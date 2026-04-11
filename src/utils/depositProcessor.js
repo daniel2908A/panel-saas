@@ -1,5 +1,8 @@
-const db = require("../db");
+const db = require("../config/db");
 const verifyTransaction = require("./verifyTx");
+
+// 🔥 IMPORTAMOS COMISIONES
+const processCommission = require("./commissionProcessor");
 
 async function processDeposits() {
   try {
@@ -46,13 +49,19 @@ async function processDeposits() {
         [dep.id]
       );
 
-      // 💰 SUMAR SALDO
+      // 💰 SUMAR SALDO AL USUARIO
       await db.query(
         "UPDATE users SET balance = balance + ? WHERE id = ?",
         [dep.amount, dep.user_id]
       );
 
       console.log(`💰 Depósito aprobado ID ${dep.id}`);
+
+      // ======================================
+      // 💸 APLICAR COMISIÓN AUTOMÁTICA
+      // ======================================
+      await processCommission(dep.user_id, dep.amount);
+
     }
 
   } catch (error) {
