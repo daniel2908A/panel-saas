@@ -2,7 +2,6 @@ require('dotenv').config();
 
 console.log("nuevo deploy limpio sin bcrypt");
 
-const commissionRoutes = require('./routes/commission.routes');
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -24,9 +23,10 @@ const orderRoutes = require('./routes/order.routes');
 const adminRoutes = require('./routes/admin.routes');
 const depositRoutes = require('./routes/deposits.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
-const resellerRoutes = require('./routes/reseller.routes'); // 👈 NUEVO
+const resellerRoutes = require('./routes/reseller.routes');
+const commissionRoutes = require('./routes/commission.routes');
 
-// 🔥 IMPORTAR PROCESADOR AUTOMÁTICO 👇
+// 🔥 IMPORTAR PROCESADOR
 const processDeposits = require('./utils/depositProcessor');
 
 // 🔗 USAR RUTAS
@@ -38,14 +38,19 @@ app.use('/api/commissions', commissionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reseller', resellerRoutes); // 👈 NUEVO
+app.use('/api/reseller', resellerRoutes);
 
-// 🔥 RUTA TEST
+// 🔥 RUTA PRINCIPAL (OPCIONAL)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/register.html'));
+});
+
+// 🔥 TEST API
 app.get('/api', (req, res) => {
   res.json({ message: "API funcionando 🚀" });
 });
 
-// 🔁 CRON AUTOMÁTICO (CADA 60 SEGUNDOS)
+// 🔁 CRON AUTOMÁTICO
 setInterval(() => {
   console.log("🔄 Revisando depósitos...");
   processDeposits();
@@ -56,7 +61,7 @@ app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// 🚨 ERROR HANDLER GLOBAL
+// 🚨 ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error("Error global:", err);
   res.status(500).json({ error: "Error interno del servidor" });

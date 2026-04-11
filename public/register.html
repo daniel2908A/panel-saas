@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Registro</title>
+</head>
+<body>
+
+<h2>Registro</h2>
+
+<div>
+  <button onclick="setRole('reseller')">Reseller</button>
+  <button onclick="setRole('super_reseller')">Super Reseller</button>
+</div>
+
+<form id="form">
+  <input type="text" id="username" placeholder="Usuario" required><br>
+  <input type="email" id="email" placeholder="Correo" required><br>
+  <input type="password" id="password" placeholder="Password" required><br>
+  <button type="submit">Registrarse</button>
+</form>
+
+<script>
+let role = "reseller";
+
+function setRole(r) {
+  role = r;
+  alert("Rol seleccionado: " + role);
+}
+
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: username.value,
+      email: email.value,
+      password: password.value,
+      role: role
+    })
+  });
+
+  const data = await res.json();
+  alert(JSON.stringify(data));
+});
+</script>
+
+</body>
+</html>
