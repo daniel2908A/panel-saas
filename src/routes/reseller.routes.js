@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const db = require('../db'); // ajusta si tu ruta es distinta
-const authMiddleware = require('../middleware/auth.Middleware');
+const bcrypt = require('bcryptjs'); // ✅ CAMBIO AQUÍ
+const db = require('../config/db'); // ⚠️ también corregido
+const authMiddleware = require('../middleware/auth.middleware'); // ⚠️ minúsculas
 
 router.post('/create-user', authMiddleware, async (req, res) => {
   try {
