@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Nexora Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #020617;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* 🔥 IMAGEN DE FONDO */
+.hero-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+  background: url('bg.jpg') center/cover no-repeat;
+  opacity: 0.7;
+  filter: brightness(0.9);
+}
+
+/* 🔥 OVERLAY */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  background: rgba(2,6,23,0.6);
+}
+
+/* 🔥 LÍNEAS ANIMADAS */
+.background-animation {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(transparent,#38bdf8,transparent);
+  opacity: 0.1;
+  animation: move 6s linear infinite;
+}
+
+@keyframes move {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 50px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  width: clamp(120px, 15vw, 220px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(56,189,248,0.7));
+  transition: 0.3s;
+}
+
+.logo img:hover {
+  transform: scale(1.05);
+}
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.login {
+  background: transparent;
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+}
+
+.register {
+  background: #38bdf8;
+  color: black;
+}
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.hero h1 {
+  font-size: 52px;
+}
+
+.hero span {
+  color: #38bdf8;
+}
+
+.hero p {
+  color: #94a3b8;
+  margin: 20px 0;
+}
+
+.hero button {
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 10px;
+  background: #38bdf8;
+  border: none;
+  cursor: pointer;
+}
+
+.counter {
+  margin-top: 20px;
+  color: #4ade80;
+}
+
+/* 💎 GLASS */
+.card, .testimonial, .product {
+  backdrop-filter: blur(10px);
+  background: rgba(2,6,23,0.7);
+}
+
+/* FEATURES */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 50px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* 🔥 DASHBOARD */
+.dashboard-preview {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dash-card {
+  border: 1px solid #38bdf8;
+  padding: 20px;
+  border-radius: 12px;
+  width: 140px;
+}
+
+.dash-card div {
+  color: #4ade80;
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+/* TESTIMONIOS */
+.testimonials {
+  padding: 50px;
+  text-align: center;
+}
+
+.testimonial {
+  padding: 20px;
+  max-width: 400px;
+  margin: auto;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+/* PRODUCTOS */
+.products {
+  padding: 50px;
+  text-align: center;
+}
+
+.product {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.cta {
+  text-align: center;
+  padding: 50px;
+}
+
+.whatsapp {
+  background: #25D366;
+  color: white;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="hero-bg"></div>
+<div class="overlay"></div>
+
+<div class="background-animation">
+  <div class="line" style="left:10%"></div>
+  <div class="line" style="left:30%"></div>
+  <div class="line" style="left:50%"></div>
+  <div class="line" style="left:70%"></div>
+  <div class="line" style="left:90%"></div>
+</div>
+
+<header>
+  <div class="logo">
+  <img src="logo.png" alt="Nexora">
+</div>
+  <div>
+    <button class="btn login" onclick="goLogin()">Login</button>
+    <button class="btn register" onclick="goRegister()">Registrarse</button>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Gana dinero con <span>Nexora Panel</span> 🚀</h1>
+  <p>Un sistema completo para vender y automatizar ingresos</p>
+  <button onclick="goRegister()">💸 Empezar ahora</button>
+
+  <div class="counter" id="counter">+$0 generados hoy</div>
+
+  <div class="dashboard-preview">
+    <div class="dash-card">💰 Ventas<div id="sales">$120</div></div>
+    <div class="dash-card">👥 Usuarios<div id="users">12</div></div>
+    <div class="dash-card">📈 Ganancias<div id="earnings">$45</div></div>
+  </div>
+
+</section>
+
+<section class="features">
+  <div class="card">💰 Ingresos automáticos</div>
+  <div class="card">⚡ Sistema automático</div>
+  <div class="card">📊 Panel profesional</div>
+  <div class="card">🌍 Negocio global</div>
+</section>
+
+<section class="testimonials">
+  <h2>💬 Usuarios reales</h2>
+  <div class="testimonial" id="testimonialBox"></div>
+</section>
+
+<section class="products">
+  <h2>🛒 Productos disponibles</h2>
+  <div id="products"></div>
+</section>
+
+<section class="cta">
+  <h2>🚀 Empieza hoy mismo</h2>
+  <button onclick="goRegister()">Crear cuenta</button>
+  <button class="btn whatsapp" onclick="goWhats()">WhatsApp</button>
+</section>
+
+<footer>
+  Nexora Panel © 2026
+</footer>
+
+<script>
+
+function goLogin(){window.location.href='/login.html'}
+function goRegister(){window.location.href='/register.html'}
+function goWhats(){window.open('https://wa.me/50239779827')}
+
+// contador
+let total=0;
+setInterval(()=>{
+  total+=Math.floor(Math.random()*5)+1;
+  document.getElementById("counter").innerText="+$"+total+" generados hoy";
+},2000);
+
+// dashboard animado
+let sales=120, users=12, earnings=45;
+
+setInterval(()=>{
+  sales+=Math.floor(Math.random()*5);
+  users+=Math.floor(Math.random()*2);
+  earnings+=Math.floor(Math.random()*3);
+
+  document.getElementById("sales").innerText="$"+sales;
+  document.getElementById("users").innerText=users;
+  document.getElementById("earnings").innerText="$"+earnings;
+},2000);
+
+// testimonios
+const testimonialList=[
+"“Ya recuperé mi inversión en 2 días 💸”",
+"“El sistema trabaja solo 🔥”",
+"“Genero ingresos diarios sin esfuerzo”",
+"“Vendo mientras duermo 😴💰”"
+];
+
+let i=0;
+
+function rotateTestimonial(){
+  const box = document.getElementById("testimonialBox");
+  box.style.opacity=0;
+  setTimeout(()=>{
+    box.innerText=testimonialList[i];
+    box.style.opacity=1;
+    i=(i+1)%testimonialList.length;
+  },300);
+}
+
+rotateTestimonial();
+setInterval(rotateTestimonial,3000);
+
+// productos
+async function loadProducts(){
+  const res=await fetch('/api/products/public');
+  const data=await res.json();
+
+  let html="";
+  data.forEach(p=>{
+    const price=p.price||(p.plans&&p.plans[0]?.price)||0;
+    html+=`<div class="product"><b>${p.name}</b><br>$${price}</div>`;
+  });
+
+  document.getElementById("products").innerHTML=html;
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>

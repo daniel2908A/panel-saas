@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Super Reseller Panel</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+
+h1 {
+  color: #38bdf8;
+}
+
+.card {
+  background: #020617;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+button {
+  padding: 10px;
+  background: #38bdf8;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.product {
+  background: #1e293b;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>🚀 Panel Super Reseller</h1>
+
+<div class="card">
+  <h3>💰 Mi saldo</h3>
+  <p id="balance">Cargando...</p>
+</div>
+
+<div class="card">
+  <h3>🛒 Productos</h3>
+  <div id="products"></div>
+</div>
+
+<script>
+
+const token = localStorage.getItem('token');
+
+// 🔒 protección
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+// 💰 cargar saldo
+async function loadBalance() {
+  const res = await fetch('/api/user/me', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+
+  const data = await res.json();
+
+  balance.innerText = "$" + data.credits;
+}
+
+// 🛒 cargar productos
+async function loadProducts() {
+  const res = await fetch('/api/products/public');
+
+  const products = await res.json();
+
+  let html = "";
+
+products.forEach(p => {
+
+  const price = p.price || (p.plans && p.plans[0]?.price) || 0;
+
+  html += `
+    <div class="product">
+      <b>${p.name}</b><br>
+      Precio: $${price}<br><br>
+      <button onclick="buyProduct(${p.id}, ${price})">
+        Comprar
+      </button>
+    </div>
+  `;
+});
+
+  document.getElementById('products').innerHTML = html;
+}
+
+// 💸 comprar producto
+async function buyProduct(productId, price) {
+
+  const confirmBuy = confirm("¿Comprar producto por $" + price + "?");
+
+  if (!confirmBuy) return;
+
+  const res = await fetch('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token
+    },
+    body: JSON.stringify({ productId })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
+
+  loadBalance();
+}
+
+// 🚀 init
+loadBalance();
+loadProducts();
+
+</script>
+
+</body>
+</html>

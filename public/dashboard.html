@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #020617;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .sidebar h2 {
+      color: #38bdf8;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: transparent;
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #020617;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .card h3 {
+      color: #38bdf8;
+    }
+
+    .user-card {
+      background: #1e293b;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    .super {
+      background: orange;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="sidebar">
+    <h2>NEXORA</h2>
+
+    <button onclick="loadStats()">📊 Estadísticas</button>
+    <button onclick="loadUsers()">👥 Usuarios</button>
+    <button onclick="loadProducts()">📦 Productos</button>
+    <button onclick="logout()">🚪 Salir</button>
+  </div>
+
+  <div class="content">
+    <h1>Dashboard Owner</h1>
+    <div id="data"></div>
+  </div>
+
+<script>
+
+const token = localStorage.getItem('token');
+
+// 🔒 protección
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+// 📊 STATS
+async function loadStats() {
+
+  const res = await fetch('/api/admin/stats', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+
+  const data = await res.json();
+
+  document.getElementById('data').innerHTML = `
+    <div class="cards">
+      <div class="card">
+        <h3>💰 Ventas</h3>
+        <p>$${data.sales || 0}</p>
+      </div>
+
+      <div class="card">
+        <h3>👥 Usuarios</h3>
+        <p>${data.users || 0}</p>
+      </div>
+
+      <div class="card">
+        <h3>💸 Créditos</h3>
+        <p>$${data.credits || 0}</p>
+      </div>
+    </div>
+  `;
+}
+
+// 👥 USERS
+async function loadUsers() {
+  const res = await fetch('/api/admin/users', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+
+  const users = await res.json();
+
+  let html = '<h2>Usuarios</h2>';
+
+  users.forEach(u => {
+    html += `
+      <div class="user-card">
+        <b>${u.username}</b> (${u.role})<br>
+        💰 Créditos: ${u.credits}<br><br>
+        <button class="super" onclick="makeSuper(${u.id})">
+          🔥 Super Reseller
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById('data').innerHTML = html;
+}
+
+// 🔥 HACER SUPER
+async function makeSuper(userId) {
+
+  const res = await fetch('/api/admin/make-super', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
+
+  loadUsers();
+}
+
+// 📦 PRODUCTS
+async function loadProducts() {
+  const res = await fetch('/api/products', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+
+  const products = await res.json();
+
+  let html = '<h2>Productos</h2>';
+
+  products.forEach(p => {
+    html += `<p>${p.name}</p>`;
+  });
+
+  document.getElementById('data').innerHTML = html;
+}
+
+// 🚪 logout
+function logout() {
+  localStorage.removeItem('token');
+  window.location.href = '/';
+}
+
+// 🚀 INIT
+loadStats();
+
+</script>
+
+</body>
+</html>

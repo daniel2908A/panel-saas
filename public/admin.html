@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Nexora Admin Panel</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: white;
+  padding: 20px;
+}
+
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+h1 {
+  color: gold;
+}
+
+.card {
+  background: rgba(30,41,59,0.9);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,255,100,0.1);
+}
+
+input {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 10px;
+  background: linear-gradient(45deg, #22c55e, #16a34a);
+  border: none;
+  cursor: pointer;
+  color: white;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+.logout {
+  background: red;
+}
+
+.user-card {
+  margin-bottom: 10px;
+  padding: 12px;
+  background: #334155;
+  border-radius: 8px;
+}
+
+.user-card b {
+  color: #4ade80;
+}
+
+.super {
+  background: linear-gradient(45deg, #f59e0b, #d97706);
+}
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <h1>👑 Nexora Admin</h1>
+  <button class="logout" onclick="logout()">Cerrar sesión</button>
+</div>
+
+<div class="card">
+<h3>Crear Reseller</h3>
+<input id="ruser" placeholder="Usuario">
+<input id="remail" placeholder="Email">
+<input id="rpass" placeholder="Password">
+<br><br>
+<button onclick="crearReseller()">Crear</button>
+<p id="msg"></p>
+</div>
+
+<div class="card">
+<h3>Usuarios</h3>
+<div id="users"></div>
+</div>
+
+<div class="card">
+<h3>Agregar Créditos Manual</h3>
+<input id="uid" placeholder="User ID">
+<input id="amount" placeholder="Monto">
+<br><br>
+<button onclick="addCredits()">Agregar</button>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem("token");
+
+// 🔒 protección
+if (!TOKEN || TOKEN.length < 20) {
+  localStorage.removeItem("token");
+  window.location.href = "/login.html";
+}
+
+// 🔓 logout
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/login.html";
+}
+
+// 👑 crear reseller
+async function crearReseller() {
+  const username = ruser.value;
+  const email = remail.value;
+  const password = rpass.value;
+
+  if (!username || !email || !password) {
+    alert("Completa todos los campos");
+    return;
+  }
+
+  const res = await fetch('/api/admin/create-reseller', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + TOKEN
+    },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const data = await res.json();
+  msg.innerText = data.message || data.error;
+
+  cargarUsers();
+}
+
+// 🔥 HACER SUPER RESELLER
+async function makeSuper(userId) {
+  const res = await fetch('/api/admin/make-super', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + TOKEN
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
+  cargarUsers();
+}
+
+// 👥 cargar usuarios
+async function cargarUsers() {
+  const res = await fetch('/api/admin/users', {
+    headers: { 'Authorization': 'Bearer ' + TOKEN }
+  });
+
+  const data = await res.json();
+
+  users.innerHTML = "";
+
+  data.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "user-card";
+
+    div.innerHTML = `
+      <b>${u.username}</b> (${u.role})  
+      <br>💰 Créditos: $${u.credits}
+      <br><br>
+      <button onclick="addCreditsQuick(${u.id}, 10)">+10</button>
+      <button onclick="addCreditsQuick(${u.id}, 20)">+20</button>
+      <button onclick="addCreditsQuick(${u.id}, 50)">+50</button>
+      <button class="super" onclick="makeSuper(${u.id})">
+        🔥 Super Reseller
+      </button>
+    `;
+
+    users.appendChild(div);
+  });
+}
+
+// 💰 agregar créditos manual
+async function addCredits() {
+  const userId = uid.value;
+  const amountValue = amount.value;
+
+  if (!userId || !amountValue) {
+    alert("Completa todos los campos");
+    return;
+  }
+
+  const res = await fetch('/api/admin/add-credits', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + TOKEN
+    },
+    body: JSON.stringify({
+      userId: parseInt(userId),
+      amount: parseFloat(amountValue)
+    })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
+  cargarUsers();
+}
+
+// ⚡ rápido
+async function addCreditsQuick(userId, amount) {
+  const res = await fetch('/api/admin/add-credits', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + TOKEN
+    },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
+  cargarUsers();
+}
+
+// 🚀 auto load
+window.onload = () => {
+  cargarUsers();
+};
+</script>
+
+</body>
+</html>
