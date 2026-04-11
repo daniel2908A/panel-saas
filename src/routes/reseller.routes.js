@@ -1,12 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); // ✅ CAMBIO AQUÍ
-const db = require('../config/db'); // ⚠️ también corregido
-const authMiddleware = require('../middleware/auth.middleware'); // ⚠️ minúsculas
 
+const bcrypt = require('bcryptjs');
+const db = require('../config/db');
+const authMiddleware = require('../middleware/auth.middleware');
+
+// 🔹 Crear usuario desde reseller
 router.post('/create-user', authMiddleware, async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Faltan datos' });
+    }
 
     // Validar rol
     if (!['admin', 'reseller'].includes(req.user.role)) {
@@ -26,6 +32,7 @@ router.post('/create-user', authMiddleware, async (req, res) => {
     });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
