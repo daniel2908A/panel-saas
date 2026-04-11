@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+console.log("nuevo deploy limpio sin bcrypt");
+
 const commissionRoutes = require('./routes/commission.routes');
 const express = require('express');
 const path = require('path');
