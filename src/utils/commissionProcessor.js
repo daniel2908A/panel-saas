@@ -2,20 +2,18 @@ const db = require('../config/db');
 
 async function processCommission(userId, amount) {
   try {
-    const totalCommission = amount * 0.08;
+    const total = amount * 0.08;
 
-    let ownerAmount = totalCommission;
-    let superAmount = 0;
+    let ownerAmount = total;
 
-    // 🔎 Buscar usuario
-    const [users] = await db.query(
+    const [user] = await db.query(
       "SELECT parent_id FROM users WHERE id = ?",
       [userId]
     );
 
-    if (users.length === 0) return;
+    if (user.length === 0) return;
 
-    const parentId = users[0].parent_id;
+    const parentId = user[0].parent_id;
 
     if (parentId) {
       const [parent] = await db.query(
@@ -24,43 +22,31 @@ async function processCommission(userId, amount) {
       );
 
       if (parent.length > 0 && parent[0].role === 'super_reseller') {
-        superAmount = amount * 0.03;
+        const superAmount = amount * 0.03;
         ownerAmount = amount * 0.05;
 
-        // 💰 Pagar super reseller
         await db.query(
-          "UPDATE users SET credits = credits + ? WHERE id = ?",
+          "UPDATE users SET balance = balance + ? WHERE id = ?",
           [superAmount, parentId]
-        );
-
-        await db.query(
-          "INSERT INTO commissions (user_id, amount, type) VALUES (?, ?, ?)",
-          [parentId, superAmount, 'super_reseller']
         );
       }
     }
 
-    // 👑 OWNER
     const [owner] = await db.query(
       "SELECT id FROM users WHERE role = 'owner' LIMIT 1"
     );
 
     if (owner.length > 0) {
       await db.query(
-        "UPDATE users SET credits = credits + ? WHERE id = ?",
+        "UPDATE users SET balance = balance + ? WHERE id = ?",
         [ownerAmount, owner[0].id]
-      );
-
-      await db.query(
-        "INSERT INTO commissions (user_id, amount, type) VALUES (?, ?, ?)",
-        [owner[0].id, ownerAmount, 'owner']
       );
     }
 
-    console.log("💸 Comisión aplicada correctamente");
+    console.log("💸 Comisión aplicada");
 
   } catch (err) {
-    console.error("Error en comisión:", err);
+    console.error("Error comisión:", err);
   }
 }
 
