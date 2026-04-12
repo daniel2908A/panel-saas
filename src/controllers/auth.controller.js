@@ -119,7 +119,8 @@ const register = async (req, res) => {
     sqlMessage: error.sqlMessage,
     code: error.code
   });
-
+}
+};
 
 // 🔥 EXPORT
 module.exports = {
