@@ -45,7 +45,6 @@ router.post(
     try {
       const { userId, amount } = req.body;
 
-      // Validaciones
       if (!userId || !amount) {
         return res.status(400).json({ error: 'Datos incompletos' });
       }
@@ -54,7 +53,6 @@ router.post(
         return res.status(400).json({ error: 'Monto inválido' });
       }
 
-      // Verificar que exista el usuario
       const [user] = await db.query(
         'SELECT id FROM users WHERE id = ?',
         [userId]
@@ -64,13 +62,11 @@ router.post(
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
-      // Agregar créditos
       await db.query(
         'UPDATE credits SET balance = balance + ? WHERE user_id = ?',
         [amount, userId]
       );
 
-      // Registrar transacción
       await db.query(
         'INSERT INTO credit_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
         [userId, amount, 'add', 'Recarga manual por admin']
@@ -83,6 +79,61 @@ router.post(
 
     } catch (err) {
       console.error('Error en /add:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+);
+
+
+// ❌ RESTAR CRÉDITOS
+router.post(
+  '/remove',
+  auth,
+  requireRole('admin'),
+  async (req, res) => {
+    try {
+      const { userId, amount } = req.body;
+
+      if (!userId || !amount) {
+        return res.status(400).json({ error: 'Datos incompletos' });
+      }
+
+      if (amount <= 0) {
+        return res.status(400).json({ error: 'Monto inválido' });
+      }
+
+      const [rows] = await db.query(
+        'SELECT balance FROM credits WHERE user_id = ?',
+        [userId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      const current = rows[0].balance;
+
+      if (current < amount) {
+        return res.status(400).json({ error: 'Saldo insuficiente' });
+      }
+
+      await db.query(
+        'UPDATE credits SET balance = balance - ? WHERE user_id = ?',
+        [amount, userId]
+      );
+
+      await db.query(
+        'INSERT INTO credit_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
+        [userId, amount, 'remove', 'Descuento manual por admin']
+      );
+
+      res.json({
+        success: true,
+        message: 'Créditos descontados correctamente'
+      });
+
+    } catch (err) {
+      console.error('Error en /remove:', err);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
