@@ -10,5 +10,5 @@ const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 });
-
+console.log("🔥 USANDO DB CORRECTA:", process.env.MYSQLHOST);
 module.exports = db;
