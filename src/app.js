@@ -26,6 +26,9 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const resellerRoutes = require('./routes/reseller.routes');
 const commissionRoutes = require('./routes/commission.routes');
 
+// 🔥 NUEVO: WEBHOOK BINANCE
+const webhookRoutes = require('./routes/webhook.routes');
+
 // 🔥 IMPORTAR PROCESADOR
 const processDeposits = require('./utils/depositProcessor');
 
@@ -40,7 +43,10 @@ app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reseller', resellerRoutes);
 
-// 🔥 RUTA PRINCIPAL (OPCIONAL)
+// 🔥 ACTIVAR WEBHOOK
+app.use('/api/webhook', webhookRoutes);
+
+// 🔥 RUTA PRINCIPAL
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/register.html'));
 });

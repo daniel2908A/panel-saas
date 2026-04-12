@@ -57,20 +57,28 @@
       color: #38bdf8;
     }
 
-    .user-card {
-      background: #1e293b;
+    .status-ok { color: #22c55e; }
+    .status-warn { color: orange; }
+    .status-bad { color: red; }
+
+    input, select {
+      width: 100%;
       padding: 10px;
-      margin-bottom: 10px;
+      margin-top: 10px;
       border-radius: 8px;
+      border: none;
     }
 
-    .super {
-      background: orange;
+    button.activate {
+      margin-top: 10px;
+      background: #22c55e;
       border: none;
-      padding: 5px 10px;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 5px;
     }
+
   </style>
 </head>
 
@@ -99,7 +107,7 @@ if (!token) {
   window.location.href = "/login.html";
 }
 
-// 📊 STATS
+// 📊 STATS + SUSCRIPCIÓN + ACTIVADOR
 async function loadStats() {
 
   const res = await fetch('/api/admin/stats', {
@@ -108,8 +116,43 @@ async function loadStats() {
 
   const data = await res.json();
 
+  const userRes = await fetch('/api/user/me', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
+
+  const user = await userRes.json();
+
+  let plan = user.plan || "Sin plan";
+  let exp = "No definido";
+  let days = "-";
+  let statusText = "";
+  let statusClass = "";
+
+  if (user.expires_at) {
+    const expDate = new Date(user.expires_at);
+    const today = new Date();
+
+    const diff = expDate - today;
+    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    exp = expDate.toLocaleDateString();
+    days = d;
+
+    if (d <= 0) {
+      statusText = "❌ Vencido";
+      statusClass = "status-bad";
+    } else if (d <= 3) {
+      statusText = "⚠️ Por expirar";
+      statusClass = "status-warn";
+    } else {
+      statusText = "✅ Activo";
+      statusClass = "status-ok";
+    }
+  }
+
   document.getElementById('data').innerHTML = `
     <div class="cards">
+
       <div class="card">
         <h3>💰 Ventas</h3>
         <p>$${data.sales || 0}</p>
@@ -124,8 +167,61 @@ async function loadStats() {
         <h3>💸 Créditos</h3>
         <p>$${data.credits || 0}</p>
       </div>
+
+      <div class="card">
+        <h3>💳 Suscripción</h3>
+        <p>Plan: ${plan}</p>
+        <p>Expira: ${exp}</p>
+        <p>Días restantes: ${days}</p>
+        <p class="${statusClass}">${statusText}</p>
+        <br>
+        <button onclick="window.location.href='/payment.html'">
+          🔄 Renovar Plan
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>⚡ Activar Usuario</h3>
+
+        <input id="emailActivate" placeholder="Correo del usuario">
+
+        <select id="planActivate">
+          <option value="1m">1 mes</option>
+          <option value="3m">3 meses</option>
+          <option value="6m">6 meses</option>
+          <option value="12m">1 año</option>
+        </select>
+
+        <button class="activate" onclick="activarUsuario()">Activar</button>
+      </div>
+
     </div>
   `;
+}
+
+// 🔥 ACTIVAR USUARIO
+async function activarUsuario() {
+
+  const email = document.getElementById("emailActivate").value;
+  const plan = document.getElementById("planActivate").value;
+
+  if (!email) {
+    alert("Ingresa un correo");
+    return;
+  }
+
+  const res = await fetch('/api/admin/activate-user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token
+    },
+    body: JSON.stringify({ email, plan })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || data.error);
 }
 
 // 👥 USERS
@@ -140,36 +236,14 @@ async function loadUsers() {
 
   users.forEach(u => {
     html += `
-      <div class="user-card">
+      <div class="card">
         <b>${u.username}</b> (${u.role})<br>
-        💰 Créditos: ${u.credits}<br><br>
-        <button class="super" onclick="makeSuper(${u.id})">
-          🔥 Super Reseller
-        </button>
+        💰 Créditos: ${u.credits}<br>
       </div>
     `;
   });
 
   document.getElementById('data').innerHTML = html;
-}
-
-// 🔥 HACER SUPER
-async function makeSuper(userId) {
-
-  const res = await fetch('/api/admin/make-super', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({ userId })
-  });
-
-  const data = await res.json();
-
-  alert(data.message || data.error);
-
-  loadUsers();
 }
 
 // 📦 PRODUCTS
@@ -195,7 +269,7 @@ function logout() {
   window.location.href = '/';
 }
 
-// 🚀 INIT
+// INIT
 loadStats();
 
 </script>

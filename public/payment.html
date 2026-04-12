@@ -1,73 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Pagar - Nexora Panel</title>
-  <style>
-    body {
-      background: #0a0f1c;
-      color: white;
-      font-family: Arial;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<title>Pagar - Nexora Panel</title>
 
-    .card {
-      background: #111827;
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      width: 350px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
 
-    h1 {
-      color: #00ff88;
-    }
+.container {
+  background: rgba(255,255,255,0.05);
+  padding: 30px;
+  border-radius: 20px;
+  width: 350px;
+  text-align: center;
+}
 
-    button {
-      background: #f0b90b;
-      border: none;
-      padding: 15px;
-      width: 100%;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
+h2 {
+  margin-bottom: 20px;
+}
 
-    button:hover {
-      opacity: 0.9;
-    }
+.plan {
+  background: #020617;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+  border: 1px solid #38bdf8;
+}
 
-    .info {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #aaa;
-    }
-  </style>
+.plan:hover {
+  transform: scale(1.05);
+  background: #1e293b;
+}
+
+.price {
+  font-size: 20px;
+  color: #38bdf8;
+}
+
+.small {
+  font-size: 12px;
+  color: #aaa;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="card">
-    <h1>Activar Cuenta</h1>
-    <p>Plan Super Reseller</p>
-    <h2>$10 USD</h2>
+<div class="container">
 
-    <button onclick="pagar()">Pagar con Binance</button>
+  <h2>💳 Selecciona tu plan</h2>
 
-    <div class="info">
-      Una vez realizado el pago, tu cuenta será activada.
-    </div>
+  <div class="plan" onclick="pagar('1m')">
+    <div class="price">$5 / mes</div>
+    <div class="small">Acceso completo mensual</div>
   </div>
 
-  <script>
-    function pagar() {
-      // 🔥 CAMBIA ESTE LINK POR TU BINANCE PAY
-      window.location.href = "https://pay.binance.com/tu-link-aqui";
-    }
-  </script>
+  <div class="plan" onclick="pagar('3m')">
+    <div class="price">$10 / 3 meses</div>
+    <div class="small">Ahorra $5 🔥</div>
+  </div>
+
+  <div class="plan" onclick="pagar('6m')">
+    <div class="price">$16 / 6 meses</div>
+    <div class="small">Mejor opción 💸</div>
+  </div>
+
+  <div class="plan" onclick="pagar('12m')">
+    <div class="price">$25 / 1 año</div>
+    <div class="small">Máximo ahorro 🚀</div>
+  </div>
+
+</div>
+
+<script>
+
+// ⚠️ IMPORTANTE: asegúrate de guardar email en login/register
+// ejemplo: localStorage.setItem("email", email);
+
+function pagar(plan) {
+
+  const email = localStorage.getItem("email");
+
+  if (!email) {
+    alert("Error: no se detecta usuario");
+    return;
+  }
+
+  // guardamos plan
+  localStorage.setItem("plan", plan);
+
+  // 🔥 IDENTIFICADOR DE PAGO
+  const reference = email + "|" + plan;
+
+  console.log("Referencia de pago:", reference);
+
+  let link = "";
+
+  // ⚠️ REEMPLAZA ESTOS LINKS CON LOS TUYOS DE BINANCE
+  if (plan === "1m") link = "https://pay.binance.com/xxxx1?memo=" + reference;
+  if (plan === "3m") link = "https://pay.binance.com/xxxx2?memo=" + reference;
+  if (plan === "6m") link = "https://pay.binance.com/xxxx3?memo=" + reference;
+  if (plan === "12m") link = "https://pay.binance.com/xxxx4?memo=" + reference;
+
+  window.location.href = link;
+}
+
+</script>
 
 </body>
 </html>
