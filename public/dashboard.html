@@ -78,7 +78,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
   </style>
 </head>
 
@@ -94,23 +93,47 @@
   </div>
 
   <div class="content">
-    <h1>Dashboard Owner</h1>
+    <h1 id="title">Dashboard</h1>
     <div id="data"></div>
   </div>
 
 <script>
 
 const token = localStorage.getItem('token');
+const role = localStorage.getItem('role');
 
 // 🔒 protección
 if (!token) {
   window.location.href = "/login.html";
 }
 
-// 📊 STATS + SUSCRIPCIÓN + ACTIVADOR
+// 🔥 CONTROL DE ROLES
+if (!role) {
+  alert("Error de sesión");
+  window.location.href = "/login.html";
+}
+
+// 🔥 CAMBIAR TÍTULO SEGÚN ROL
+const title = document.getElementById("title");
+
+if (role === "admin") {
+  title.innerText = "Dashboard Admin";
+} else if (role === "super_reseller") {
+  title.innerText = "Dashboard Super Reseller";
+} else {
+  title.innerText = "Dashboard Usuario";
+}
+
+
+// 📊 STATS
 async function loadStats() {
 
-  const res = await fetch('/api/admin/stats', {
+  // 🔥 SI ES ADMIN USA /admin/stats
+  const url = role === "admin" 
+    ? '/api/admin/stats' 
+    : '/api/dashboard';
+
+  const res = await fetch(url, {
     headers: { Authorization: 'Bearer ' + token }
   });
 
@@ -150,6 +173,28 @@ async function loadStats() {
     }
   }
 
+  let adminSection = "";
+
+  // 🔥 SOLO ADMIN VE ESTO
+  if (role === "admin") {
+    adminSection = `
+      <div class="card">
+        <h3>⚡ Activar Usuario</h3>
+
+        <input id="emailActivate" placeholder="Correo del usuario">
+
+        <select id="planActivate">
+          <option value="1m">1 mes</option>
+          <option value="3m">3 meses</option>
+          <option value="6m">6 meses</option>
+          <option value="12m">1 año</option>
+        </select>
+
+        <button class="activate" onclick="activarUsuario()">Activar</button>
+      </div>
+    `;
+  }
+
   document.getElementById('data').innerHTML = `
     <div class="cards">
 
@@ -180,35 +225,23 @@ async function loadStats() {
         </button>
       </div>
 
-      <div class="card">
-        <h3>⚡ Activar Usuario</h3>
-
-        <input id="emailActivate" placeholder="Correo del usuario">
-
-        <select id="planActivate">
-          <option value="1m">1 mes</option>
-          <option value="3m">3 meses</option>
-          <option value="6m">6 meses</option>
-          <option value="12m">1 año</option>
-        </select>
-
-        <button class="activate" onclick="activarUsuario()">Activar</button>
-      </div>
+      ${adminSection}
 
     </div>
   `;
 }
 
-// 🔥 ACTIVAR USUARIO
+
+// 🔥 ACTIVAR USUARIO (SOLO ADMIN)
 async function activarUsuario() {
+
+  if (role !== "admin") {
+    alert("No autorizado");
+    return;
+  }
 
   const email = document.getElementById("emailActivate").value;
   const plan = document.getElementById("planActivate").value;
-
-  if (!email) {
-    alert("Ingresa un correo");
-    return;
-  }
 
   const res = await fetch('/api/admin/activate-user', {
     method: 'POST',
@@ -220,12 +253,18 @@ async function activarUsuario() {
   });
 
   const data = await res.json();
-
   alert(data.message || data.error);
 }
 
+
 // 👥 USERS
 async function loadUsers() {
+
+  if (role !== "admin") {
+    alert("No autorizado");
+    return;
+  }
+
   const res = await fetch('/api/admin/users', {
     headers: { Authorization: 'Bearer ' + token }
   });
@@ -246,6 +285,7 @@ async function loadUsers() {
   document.getElementById('data').innerHTML = html;
 }
 
+
 // 📦 PRODUCTS
 async function loadProducts() {
   const res = await fetch('/api/products', {
@@ -263,11 +303,14 @@ async function loadProducts() {
   document.getElementById('data').innerHTML = html;
 }
 
+
 // 🚪 logout
 function logout() {
   localStorage.removeItem('token');
+  localStorage.removeItem('role');
   window.location.href = '/';
 }
+
 
 // INIT
 loadStats();
