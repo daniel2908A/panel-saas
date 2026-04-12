@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pagar - Nexora</title>
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 15px;
+  width: 350px;
+  text-align: center;
+}
+
+img {
+  width: 200px;
+  margin: 20px 0;
+}
+
+button {
+  padding: 10px;
+  width: 100%;
+  margin-top: 10px;
+  background: #22c55e;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>💳 Pago Binance</h2>
+
+<p id="planInfo"></p>
+
+<img src="/img/binance-qr.png" alt="QR Binance">
+
+<p>Escanea y paga con Binance Pay</p>
+
+<input type="file" id="proof">
+
+<button onclick="enviar()">Enviar comprobante</button>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const plan = params.get("plan");
+
+document.getElementById("planInfo").innerText = "Plan: " + plan;
+
+async function enviar() {
+  const file = document.getElementById("proof").files[0];
+
+  if (!file) {
+    alert("Sube comprobante");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("plan", plan);
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("/api/payment/upload", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token
+    },
+    body: formData
+  });
+
+  const data = await res.json();
+
+  alert("Pago enviado, espera confirmación");
+  window.location.href = "/dashboard.html";
+}
+
+</script>
+
+</body>
+</html>
