@@ -37,7 +37,7 @@ exports.createReseller = async (req, res) => {
 };
 
 
-// 👥 LISTAR USUARIOS
+// 👥 LISTAR USUARIOS (OK)
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
@@ -53,7 +53,7 @@ exports.getAllUsers = async (req, res) => {
 };
 
 
-// 💰 AGREGAR CRÉDITOS
+// 💰 AGREGAR CRÉDITOS (FIX)
 exports.addCreditsToUser = async (req, res) => {
   try {
     let { userId, amount } = req.body;
@@ -68,15 +68,6 @@ exports.addCreditsToUser = async (req, res) => {
       return res.status(400).json({ error: "Monto inválido" });
     }
 
-    const [users] = await db.query(
-      "SELECT id FROM users WHERE id = ?",
-      [userId]
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({ error: "Usuario no existe" });
-    }
-
     await db.query(
       "UPDATE users SET credits = credits + ? WHERE id = ?",
       [amount, userId]
@@ -87,6 +78,44 @@ exports.addCreditsToUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error agregando créditos" });
+  }
+};
+
+
+// ❌ RESTAR CRÉDITOS (NUEVO)
+exports.removeCreditsFromUser = async (req, res) => {
+  try {
+    let { userId, amount } = req.body;
+
+    if (!userId || !amount) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    amount = parseFloat(amount);
+
+    const [users] = await db.query(
+      "SELECT credits FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (!users.length) {
+      return res.status(404).json({ error: "Usuario no existe" });
+    }
+
+    if (users[0].credits < amount) {
+      return res.status(400).json({ error: "Saldo insuficiente" });
+    }
+
+    await db.query(
+      "UPDATE users SET credits = credits - ? WHERE id = ?",
+      [amount, userId]
+    );
+
+    res.json({ message: "Créditos descontados correctamente" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error quitando créditos" });
   }
 };
 
@@ -122,45 +151,17 @@ exports.getStats = async (req, res) => {
       "SELECT COUNT(*) as total FROM users"
     );
 
-    const [sales] = await db.query(
-      "SELECT SUM(price) as total FROM orders"
-    );
-
     const [credits] = await db.query(
       "SELECT SUM(credits) as total FROM users"
     );
 
     res.json({
       users: users[0].total || 0,
-      sales: sales[0].total || 0,
       credits: credits[0].total || 0
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error obteniendo estadísticas" });
-  }
-};
-
-
-// 🔥 NUEVO: HACER SUPER RESELLER
-exports.makeSuperReseller = async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "Falta userId" });
-    }
-
-    await db.query(
-      "UPDATE users SET role = 'superreseller' WHERE id = ?",
-      [userId]
-    );
-
-    res.json({ message: "Usuario ahora es Super Reseller 🔥" });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error actualizando usuario" });
   }
 };
