@@ -3,8 +3,8 @@ const router = express.Router();
 
 const userController = require('../controllers/user.controller');
 
-// 🔥 CORREGIDO AQUÍ
-const auth = require('../middlewares/auth.middleware');
+// 🔥 FIX REAL AQUÍ
+const auth = require('../middlewares/authMiddleware');
 const requireRole = require('../middlewares/role.middleware');
 
 const db = require('../db');
