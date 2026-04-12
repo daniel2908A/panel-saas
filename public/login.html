@@ -101,14 +101,14 @@ async function login() {
       // 🔥 GUARDAR TOKEN
       localStorage.setItem("token", data.token);
 
-      // 🔥 GUARDAR EMAIL (IMPORTANTE)
+      // 🔥 GUARDAR ROLE (ESTO ES LA CLAVE 🔥)
+      localStorage.setItem("role", data.role);
+
+      // 🔥 GUARDAR EMAIL
       localStorage.setItem("email", email);
 
-      // 🔥 DECODIFICAR TOKEN
-      const payload = JSON.parse(atob(data.token.split('.')[1]));
-
       // 🔥 REDIRECCIÓN SEGÚN ROL
-      if (payload.role === 'admin') {
+      if (data.role === 'admin') {
         window.location.href = "/admin.html";
       } else {
         window.location.href = "/dashboard.html";
