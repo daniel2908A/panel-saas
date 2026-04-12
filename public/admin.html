@@ -66,12 +66,10 @@ button {
 <script>
 const TOKEN = localStorage.getItem("token");
 
-// 🔒 protección
 if (!TOKEN) {
   window.location.href = "/login.html";
 }
 
-// 🔓 logout
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "/login.html";
@@ -79,6 +77,12 @@ function logout() {
 
 // 🔥 ACTIVAR SUPER RESELLER
 async function activarSuper(userId, months) {
+
+  if (!userId) {
+    alert("Error: userId no definido");
+    return;
+  }
+
   const res = await fetch('/api/admin/activar-superreseller', {
     method: 'POST',
     headers: {
@@ -95,6 +99,12 @@ async function activarSuper(userId, months) {
 
 // 💰 SUMAR CRÉDITOS
 async function addCredits(userId, amount) {
+
+  if (!userId) {
+    alert("Error: userId no definido");
+    return;
+  }
+
   const res = await fetch('/api/admin/add', {
     method: 'POST',
     headers: {
@@ -111,6 +121,12 @@ async function addCredits(userId, amount) {
 
 // ❌ RESTAR CRÉDITOS
 async function removeCredits(userId, amount) {
+
+  if (!userId) {
+    alert("Error: userId no definido");
+    return;
+  }
+
   const res = await fetch('/api/admin/remove', {
     method: 'POST',
     headers: {
@@ -133,12 +149,19 @@ async function cargarUsers() {
 
   const data = await res.json();
 
+  console.log("DATA USERS:", data); // 🔥 DEBUG
+
   users.innerHTML = "";
 
   data.forEach(u => {
 
-    // 🔥 SOLUCIÓN CLAVE
+    // 🔥 DETECTAR ID REAL
     const userId = u.id || u.user_id || u.id_user;
+
+    if (!userId) {
+      console.error("Usuario sin ID:", u);
+      return;
+    }
 
     const div = document.createElement("div");
     div.className = "user-card";
@@ -148,7 +171,6 @@ async function cargarUsers() {
       <br>💰 Créditos: $${u.credits || 0}
       <br><br>
 
-      <!-- SUMAR -->
       <button class="btn-green" onclick="addCredits(${userId}, 5)">+5</button>
       <button class="btn-green" onclick="addCredits(${userId}, 10)">+10</button>
       <button class="btn-green" onclick="addCredits(${userId}, 15)">+15</button>
@@ -159,14 +181,12 @@ async function cargarUsers() {
 
       <br><br>
 
-      <!-- RESTAR -->
       <button class="btn-red" onclick="removeCredits(${userId}, 5)">-5</button>
       <button class="btn-red" onclick="removeCredits(${userId}, 10)">-10</button>
       <button class="btn-red" onclick="removeCredits(${userId}, 20)">-20</button>
 
       <br><br>
 
-      <!-- PLAN -->
       <button class="btn-orange" onclick="activarSuper(${userId}, 1)">1 Mes</button>
       <button class="btn-orange" onclick="activarSuper(${userId}, 3)">3 Meses</button>
       <button class="btn-orange" onclick="activarSuper(${userId}, 6)">6 Meses</button>
@@ -177,7 +197,6 @@ async function cargarUsers() {
   });
 }
 
-// 🚀 iniciar
 window.onload = cargarUsers;
 </script>
 
