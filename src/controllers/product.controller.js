@@ -3,15 +3,15 @@ const db = require('../db');
 // 🔹 CREAR PRODUCTO
 exports.createProduct = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, price } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ error: 'El nombre es obligatorio' });
+    if (!name || !price) {
+      return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
     }
 
     const [result] = await db.query(
-      'INSERT INTO products (name) VALUES (?)',
-      [name]
+      'INSERT INTO products (name, price) VALUES (?, ?)',
+      [name, price]
     );
 
     res.json({
@@ -26,23 +26,13 @@ exports.createProduct = async (req, res) => {
 };
 
 
-// 🔹 OBTENER TODOS LOS PRODUCTOS + PLANES (PRIVADO)
+// 🔹 OBTENER TODOS LOS PRODUCTOS (🔥 SIMPLE Y FUNCIONAL)
 exports.getProducts = async (req, res) => {
   try {
     const [products] = await db.query('SELECT * FROM products');
-    const [plans] = await db.query('SELECT * FROM plans');
 
-    const productsWithPlans = products.map(product => {
-      const productPlans = plans.filter(plan => plan.product_id === product.id);
-
-      return {
-        id: product.id,
-        name: product.name,
-        plans: productPlans
-      };
-    });
-
-    res.json(productsWithPlans);
+    // 🔥 SIEMPRE DEVOLVER ARRAY
+    res.json(products);
 
   } catch (error) {
     console.error('Error getProducts:', error);
@@ -51,24 +41,11 @@ exports.getProducts = async (req, res) => {
 };
 
 
-// 🔓 🔥 PRODUCTOS PÚBLICOS (SIN LOGIN)
+// 🔓 PRODUCTOS PÚBLICOS
 exports.getProductsPublic = async (req, res) => {
   try {
     const [products] = await db.query('SELECT * FROM products');
-    const [plans] = await db.query('SELECT * FROM plans');
-
-    const productsWithPlans = products.map(product => {
-      const productPlans = plans.filter(plan => plan.product_id === product.id);
-
-      return {
-        id: product.id,
-        name: product.name,
-        plans: productPlans
-      };
-    });
-
-    res.json(productsWithPlans);
-
+    res.json(products);
   } catch (error) {
     console.error('Error getProductsPublic:', error);
     res.status(500).json({ error: 'Error obteniendo productos públicos' });
@@ -90,15 +67,7 @@ exports.getProductById = async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    const [plans] = await db.query(
-      'SELECT * FROM plans WHERE product_id = ?',
-      [id]
-    );
-
-    res.json({
-      ...products[0],
-      plans
-    });
+    res.json(products[0]);
 
   } catch (error) {
     console.error('Error getProductById:', error);
@@ -111,15 +80,11 @@ exports.getProductById = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ error: 'El nombre es obligatorio' });
-    }
+    const { name, price } = req.body;
 
     await db.query(
-      'UPDATE products SET name = ? WHERE id = ?',
-      [name, id]
+      'UPDATE products SET name = ?, price = ? WHERE id = ?',
+      [name, price, id]
     );
 
     res.json({ message: 'Producto actualizado correctamente' });
