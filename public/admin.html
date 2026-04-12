@@ -39,7 +39,6 @@ button {
 
 .btn-green { background: #22c55e; }
 .btn-orange { background: #f59e0b; }
-.btn-blue { background: #3b82f6; }
 .logout { background: red; }
 
 .user-card {
@@ -79,7 +78,7 @@ function logout() {
 
 // 🔥 ACTIVAR SUPER RESELLER
 async function activarSuper(userId, months) {
-  const res = await fetch('/admin/activar-superreseller', {
+  const res = await fetch('/api/admin/activar-superreseller', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -94,9 +93,9 @@ async function activarSuper(userId, months) {
   cargarUsers();
 }
 
-// 💰 créditos rápidos (5 en 5)
+// 💰 créditos
 async function addCredits(userId, amount) {
-  const res = await fetch('/admin/add', {
+  const res = await fetch('/api/admin/add', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -113,7 +112,7 @@ async function addCredits(userId, amount) {
 
 // 👥 cargar usuarios
 async function cargarUsers() {
-  const res = await fetch('/admin/users', {
+  const res = await fetch('/api/admin/users', {
     headers: { 'Authorization': 'Bearer ' + TOKEN }
   });
 
