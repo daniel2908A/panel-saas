@@ -11,4 +11,5 @@ const db = mysql.createPool({
   connectionLimit: 10,
 });
 console.log("🔥 USANDO DB CORRECTA:", process.env.MYSQLHOST);
+console.log("🚀 VERSION NUEVA DB ACTIVADA");
 module.exports = db;
