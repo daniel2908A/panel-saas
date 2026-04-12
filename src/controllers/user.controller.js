@@ -25,12 +25,21 @@ exports.getCredits = async (req, res) => {
 };
 
 
-// 🔥 DATOS DEL USUARIO
+// 🔥 DATOS DEL USUARIO (FIX IMPORTANTE)
 exports.getMe = async (req, res) => {
   try {
 
     const [user] = await db.query(
-      "SELECT id, username, credits, role FROM users WHERE id = ?",
+      `SELECT 
+        id,
+        username,
+        email,
+        credits,
+        role,
+        plan,
+        expires_at
+      FROM users 
+      WHERE id = ?`,
       [req.user.id]
     );
 
@@ -41,13 +50,13 @@ exports.getMe = async (req, res) => {
     res.json(user[0]);
 
   } catch (error) {
-    console.error(error);
+    console.error("ERROR GET ME:", error);
     res.status(500).json({ error: "Error obteniendo usuario" });
   }
 };
 
 
-// 💸 🔥 HISTORIAL DE COMISIONES
+// 💸 HISTORIAL DE COMISIONES
 exports.getMyCommissions = async (req, res) => {
   try {
     const userId = req.user.id;
