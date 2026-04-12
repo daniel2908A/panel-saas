@@ -70,7 +70,7 @@ router.post(
         [amount, userId]
       );
 
-      // Registrar transacción (opcional pero recomendado)
+      // Registrar transacción
       await db.query(
         'INSERT INTO credit_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
         [userId, amount, 'add', 'Recarga manual por admin']
@@ -83,6 +83,42 @@ router.post(
 
     } catch (err) {
       console.error('Error en /add:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+);
+
+
+// 🔥 ACTIVAR SUPER RESELLER CON TIEMPO
+router.post(
+  '/activar-superreseller',
+  auth,
+  requireRole('admin'),
+  async (req, res) => {
+    try {
+      const { userId, months } = req.body;
+
+      if (!userId || !months) {
+        return res.status(400).json({ error: 'Datos incompletos' });
+      }
+
+      const expires = new Date();
+      expires.setMonth(expires.getMonth() + months);
+
+      await db.query(`
+        UPDATE users 
+        SET role = 'superreseller',
+            plan_expires_at = ?
+        WHERE id = ?
+      `, [expires, userId]);
+
+      res.json({
+        success: true,
+        message: 'Super Reseller activado correctamente'
+      });
+
+    } catch (error) {
+      console.error('Error en activar-superreseller:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
