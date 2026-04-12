@@ -23,12 +23,8 @@ const login = async (req, res) => {
 
     const user = users[0];
 
-    // 🔒 BLOQUEO SI NO HA PAGADO
-    if (user.status !== "active") {
-      return res.status(403).json({
-        error: "Debes pagar para activar tu cuenta"
-      });
-    }
+    // 🔥 IMPORTANTE: PERMITIR LOGIN (QUITAMOS BLOQUEO)
+    // luego puedes validar esto en otras rutas
 
     const match = await bcrypt.compare(password, user.password);
 
@@ -44,7 +40,12 @@ const login = async (req, res) => {
 
     res.json({
       message: "Login exitoso",
-      token
+      token,
+      user: {
+        id: user.id,
+        role: user.role,
+        status: user.status
+      }
     });
 
   } catch (err) {
@@ -56,7 +57,7 @@ const login = async (req, res) => {
 };
 
 
-// 📝 REGISTER
+// 📝 REGISTER (igual que antes)
 const register = async (req, res) => {
   try {
     const { username, email, password, role, referral } = req.body;
@@ -121,10 +122,7 @@ const register = async (req, res) => {
     console.error("🔥 ERROR REAL REGISTRO:", error);
 
     res.status(500).json({
-      error: "Error en registro",
-      detalle: error,
-      sqlMessage: error.sqlMessage,
-      code: error.code
+      error: "Error en registro"
     });
   }
 };
