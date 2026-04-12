@@ -1,3 +1,4 @@
+throw new Error("🔥 ESTE DB.JS SE ESTA USANDO 🔥");
 const mysql = require('mysql2/promise');
 
 const db = mysql.createPool({
