@@ -1,61 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Selecciona tu plan</title>
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 15px;
+  width: 300px;
+  text-align: center;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  background: #22c55e;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Selecciona tu plan</h2>
+
+<button onclick="goPay('monthly')">$5 / mes</button>
+<button onclick="goPay('3months')">$10 / 3 meses</button>
+<button onclick="goPay('6months')">$16 / 6 meses</button>
+<button onclick="goPay('year')">$25 / 1 año</button>
+
+</div>
+
 <script>
-
-// 🔐 TOKEN
-const token = localStorage.getItem("token");
-
-if (!token) {
-  alert("Debes iniciar sesión");
-  window.location.href = "/login.html";
+function goPay(plan) {
+  window.location.href = "/pay.html?plan=" + plan;
 }
-
-// 💳 COMPRAR PLAN (SIN COMISIÓN)
-async function pagar(plan, amount) {
-
-  try {
-
-    const res = await fetch('/api/plan/subscribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify({
-        plan,
-        amount // 🔥 SIN comisión
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      alert(data.error);
-      return;
-    }
-
-    const reference = data.reference;
-
-    // 💡 INFO AL USUARIO
-    alert(
-      `💳 PLAN SELECCIONADO\n\n` +
-      `💰 Total: $${amount}\n\n` +
-      `📩 Enviar a Binance\n\n` +
-      `📝 MEMO:\n${reference}`
-    );
-
-    // 🔥 LINKS BINANCE (EDITA LOS TUYOS)
-    let link = "";
-
-    if (plan === "1m") link = "https://pay.binance.com/xxxx1?memo=" + reference;
-    if (plan === "3m") link = "https://pay.binance.com/xxxx2?memo=" + reference;
-    if (plan === "6m") link = "https://pay.binance.com/xxxx3?memo=" + reference;
-    if (plan === "12m") link = "https://pay.binance.com/xxxx4?memo=" + reference;
-
-    window.location.href = link;
-
-  } catch (err) {
-    console.error(err);
-    alert("Error en el pago");
-  }
-}
-
 </script>
+
+</body>
+</html>
