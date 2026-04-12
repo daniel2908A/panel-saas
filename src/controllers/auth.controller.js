@@ -110,11 +110,15 @@ const register = async (req, res) => {
       referralCode
     });
 
-  } catch (error) {
-    console.error("ERROR REGISTRO:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
+} catch (error) {
+  console.error("🔥 ERROR REAL REGISTRO:", error);
+
+  res.status(500).json({
+    error: "Error en registro",
+    detalle: error,
+    sqlMessage: error.sqlMessage,
+    code: error.code
+  });
 
 
 // 🔥 EXPORT
