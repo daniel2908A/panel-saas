@@ -40,11 +40,14 @@ const login = async (req, res) => {
       token
     });
 
-  } catch (error) {
-    console.error("ERROR LOGIN:", error);
-    res.status(500).json({ error: "Error en login" });
-  }
-};
+  } catch (err) {
+  console.error("ERROR REGISTRO:", err);
+  res.status(500).json({
+    error: err.message || "Error en registro",
+    detalle: err
+  });
+}
+
 
 
 // 📝 REGISTER (🔥 NUEVO COMPLETO CON REFERIDOS)
