@@ -93,6 +93,7 @@ async function activarSuper(userId, months) {
   });
 
   const data = await res.json();
+  console.log("USERS RAW:", data);
   alert(data.message || data.error);
   cargarUsers();
 }
