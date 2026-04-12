@@ -39,6 +39,7 @@ button {
 
 .btn-green { background: #22c55e; }
 .btn-orange { background: #f59e0b; }
+.btn-red { background: red; }
 .logout { background: red; }
 
 .user-card {
@@ -88,12 +89,11 @@ async function activarSuper(userId, months) {
   });
 
   const data = await res.json();
-
   alert(data.message || data.error);
   cargarUsers();
 }
 
-// 💰 créditos
+// 💰 SUMAR CRÉDITOS
 async function addCredits(userId, amount) {
   const res = await fetch('/api/admin/add', {
     method: 'POST',
@@ -105,7 +105,22 @@ async function addCredits(userId, amount) {
   });
 
   const data = await res.json();
+  alert(data.message || data.error);
+  cargarUsers();
+}
 
+// ❌ RESTAR CRÉDITOS
+async function removeCredits(userId, amount) {
+  const res = await fetch('/api/admin/remove', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + TOKEN
+    },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  const data = await res.json();
   alert(data.message || data.error);
   cargarUsers();
 }
@@ -121,6 +136,10 @@ async function cargarUsers() {
   users.innerHTML = "";
 
   data.forEach(u => {
+
+    // 🔥 SOLUCIÓN CLAVE
+    const userId = u.id || u.user_id || u.id_user;
+
     const div = document.createElement("div");
     div.className = "user-card";
 
@@ -129,22 +148,29 @@ async function cargarUsers() {
       <br>💰 Créditos: $${u.credits || 0}
       <br><br>
 
-      <!-- 💰 BOTONES CRÉDITOS -->
-      <button class="btn-green" onclick="addCredits(${u.id}, 5)">+5</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 10)">+10</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 15)">+15</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 20)">+20</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 30)">+30</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 50)">+50</button>
-      <button class="btn-green" onclick="addCredits(${u.id}, 100)">+100</button>
+      <!-- SUMAR -->
+      <button class="btn-green" onclick="addCredits(${userId}, 5)">+5</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 10)">+10</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 15)">+15</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 20)">+20</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 30)">+30</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 50)">+50</button>
+      <button class="btn-green" onclick="addCredits(${userId}, 100)">+100</button>
 
       <br><br>
 
-      <!-- 🔥 BOTONES PLAN -->
-      <button class="btn-orange" onclick="activarSuper(${u.id}, 1)">1 Mes</button>
-      <button class="btn-orange" onclick="activarSuper(${u.id}, 3)">3 Meses</button>
-      <button class="btn-orange" onclick="activarSuper(${u.id}, 6)">6 Meses</button>
-      <button class="btn-orange" onclick="activarSuper(${u.id}, 12)">12 Meses</button>
+      <!-- RESTAR -->
+      <button class="btn-red" onclick="removeCredits(${userId}, 5)">-5</button>
+      <button class="btn-red" onclick="removeCredits(${userId}, 10)">-10</button>
+      <button class="btn-red" onclick="removeCredits(${userId}, 20)">-20</button>
+
+      <br><br>
+
+      <!-- PLAN -->
+      <button class="btn-orange" onclick="activarSuper(${userId}, 1)">1 Mes</button>
+      <button class="btn-orange" onclick="activarSuper(${userId}, 3)">3 Meses</button>
+      <button class="btn-orange" onclick="activarSuper(${userId}, 6)">6 Meses</button>
+      <button class="btn-orange" onclick="activarSuper(${userId}, 12)">12 Meses</button>
     `;
 
     users.appendChild(div);
