@@ -50,6 +50,11 @@ button {
 
 <img src="/img/binance-qr.png" alt="QR Binance">
 
+<div style="margin-top:15px; background:#0f172a; padding:10px; border-radius:8px;">
+  <p style="font-size:13px; color:#94a3b8;">Binance Pay ID</p>
+  <p style="font-weight:bold; font-size:16px;">1195665274</p>
+</div>
+
 <p>Escanea y paga con Binance Pay</p>
 
 <input type="file" id="proof">
@@ -65,7 +70,9 @@ const plan = params.get("plan");
 
 document.getElementById("planInfo").innerText = "Plan: " + plan;
 
+<script>
 async function enviar() {
+
   const file = document.getElementById("proof").files[0];
 
   if (!file) {
@@ -75,11 +82,10 @@ async function enviar() {
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("plan", plan);
 
   const token = localStorage.getItem("token");
 
-  const res = await fetch("/api/payment/upload", {
+  await fetch("/api/payment/upload", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token
@@ -87,12 +93,19 @@ async function enviar() {
     body: formData
   });
 
-  const data = await res.json();
+  // 🔥 WHATSAPP AUTOMÁTICO
+  const numero = "56946184516"; // 👈 TU NÚMERO AQUÍ
 
-  alert("Pago enviado, espera confirmación");
+  const mensaje = encodeURIComponent(
+    "Hola, ya realicé el pago en Nexora Panel y envié el comprobante."
+  );
+
+  window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
+
+  alert("Comprobante enviado correctamente");
+
   window.location.href = "/dashboard.html";
 }
-
 </script>
 
 </body>
