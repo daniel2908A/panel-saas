@@ -146,10 +146,6 @@ function setRole(r, el) {
   } else {
     info.innerText = "Acceso básico para vender productos";
   }
-
-  document.querySelector('.container').classList.remove('fade');
-  void document.querySelector('.container').offsetWidth;
-  document.querySelector('.container').classList.add('fade');
 }
 
 // REFERIDO DESDE URL
@@ -164,36 +160,44 @@ if (refFromUrl) {
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const referral = document.getElementById("ref").value;
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const referral = document.getElementById("ref").value.trim();
 
-  const res = await fetch("/api/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username,
-      email,
-      password,
-      role,
-      referral
-    })
-  });
+  try {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        role,
+        referral
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  // 🔥 NUEVA LÓGICA
-  if (data.error) {
-    alert(data.error);
-  } else {
-    // 💳 SI ES SUPER RESELLER → PAGO
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    // 🔥 DEBUG (puedes quitar después)
+    console.log("ROLE ENVIADO:", role);
+
+    // 💳 FLUJO DE NEGOCIO
     if (role === "super_reseller") {
       window.location.href = "/payment.html";
     } else {
-      // 👇 reseller normal entra directo
       window.location.href = "/login.html";
     }
+
+  } catch (err) {
+    alert("Error de conexión con el servidor");
+    console.error(err);
   }
 });
 </script>
