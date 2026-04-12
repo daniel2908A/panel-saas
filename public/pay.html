@@ -2,40 +2,101 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Pagar - Nexora</title>
 
 <style>
 body {
-  background: #0f172a;
+  margin: 0;
+  background: linear-gradient(135deg, #020617, #0f172a);
+  font-family: 'Segoe UI', sans-serif;
   color: white;
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
 }
 
 .container {
-  background: #1e293b;
-  padding: 30px;
-  border-radius: 15px;
-  width: 350px;
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
   text-align: center;
 }
 
+.card {
+  background: rgba(30, 41, 59, 0.9);
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,255,150,0.1);
+}
+
+h2 {
+  margin-bottom: 15px;
+}
+
+.plan {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 15px;
+}
+
 img {
-  width: 200px;
-  margin: 20px 0;
+  width: 100%;
+  max-width: 260px;
+  margin: 20px auto;
+  display: block;
+}
+
+.binance-box {
+  background: #020617;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 15px;
+}
+
+.binance-box p:first-child {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.binance-box p:last-child {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 20px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  border-radius: 8px;
 }
 
 button {
-  padding: 10px;
   width: 100%;
-  margin-top: 10px;
+  padding: 12px;
+  margin-top: 15px;
   background: #22c55e;
   border: none;
-  color: white;
+  border-radius: 10px;
+  font-weight: bold;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 10px #22c55e;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 20px;
+  }
+
+  img {
+    max-width: 220px;
+  }
 }
 </style>
 </head>
@@ -44,22 +105,26 @@ button {
 
 <div class="container">
 
+<div class="card">
+
 <h2>💳 Pago Binance</h2>
 
-<p id="planInfo"></p>
+<p class="plan" id="planInfo"></p>
 
 <img src="/img/binance-qr.png" alt="QR Binance">
 
-<div style="margin-top:15px; background:#0f172a; padding:10px; border-radius:8px;">
-  <p style="font-size:13px; color:#94a3b8;">Binance Pay ID</p>
-  <p style="font-weight:bold; font-size:16px;">1195665274</p>
+<div class="binance-box">
+  <p>Binance Pay ID</p>
+  <p>1195665274</p>
 </div>
 
-<p>Escanea y paga con Binance Pay</p>
+<p style="margin-top:10px;">Escanea y paga con Binance Pay</p>
 
 <input type="file" id="proof">
 
 <button onclick="enviar()">Enviar comprobante</button>
+
+</div>
 
 </div>
 
@@ -68,9 +133,8 @@ button {
 const params = new URLSearchParams(window.location.search);
 const plan = params.get("plan");
 
-document.getElementById("planInfo").innerText = "Plan: " + plan;
+document.getElementById("planInfo").innerText = "Plan seleccionado: " + plan;
 
-<script>
 async function enviar() {
 
   const file = document.getElementById("proof").files[0];
@@ -93,11 +157,10 @@ async function enviar() {
     body: formData
   });
 
-  // 🔥 WHATSAPP AUTOMÁTICO
-  const numero = "56946184516"; // 👈 TU NÚMERO AQUÍ
+  const numero = "56946184516";
 
   const mensaje = encodeURIComponent(
-    "Hola, ya realicé el pago en Nexora Panel y envié el comprobante."
+    "Hola, ya realicé el pago en Nexora Panel."
   );
 
   window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
@@ -106,6 +169,7 @@ async function enviar() {
 
   window.location.href = "/dashboard.html";
 }
+
 </script>
 
 </body>
