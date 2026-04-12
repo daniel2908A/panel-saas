@@ -1,91 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Pagar - Nexora Panel</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
-.container {
-  background: rgba(255,255,255,0.05);
-  padding: 30px;
-  border-radius: 20px;
-  width: 350px;
-  text-align: center;
-}
-
-h2 {
-  margin-bottom: 20px;
-}
-
-.plan {
-  background: #020617;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  transition: 0.3s;
-  border: 1px solid #38bdf8;
-}
-
-.plan:hover {
-  transform: scale(1.05);
-  background: #1e293b;
-}
-
-.price {
-  font-size: 20px;
-  color: #38bdf8;
-}
-
-.small {
-  font-size: 12px;
-  color: #aaa;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <h2>💳 Selecciona tu plan</h2>
-
-  <div class="plan" onclick="pagar('1m', 5)">
-    <div class="price">$5 / mes</div>
-    <div class="small">Acceso completo mensual</div>
-  </div>
-
-  <div class="plan" onclick="pagar('3m', 10)">
-    <div class="price">$10 / 3 meses</div>
-    <div class="small">Ahorra $5 🔥</div>
-  </div>
-
-  <div class="plan" onclick="pagar('6m', 16)">
-    <div class="price">$16 / 6 meses</div>
-    <div class="small">Mejor opción 💸</div>
-  </div>
-
-  <div class="plan" onclick="pagar('12m', 25)">
-    <div class="price">$25 / 1 año</div>
-    <div class="small">Máximo ahorro 🚀</div>
-  </div>
-
-</div>
-
 <script>
 
-// 🔥 OBTENER TOKEN (LOGIN REAL)
+// 🔐 TOKEN
 const token = localStorage.getItem("token");
 
 if (!token) {
@@ -93,39 +8,41 @@ if (!token) {
   window.location.href = "/login.html";
 }
 
-// 💳 FUNCIÓN DE PAGO
+// 💳 COMPRAR PLAN (SIN COMISIÓN)
 async function pagar(plan, amount) {
 
   try {
 
-    // 🔥 crear recarga en backend
-    const res = await fetch('/api/recharge', {
+    const res = await fetch('/api/plan/subscribe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
       },
-      body: JSON.stringify({ amount })
+      body: JSON.stringify({
+        plan,
+        amount // 🔥 SIN comisión
+      })
     });
 
     const data = await res.json();
 
-    if (!data.success) {
-      alert(data.error || "Error creando recarga");
+    if (data.error) {
+      alert(data.error);
       return;
     }
 
     const reference = data.reference;
-    const total = data.total;
 
-    // 💡 Mostrar info al usuario
+    // 💡 INFO AL USUARIO
     alert(
-      `💰 Total a pagar: $${total}\n\n` +
+      `💳 PLAN SELECCIONADO\n\n` +
+      `💰 Total: $${amount}\n\n` +
       `📩 Enviar a Binance\n\n` +
       `📝 MEMO:\n${reference}`
     );
 
-    // 🔥 REDIRECCIÓN BINANCE (REEMPLAZAR)
+    // 🔥 LINKS BINANCE (EDITA LOS TUYOS)
     let link = "";
 
     if (plan === "1m") link = "https://pay.binance.com/xxxx1?memo=" + reference;
@@ -142,6 +59,3 @@ async function pagar(plan, amount) {
 }
 
 </script>
-
-</body>
-</html>
