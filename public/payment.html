@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagar - Nexora Panel</title>
+  <style>
+    body {
+      background: #0a0f1c;
+      color: white;
+      font-family: Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: #111827;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 350px;
+    }
+
+    h1 {
+      color: #00ff88;
+    }
+
+    button {
+      background: #f0b90b;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .info {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Activar Cuenta</h1>
+    <p>Plan Super Reseller</p>
+    <h2>$10 USD</h2>
+
+    <button onclick="pagar()">Pagar con Binance</button>
+
+    <div class="info">
+      Una vez realizado el pago, tu cuenta será activada.
+    </div>
+  </div>
+
+  <script>
+    function pagar() {
+      // 🔥 CAMBIA ESTE LINK POR TU BINANCE PAY
+      window.location.href = "https://pay.binance.com/tu-link-aqui";
+    }
+  </script>
+
+</body>
+</html>
