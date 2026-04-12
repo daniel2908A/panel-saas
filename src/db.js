@@ -1,5 +1,8 @@
-throw new Error("🔥 ESTE DB.JS SE ESTA USANDO 🔥");
 const mysql = require('mysql2/promise');
+
+console.log("🔥 MYSQLHOST:", process.env.MYSQLHOST);
+console.log("🔥 MYSQLUSER:", process.env.MYSQLUSER);
+console.log("🔥 MYSQLDATABASE:", process.env.MYSQLDATABASE);
 
 const db = mysql.createPool({
   host: process.env.MYSQLHOST,
@@ -7,10 +10,6 @@ const db = mysql.createPool({
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-
-  waitForConnections: true,
-  connectionLimit: 10,
 });
-console.log("🔥 USANDO DB CORRECTA:", process.env.MYSQLHOST);
-console.log("🚀 VERSION NUEVA DB ACTIVADA");
+
 module.exports = db;
