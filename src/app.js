@@ -8,6 +8,9 @@ const cors = require('cors');
 
 const app = express();
 
+// 🔥 IMPORTANTE: DB
+const db = require('./db'); // 👈 ASEGÚRATE QUE ESTA RUTA ES CORRECTA
+
 // 🔥 MIDDLEWARES
 app.use(cors());
 app.use(express.json());
@@ -26,7 +29,7 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const resellerRoutes = require('./routes/reseller.routes');
 const commissionRoutes = require('./routes/commission.routes');
 
-// 🔥 NUEVO: PLANES (AQUÍ ESTÁ LO IMPORTANTE)
+// 🔥 NUEVO: PLANES
 const planRoutes = require('./routes/plan.routes');
 
 // 🔥 NUEVO: WEBHOOK BINANCE
@@ -46,11 +49,39 @@ app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reseller', resellerRoutes);
 
-// 🔥 ACTIVAR PLANES (CLAVE)
+// 🔥 PLANES
 app.use('/api/plan', planRoutes);
 
-// 🔥 ACTIVAR WEBHOOK
+// 🔥 WEBHOOK
 app.use('/api/webhook', webhookRoutes);
+
+// =======================================
+// 🔥🔥🔥 FIX BASE DE DATOS (TEMPORAL)
+// =======================================
+app.get('/fix-db', async (req, res) => {
+  try {
+
+    // arreglar columna id
+    await db.query(`
+      ALTER TABLE users 
+      MODIFY id INT NOT NULL AUTO_INCREMENT
+    `);
+
+    // asegurar primary key
+    await db.query(`
+      ALTER TABLE users 
+      ADD PRIMARY KEY (id)
+    `);
+
+    res.send("✅ DB ARREGLADA CORRECTAMENTE");
+
+  } catch (err) {
+    console.error(err);
+    res.send("❌ ERROR AL ARREGLAR DB");
+  }
+});
+// =======================================
+
 
 // 🔥 RUTA PRINCIPAL
 app.get('/', (req, res) => {
