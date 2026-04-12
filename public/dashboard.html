@@ -102,18 +102,15 @@
 const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
 
-// 🔒 protección
 if (!token) {
   window.location.href = "/login.html";
 }
 
-// 🔥 CONTROL DE ROLES
 if (!role) {
   alert("Error de sesión");
   window.location.href = "/login.html";
 }
 
-// 🔥 CAMBIAR TÍTULO SEGÚN ROL
 const title = document.getElementById("title");
 
 if (role === "admin") {
@@ -124,11 +121,8 @@ if (role === "admin") {
   title.innerText = "Dashboard Usuario";
 }
 
-
-// 📊 STATS
 async function loadStats() {
 
-  // 🔥 SI ES ADMIN USA /admin/stats
   const url = role === "admin" 
     ? '/api/admin/stats' 
     : '/api/dashboard';
@@ -139,6 +133,7 @@ async function loadStats() {
 
   const data = await res.json();
 
+  // 🔥 ESTE ES EL IMPORTANTE
   const userRes = await fetch('/api/user/me', {
     headers: { Authorization: 'Bearer ' + token }
   });
@@ -175,7 +170,6 @@ async function loadStats() {
 
   let adminSection = "";
 
-  // 🔥 SOLO ADMIN VE ESTO
   if (role === "admin") {
     adminSection = `
       <div class="card">
@@ -210,7 +204,7 @@ async function loadStats() {
 
       <div class="card">
         <h3>💸 Créditos</h3>
-        <p>$${data.credits || 0}</p>
+        <p>$${user.credits || 0}</p> <!-- 🔥 FIX AQUÍ -->
       </div>
 
       <div class="card">
@@ -231,8 +225,6 @@ async function loadStats() {
   `;
 }
 
-
-// 🔥 ACTIVAR USUARIO (SOLO ADMIN)
 async function activarUsuario() {
 
   if (role !== "admin") {
@@ -256,8 +248,6 @@ async function activarUsuario() {
   alert(data.message || data.error);
 }
 
-
-// 👥 USERS
 async function loadUsers() {
 
   if (role !== "admin") {
@@ -285,8 +275,6 @@ async function loadUsers() {
   document.getElementById('data').innerHTML = html;
 }
 
-
-// 📦 PRODUCTS
 async function loadProducts() {
   const res = await fetch('/api/products', {
     headers: { Authorization: 'Bearer ' + token }
@@ -303,16 +291,12 @@ async function loadProducts() {
   document.getElementById('data').innerHTML = html;
 }
 
-
-// 🚪 logout
 function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
   window.location.href = '/';
 }
 
-
-// INIT
 loadStats();
 
 </script>
