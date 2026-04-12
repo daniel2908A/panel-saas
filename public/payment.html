@@ -61,22 +61,22 @@ h2 {
 
   <h2>💳 Selecciona tu plan</h2>
 
-  <div class="plan" onclick="pagar('1m')">
+  <div class="plan" onclick="pagar('1m', 5)">
     <div class="price">$5 / mes</div>
     <div class="small">Acceso completo mensual</div>
   </div>
 
-  <div class="plan" onclick="pagar('3m')">
+  <div class="plan" onclick="pagar('3m', 10)">
     <div class="price">$10 / 3 meses</div>
     <div class="small">Ahorra $5 🔥</div>
   </div>
 
-  <div class="plan" onclick="pagar('6m')">
+  <div class="plan" onclick="pagar('6m', 16)">
     <div class="price">$16 / 6 meses</div>
     <div class="small">Mejor opción 💸</div>
   </div>
 
-  <div class="plan" onclick="pagar('12m')">
+  <div class="plan" onclick="pagar('12m', 25)">
     <div class="price">$25 / 1 año</div>
     <div class="small">Máximo ahorro 🚀</div>
   </div>
@@ -85,35 +85,60 @@ h2 {
 
 <script>
 
-// ⚠️ IMPORTANTE: asegúrate de guardar email en login/register
-// ejemplo: localStorage.setItem("email", email);
+// 🔥 OBTENER TOKEN (LOGIN REAL)
+const token = localStorage.getItem("token");
 
-function pagar(plan) {
+if (!token) {
+  alert("Debes iniciar sesión");
+  window.location.href = "/login.html";
+}
 
-  const email = localStorage.getItem("email");
+// 💳 FUNCIÓN DE PAGO
+async function pagar(plan, amount) {
 
-  if (!email) {
-    alert("Error: no se detecta usuario");
-    return;
+  try {
+
+    // 🔥 crear recarga en backend
+    const res = await fetch('/api/recharge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ amount })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.error || "Error creando recarga");
+      return;
+    }
+
+    const reference = data.reference;
+    const total = data.total;
+
+    // 💡 Mostrar info al usuario
+    alert(
+      `💰 Total a pagar: $${total}\n\n` +
+      `📩 Enviar a Binance\n\n` +
+      `📝 MEMO:\n${reference}`
+    );
+
+    // 🔥 REDIRECCIÓN BINANCE (REEMPLAZAR)
+    let link = "";
+
+    if (plan === "1m") link = "https://pay.binance.com/xxxx1?memo=" + reference;
+    if (plan === "3m") link = "https://pay.binance.com/xxxx2?memo=" + reference;
+    if (plan === "6m") link = "https://pay.binance.com/xxxx3?memo=" + reference;
+    if (plan === "12m") link = "https://pay.binance.com/xxxx4?memo=" + reference;
+
+    window.location.href = link;
+
+  } catch (err) {
+    console.error(err);
+    alert("Error en el pago");
   }
-
-  // guardamos plan
-  localStorage.setItem("plan", plan);
-
-  // 🔥 IDENTIFICADOR DE PAGO
-  const reference = email + "|" + plan;
-
-  console.log("Referencia de pago:", reference);
-
-  let link = "";
-
-  // ⚠️ REEMPLAZA ESTOS LINKS CON LOS TUYOS DE BINANCE
-  if (plan === "1m") link = "https://pay.binance.com/xxxx1?memo=" + reference;
-  if (plan === "3m") link = "https://pay.binance.com/xxxx2?memo=" + reference;
-  if (plan === "6m") link = "https://pay.binance.com/xxxx3?memo=" + reference;
-  if (plan === "12m") link = "https://pay.binance.com/xxxx4?memo=" + reference;
-
-  window.location.href = link;
 }
 
 </script>
