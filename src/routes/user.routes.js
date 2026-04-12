@@ -3,9 +3,9 @@ const router = express.Router();
 
 const userController = require('../controllers/user.controller');
 
-// 🔥 FIX REAL AQUÍ
-const auth = require('../middleware/authMiddleware');
-const requireRole = require('../middlewares/role.middleware');
+// ✅ CORREGIDO
+const auth = require('../middleware/auth.middleware');
+const requireRole = require('../middleware/role.middleware');
 
 const db = require('../db');
 
