@@ -1,4 +1,4 @@
-module.exports = function requireRole(...rolesPermitidos) {
+module.exports = function requireRole(rolesPermitidos = [], options = {}) {
   return (req, res, next) => {
     try {
       const user = req.user;
@@ -8,12 +8,14 @@ module.exports = function requireRole(...rolesPermitidos) {
         return res.status(401).json({ error: "No autorizado" });
       }
 
-      // 🔥 admin SIEMPRE puede todo
-      if (user.role === 'admin') {
+      const { allowAdmin = true } = options;
+
+      // 🔥 admin puede todo (si está permitido)
+      if (allowAdmin && user.role === 'admin') {
         return next();
       }
 
-      // 🔎 validar rol permitido
+      // ❌ validar rol permitido
       if (!rolesPermitidos.includes(user.role)) {
         return res.status(403).json({ error: "Acceso denegado" });
       }
