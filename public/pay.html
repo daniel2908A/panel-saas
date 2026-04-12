@@ -14,54 +14,76 @@ body {
   color: white;
 }
 
+/* CONTENEDOR */
 .container {
-  max-width: 420px;
+  max-width: 480px;
   margin: auto;
   padding: 20px;
   text-align: center;
 }
 
+/* CARD */
 .card {
-  background: rgba(30, 41, 59, 0.9);
+  background: rgba(30, 41, 59, 0.95);
   padding: 25px;
   border-radius: 20px;
-  box-shadow: 0 0 30px rgba(0,255,150,0.1);
+  box-shadow: 0 0 40px rgba(0,255,150,0.15);
 }
 
+/* TITULO */
 h2 {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
+/* PLAN */
 .plan {
   font-size: 14px;
   color: #94a3b8;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
+/* QR */
 img {
   width: 100%;
-  max-width: 260px;
+  max-width: 300px;
   margin: 20px auto;
   display: block;
+  border-radius: 12px;
 }
 
+/* CAJA BINANCE */
 .binance-box {
   background: #020617;
-  padding: 15px;
+  padding: 18px;
   border-radius: 12px;
   margin-top: 15px;
 }
 
+/* TEXTO ID */
 .binance-box p:first-child {
   font-size: 13px;
   color: #94a3b8;
 }
 
 .binance-box p:last-child {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
 }
 
+/* BOTONES EXTRA */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.actions button {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+}
+
+/* INPUT */
 input {
   width: 100%;
   padding: 10px;
@@ -72,6 +94,7 @@ input {
   border-radius: 8px;
 }
 
+/* BOTON */
 button {
   width: 100%;
   padding: 12px;
@@ -89,13 +112,10 @@ button:hover {
   box-shadow: 0 0 10px #22c55e;
 }
 
+/* RESPONSIVE */
 @media (max-width: 480px) {
-  .card {
-    padding: 20px;
-  }
-
   img {
-    max-width: 220px;
+    max-width: 260px;
   }
 }
 </style>
@@ -115,10 +135,15 @@ button:hover {
 
 <div class="binance-box">
   <p>Binance Pay ID</p>
-  <p>1195665274</p>
+  <p id="binanceId">1195665274</p>
 </div>
 
-<p style="margin-top:10px;">Escanea y paga con Binance Pay</p>
+<div class="actions">
+  <button onclick="copiarID()">📋 Copiar</button>
+  <button onclick="abrirBinance()">🚀 Abrir App</button>
+</div>
+
+<p style="margin-top:15px;">Escanea o paga manual con Binance Pay</p>
 
 <input type="file" id="proof">
 
@@ -135,6 +160,28 @@ const plan = params.get("plan");
 
 document.getElementById("planInfo").innerText = "Plan seleccionado: " + plan;
 
+/* COPIAR ID */
+function copiarID() {
+  const id = document.getElementById("binanceId").innerText;
+  navigator.clipboard.writeText(id);
+  alert("ID copiado");
+}
+
+/* DETECTAR MOVIL */
+function esMovil() {
+  return /Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+
+/* ABRIR BINANCE */
+function abrirBinance() {
+  if (esMovil()) {
+    window.location.href = "bnc://app.binance.com";
+  } else {
+    alert("Abre Binance en tu teléfono para escanear");
+  }
+}
+
+/* ENVIAR COMPROBANTE */
 async function enviar() {
 
   const file = document.getElementById("proof").files[0];
@@ -160,7 +207,7 @@ async function enviar() {
   const numero = "56946184516";
 
   const mensaje = encodeURIComponent(
-    "Hola, ya realicé el pago en Nexora Panel."
+    "Hola, ya realicé el pago en Nexora Panel (" + plan + ")"
   );
 
   window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
