@@ -3,30 +3,20 @@ const router = express.Router();
 
 const userController = require('../controllers/user.controller');
 
-const auth = require('../middleware/auth.middleware');
-const requireRole = require('../middleware/role.middleware');
-const db = require('../db'); // 🔥 IMPORTANTE
+// 🔥 CORREGIDO AQUÍ
+const auth = require('../middlewares/auth.middleware');
+const requireRole = require('../middlewares/role.middleware');
+
+const db = require('../db');
 
 // 🔥 DATOS DEL USUARIO
-router.get(
-  '/me',
-  auth,
-  userController.getMe
-);
+router.get('/me', auth, userController.getMe);
 
 // 💰 VER CRÉDITOS
-router.get(
-  '/credits',
-  auth,
-  userController.getCredits
-);
+router.get('/credits', auth, userController.getCredits);
 
 // 💸 HISTORIAL DE COMISIONES
-router.get(
-  '/commissions',
-  auth,
-  userController.getMyCommissions
-);
+router.get('/commissions', auth, userController.getMyCommissions);
 
 // ➕ AGREGAR CRÉDITOS
 router.post(
@@ -60,23 +50,19 @@ router.post(
   userController.createClient
 );
 
-
-
 // ======================================
-// 🔥 NUEVO: REFERIDOS (LO IMPORTANTE 💸)
+// 🔥 REFERIDOS
 // ======================================
 
 router.get('/referrals', auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 🔎 Obtener referidos
     const [referrals] = await db.query(
       "SELECT id, username, email, created_at FROM users WHERE parent_id = ?",
       [userId]
     );
 
-    // 🔎 Obtener mi código
     const [me] = await db.query(
       "SELECT ref_code FROM users WHERE id = ?",
       [userId]
@@ -93,7 +79,5 @@ router.get('/referrals', auth, async (req, res) => {
     res.status(500).json({ error: "Error obteniendo referidos" });
   }
 });
-
-
 
 module.exports = router;
