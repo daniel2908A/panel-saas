@@ -61,21 +61,30 @@ app.use('/api/webhook', webhookRoutes);
 app.get('/fix-db', async (req, res) => {
   try {
 
-    // 1. Ver datos actuales
-    const [rows] = await db.query("SELECT * FROM users");
-    console.log("USERS ACTUALES:", rows);
-
-    // 2. Intentar corregir ID (sin romper PK)
+    // 1. quitar AUTO_INCREMENT primero (si existe mal)
     await db.query(`
-      ALTER TABLE users 
-      MODIFY id INT NOT NULL AUTO_INCREMENT
+      ALTER TABLE users MODIFY id INT
     `);
 
-    res.send("✅ ID CORREGIDO (AUTO_INCREMENT)");
+    // 2. eliminar primary key si existe (evita conflicto)
+    try {
+      await db.query(`ALTER TABLE users DROP PRIMARY KEY`);
+    } catch (e) {
+      console.log("No tenía PK, seguimos...");
+    }
+
+    // 3. ahora sí dejarlo correcto
+    await db.query(`
+      ALTER TABLE users 
+      MODIFY id INT NOT NULL AUTO_INCREMENT,
+      ADD PRIMARY KEY (id)
+    `);
+
+    res.send("✅ DB ARREGLADA CORRECTAMENTE");
 
   } catch (err) {
-    console.error("ERROR FIX DB:", err);
-    res.send("❌ ERROR REAL: " + err.message);
+    console.error(err);
+    res.send("❌ ERROR: " + err.message);
   }
 });
 // =======================================
