@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../db');
 
 // 💰 PANEL DE GANANCIAS
 exports.getMyEarnings = async (req, res) => {

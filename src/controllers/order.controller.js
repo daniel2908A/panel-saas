@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../db');
 const commissionService = require('../services/commission.service');
 
 // 🛒 COMPRA CON ENTREGA + COMISIONES

@@ -1,5 +1,5 @@
 const depositService = require("../services/deposit.service");
-const db = require('../config/db'); // 🔥 IMPORTANTE
+const db = require('../db'); // 🔥 IMPORTANTE
 
 // 🧾 Crear depósito
 exports.createDeposit = async (req, res) => {

@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../db');
 
 // 🔹 CREAR PRODUCTO
 exports.createProduct = async (req, res) => {

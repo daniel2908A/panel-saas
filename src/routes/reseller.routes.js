@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
+const db = require('../db');
 const authMiddleware = require('../middleware/auth.middleware');
 
 // 🔹 Crear usuario desde reseller

@@ -5,7 +5,7 @@ const userController = require('../controllers/user.controller');
 
 const auth = require('../middleware/auth.middleware');
 const requireRole = require('../middleware/role.middleware');
-const db = require('../config/db'); // 🔥 IMPORTANTE
+const db = require('../db'); // 🔥 IMPORTANTE
 
 // 🔥 DATOS DEL USUARIO
 router.get(

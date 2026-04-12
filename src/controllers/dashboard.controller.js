@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../db');
 
 exports.getDashboard = async (req, res) => {
   const userId = req.user.id;
