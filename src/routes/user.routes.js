@@ -4,7 +4,7 @@ const router = express.Router();
 const userController = require('../controllers/user.controller');
 
 // 🔥 FIX REAL AQUÍ
-const auth = require('../middlewares/authMiddleware');
+const auth = require('../middleware/authMiddleware');
 const requireRole = require('../middlewares/role.middleware');
 
 const db = require('../db');
