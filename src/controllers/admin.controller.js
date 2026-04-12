@@ -1,6 +1,7 @@
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 
+
 // 👑 CREAR RESELLER
 exports.createReseller = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ exports.createReseller = async (req, res) => {
 };
 
 
-// 👥 LISTAR USUARIOS (OK)
+// 👥 LISTAR USUARIOS
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
@@ -53,19 +54,20 @@ exports.getAllUsers = async (req, res) => {
 };
 
 
-// 💰 AGREGAR CRÉDITOS (FIX)
+// 💰 AGREGAR CRÉDITOS
 exports.addCreditsToUser = async (req, res) => {
   try {
     let { userId, amount } = req.body;
 
-    if (!userId || !amount) {
+    if (!userId || amount === undefined) {
       return res.status(400).json({ error: "Datos incompletos" });
     }
 
+    userId = parseInt(userId);
     amount = parseFloat(amount);
 
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ error: "Monto inválido" });
+    if (isNaN(userId) || isNaN(amount)) {
+      return res.status(400).json({ error: "Datos inválidos" });
     }
 
     await db.query(
@@ -76,21 +78,18 @@ exports.addCreditsToUser = async (req, res) => {
     res.json({ message: "Créditos agregados correctamente" });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error agregando créditos" });
+    console.error("ERROR ADD CREDITS:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
 
-// ❌ RESTAR CRÉDITOS (NUEVO)
+// ❌ RESTAR CRÉDITOS
 exports.removeCreditsFromUser = async (req, res) => {
   try {
     let { userId, amount } = req.body;
 
-    if (!userId || !amount) {
-      return res.status(400).json({ error: "Datos incompletos" });
-    }
-
+    userId = parseInt(userId);
     amount = parseFloat(amount);
 
     const [users] = await db.query(
@@ -114,8 +113,40 @@ exports.removeCreditsFromUser = async (req, res) => {
     res.json({ message: "Créditos descontados correctamente" });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error quitando créditos" });
+    console.error("ERROR REMOVE CREDITS:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+
+// 🔥 ACTIVAR SUSCRIPCIÓN (LO QUE TE FALTABA)
+exports.activateUserPlan = async (req, res) => {
+  try {
+    const { email, plan } = req.body;
+
+    if (!email || !plan) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    let months = 1;
+
+    if (plan === "3m") months = 3;
+    if (plan === "6m") months = 6;
+    if (plan === "12m") months = 12;
+
+    const expireDate = new Date();
+    expireDate.setMonth(expireDate.getMonth() + months);
+
+    await db.query(
+      "UPDATE users SET plan = ?, expires_at = ? WHERE email = ?",
+      [plan, expireDate, email]
+    );
+
+    res.json({ message: "Plan activado correctamente" });
+
+  } catch (error) {
+    console.error("ERROR PLAN:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 

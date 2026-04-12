@@ -6,7 +6,7 @@ const adminController = require('../controllers/admin.controller');
 const auth = require('../middleware/auth.middleware');
 const requireRole = require('../middleware/role.middleware');
 
-const db = require('../db'); // 🔥 IMPORTANTE
+const db = require('../db');
 
 
 // 👑 CREAR RESELLER
@@ -36,7 +36,7 @@ router.get(
 );
 
 
-// 💰 AGREGAR CRÉDITOS (MANUAL ADMIN)
+// 💰 AGREGAR CRÉDITOS (FIX REAL)
 router.post(
   '/add',
   auth,
@@ -45,31 +45,19 @@ router.post(
     try {
       const { userId, amount } = req.body;
 
-      if (!userId || !amount) {
+      if (!userId || amount === undefined) {
         return res.status(400).json({ error: 'Datos incompletos' });
       }
 
-      if (amount <= 0) {
+      const value = parseFloat(amount);
+
+      if (isNaN(value)) {
         return res.status(400).json({ error: 'Monto inválido' });
       }
 
-      const [user] = await db.query(
-        'SELECT id FROM users WHERE id = ?',
-        [userId]
-      );
-
-      if (!user.length) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
       await db.query(
-        'UPDATE credits SET balance = balance + ? WHERE user_id = ?',
-        [amount, userId]
-      );
-
-      await db.query(
-        'INSERT INTO credit_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
-        [userId, amount, 'add', 'Recarga manual por admin']
+        'UPDATE users SET credits = credits + ? WHERE id = ?',
+        [value, userId]
       );
 
       res.json({
@@ -78,14 +66,14 @@ router.post(
       });
 
     } catch (err) {
-      console.error('Error en /add:', err);
+      console.error('ERROR ADD:', err);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 );
 
 
-// ❌ RESTAR CRÉDITOS
+// ❌ RESTAR CRÉDITOS (FIX)
 router.post(
   '/remove',
   auth,
@@ -94,37 +82,24 @@ router.post(
     try {
       const { userId, amount } = req.body;
 
-      if (!userId || !amount) {
-        return res.status(400).json({ error: 'Datos incompletos' });
-      }
-
-      if (amount <= 0) {
-        return res.status(400).json({ error: 'Monto inválido' });
-      }
+      const value = parseFloat(amount);
 
       const [rows] = await db.query(
-        'SELECT balance FROM credits WHERE user_id = ?',
+        'SELECT credits FROM users WHERE id = ?',
         [userId]
       );
 
       if (!rows.length) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
+        return res.status(404).json({ error: 'Usuario no existe' });
       }
 
-      const current = rows[0].balance;
-
-      if (current < amount) {
+      if (rows[0].credits < value) {
         return res.status(400).json({ error: 'Saldo insuficiente' });
       }
 
       await db.query(
-        'UPDATE credits SET balance = balance - ? WHERE user_id = ?',
-        [amount, userId]
-      );
-
-      await db.query(
-        'INSERT INTO credit_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
-        [userId, amount, 'remove', 'Descuento manual por admin']
+        'UPDATE users SET credits = credits - ? WHERE id = ?',
+        [value, userId]
       );
 
       res.json({
@@ -133,14 +108,14 @@ router.post(
       });
 
     } catch (err) {
-      console.error('Error en /remove:', err);
+      console.error('ERROR REMOVE:', err);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 );
 
 
-// 🔥 ACTIVAR SUPER RESELLER CON TIEMPO
+// 🔥 ACTIVAR SUPER RESELLER (FIX)
 router.post(
   '/activar-superreseller',
   auth,
@@ -158,8 +133,8 @@ router.post(
 
       await db.query(`
         UPDATE users 
-        SET role = 'superreseller',
-            plan_expires_at = ?
+        SET role = 'super_reseller',
+            expires_at = ?
         WHERE id = ?
       `, [expires, userId]);
 
@@ -169,7 +144,7 @@ router.post(
       });
 
     } catch (error) {
-      console.error('Error en activar-superreseller:', error);
+      console.error('ERROR SUPER RESELLER:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
