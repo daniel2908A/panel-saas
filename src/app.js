@@ -26,6 +26,9 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const resellerRoutes = require('./routes/reseller.routes');
 const commissionRoutes = require('./routes/commission.routes');
 
+// 🔥 NUEVO: PLANES (AQUÍ ESTÁ LO IMPORTANTE)
+const planRoutes = require('./routes/plan.routes');
+
 // 🔥 NUEVO: WEBHOOK BINANCE
 const webhookRoutes = require('./routes/webhook.routes');
 
@@ -42,6 +45,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reseller', resellerRoutes);
+
+// 🔥 ACTIVAR PLANES (CLAVE)
+app.use('/api/plan', planRoutes);
 
 // 🔥 ACTIVAR WEBHOOK
 app.use('/api/webhook', webhookRoutes);
