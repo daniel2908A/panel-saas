@@ -23,9 +23,6 @@ const login = async (req, res) => {
 
     const user = users[0];
 
-    // 🔥 IMPORTANTE: PERMITIR LOGIN (QUITAMOS BLOQUEO)
-    // luego puedes validar esto en otras rutas
-
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -57,7 +54,7 @@ const login = async (req, res) => {
 };
 
 
-// 📝 REGISTER (igual que antes)
+// 📝 REGISTER (🔥 AUTO LOGIN)
 const register = async (req, res) => {
   try {
     const { username, email, password, role, referral } = req.body;
@@ -106,20 +103,29 @@ const register = async (req, res) => {
 
     const referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    await db.query(
+    // 🔥 INSERT USER
+    const [result] = await db.query(
       `INSERT INTO users (username, email, password, role, credits, parent_id, referral_code)
        VALUES (?, ?, ?, ?, 0, ?, ?)`,
       [username, email, hashedPassword, userRole, parentId, referralCode]
     );
 
+    // 🔥 AUTO LOGIN (CLAVE)
+    const token = jwt.sign(
+      { id: result.insertId, role: userRole },
+      process.env.JWT_SECRET || "secretkey",
+      { expiresIn: "7d" }
+    );
+
     res.json({
       message: "Usuario registrado",
+      token,
       role: userRole,
       referralCode
     });
 
   } catch (error) {
-    console.error("🔥 ERROR REAL REGISTRO:", error);
+    console.error("🔥 ERROR REGISTRO:", error);
 
     res.status(500).json({
       error: "Error en registro"

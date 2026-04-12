@@ -93,21 +93,12 @@ button:hover {
   color: #aaa;
   margin-bottom: 10px;
 }
-
-.fade {
-  animation: fade 0.3s ease;
-}
-
-@keyframes fade {
-  from { opacity: 0; transform: translateY(10px);}
-  to { opacity: 1; transform: translateY(0);}
-}
 </style>
 </head>
 
 <body>
 
-<div class="container fade">
+<div class="container">
 
 <h2>Crear Cuenta</h2>
 
@@ -185,15 +176,12 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
-    // 🔥 DEBUG (puedes quitar después)
-    console.log("ROLE ENVIADO:", role);
+    // 🔥 GUARDAR TOKEN (ESTO ES LO QUE FALTABA)
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("email", email);
 
-    // 💳 FLUJO DE NEGOCIO
-    if (role === "super_reseller") {
-      window.location.href = "/payment.html";
-    } else {
-      window.location.href = "/login.html";
-    }
+    // 🔥 REDIRECCIÓN CORRECTA
+    window.location.href = "/payment.html";
 
   } catch (err) {
     alert("Error de conexión con el servidor");
