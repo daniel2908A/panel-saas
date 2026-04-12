@@ -23,6 +23,13 @@ const login = async (req, res) => {
 
     const user = users[0];
 
+    // 🔒 BLOQUEO SI NO HA PAGADO
+    if (user.status !== "active") {
+      return res.status(403).json({
+        error: "Debes pagar para activar tu cuenta"
+      });
+    }
+
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -46,7 +53,7 @@ const login = async (req, res) => {
       error: "Error en login"
     });
   }
-}; // 🔥 ESTA LÍNEA FALTABA
+};
 
 
 // 📝 REGISTER
@@ -110,17 +117,18 @@ const register = async (req, res) => {
       referralCode
     });
 
-} catch (error) {
-  console.error("🔥 ERROR REAL REGISTRO:", error);
+  } catch (error) {
+    console.error("🔥 ERROR REAL REGISTRO:", error);
 
-  res.status(500).json({
-    error: "Error en registro",
-    detalle: error,
-    sqlMessage: error.sqlMessage,
-    code: error.code
-  });
-}
+    res.status(500).json({
+      error: "Error en registro",
+      detalle: error,
+      sqlMessage: error.sqlMessage,
+      code: error.code
+    });
+  }
 };
+
 
 // 🔥 EXPORT
 module.exports = {
