@@ -1,28 +1,23 @@
-module.exports = function requireRole(rolesPermitidos = [], options = {}) {
+module.exports = (...roles) => {
   return (req, res, next) => {
     try {
+
       const user = req.user;
 
-      // 🔒 validar login
       if (!user) {
         return res.status(401).json({ error: "No autorizado" });
       }
 
-      const { allowAdmin = true } = options;
+      // 🔥 DEBUG (muy importante)
+      console.log("ROL USUARIO:", user.role);
+      console.log("ROLES PERMITIDOS:", roles);
 
-      // 🔥 admin puede todo
-      if (allowAdmin && user.role === 'admin') {
+      // 🔥 permitir admin siempre
+      if (user.role === 'admin') {
         return next();
       }
 
-      // 🧠 NORMALIZAR (acepta string o array)
-      let roles = rolesPermitidos;
-
-      if (!Array.isArray(rolesPermitidos)) {
-        roles = [rolesPermitidos];
-      }
-
-      // ❌ validar rol
+      // 🔥 validar roles
       if (!roles.includes(user.role)) {
         return res.status(403).json({ error: "Acceso denegado" });
       }
@@ -30,7 +25,7 @@ module.exports = function requireRole(rolesPermitidos = [], options = {}) {
       next();
 
     } catch (error) {
-      console.error("Error en role.middleware:", error);
+      console.error("ERROR ROLE:", error);
       res.status(500).json({ error: "Error interno" });
     }
   };

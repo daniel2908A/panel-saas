@@ -10,32 +10,32 @@ const requireRole = require('../middleware/role.middleware');
 router.post(
   '/',
   auth,
-  requireRole('admin', 'super_reseller'),
+  requireRole(['admin', 'super_reseller']), // ✅ CORRECTO
   productController.createProduct
 );
 
-// 📦 LISTAR PRODUCTOS (PRIVADO)
+// 📦 LISTAR PRODUCTOS
 router.get('/', auth, productController.getProducts);
 
-// 🔓 PRODUCTOS PÚBLICOS
+// 🔓 PÚBLICOS
 router.get('/public', productController.getProductsPublic);
 
-// 🔍 OBTENER UNO
+// 🔍 UNO
 router.get('/:id', auth, productController.getProductById);
 
-// ✏️ EDITAR PRODUCTO (ADMIN + SUPER RESELLER)
+// ✏️ EDITAR
 router.put(
   '/:id',
   auth,
-  requireRole('admin', 'super_reseller'),
+  requireRole(['admin', 'super_reseller']), // ✅ CORRECTO
   productController.updateProduct
 );
 
-// ❌ ELIMINAR PRODUCTO (ADMIN + SUPER RESELLER)
+// ❌ ELIMINAR
 router.delete(
   '/:id',
   auth,
-  requireRole('admin', 'super_reseller'),
+  requireRole(['admin', 'super_reseller']), // ✅ CORRECTO
   productController.deleteProduct
 );
 
