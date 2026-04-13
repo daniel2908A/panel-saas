@@ -169,76 +169,93 @@ async function loadStats(){
 
   document.getElementById("title").innerText = "Dashboard";
 
-  const res = await fetch('/api/dashboard',{
-    headers:{Authorization:"Bearer "+token}
-  });
+  try{
 
-  const data = await res.json();
+    const res = await fetch('/api/dashboard',{
+      headers:{Authorization:"Bearer "+token}
+    });
 
-  let expireText = "Sin fecha";
-  let daysLeft = 0;
-  let statusColor = "#ef4444";
-  let statusText = "Sin plan";
+    if(!res.ok) throw new Error("API FALLÓ");
 
-  if(data.expire){
-    const expireDate = new Date(data.expire);
-    const today = new Date();
+    const data = await res.json();
 
-    const diff = expireDate - today;
-    daysLeft = Math.ceil(diff / (1000*60*60*24));
+    let expireText = "Sin fecha";
+    let daysLeft = 0;
+    let statusColor = "#ef4444";
+    let statusText = "Sin plan";
 
-    expireText = expireDate.toLocaleDateString();
+    if(data.expire){
 
-    if(daysLeft > 0){
-      statusColor = "#22c55e";
-      statusText = "Activo";
-    } else {
-      statusText = "Expirado";
+      const expireDate = new Date(data.expire);
+      const today = new Date();
+
+      const diff = expireDate - today;
+      daysLeft = Math.ceil(diff / (1000*60*60*24));
+
+      expireText = expireDate.toLocaleDateString();
+
+      if(daysLeft > 0){
+        statusColor = "#22c55e";
+        statusText = "Activo";
+      } else {
+        statusText = "Expirado";
+      }
     }
+
+    document.getElementById('data').innerHTML = `
+      <div class="grid">
+
+        <div class="card">
+          💰 Ventas
+          <h2>$${data.sales || 0}</h2>
+        </div>
+
+        <div class="card">
+          👤 Usuarios
+          <h2>${data.users || 0}</h2>
+        </div>
+
+        <div class="card">
+          💳 Créditos
+          <h2 style="color:#4ade80;">$${data.credits ?? 0}</h2>
+        </div>
+
+        <div class="card">
+          📅 Suscripción<br><br>
+
+          <b>${data.plan || "SIN PLAN"}</b><br>
+          ${expireText}<br><br>
+
+          <span style="
+            display:inline-block;
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            background:${statusColor};
+          "></span>
+
+          <b style="color:${statusColor};"> ${statusText}</b>
+
+          <br><br>
+
+          ⏳ ${daysLeft > 0 ? daysLeft + " días restantes" : "Vencido"}
+
+        </div>
+
+      </div>
+    `;
+
+  }catch(err){
+
+    console.log(err);
+
+    document.getElementById('data').innerHTML = `
+      <div class="card">
+        ❌ Error cargando dashboard<br><br>
+        Revisa /api/dashboard
+      </div>
+    `;
   }
-
-  document.getElementById('data').innerHTML = `
-    <div class="grid">
-
-      <div class="card">
-        💰 Ventas
-        <h2>$${data.sales || 0}</h2>
-      </div>
-
-      <div class="card">
-        👤 Usuarios
-        <h2>${data.users || 0}</h2>
-      </div>
-
-      <div class="card">
-        💳 Créditos
-        <h2 style="color:#4ade80;">$${data.credits || 0}</h2>
-      </div>
-
-      <div class="card">
-        📅 Suscripción<br><br>
-
-        <b>${data.plan || "SIN PLAN"}</b><br>
-        ${expireText}<br><br>
-
-        <span style="
-          display:inline-block;
-          width:10px;
-          height:10px;
-          border-radius:50%;
-          background:${statusColor};
-        "></span>
-
-        <b style="color:${statusColor};"> ${statusText}</b>
-
-        <br><br>
-
-        ⏳ ${daysLeft > 0 ? daysLeft + " días restantes" : "Vencido"}
-
-      </div>
-
-    </div>
-  `;
 }
 
 
@@ -322,25 +339,46 @@ function initUpload(){
 // ================= CREATE =================
 async function createProduct(){
 
-  const name = document.getElementById("name").value;
-  const price = document.getElementById("price").value;
-  const description = document.getElementById("desc").value;
+  const name = document.getElementById("name").value.trim();
+  const price = document.getElementById("price").value.trim();
+  const description = document.getElementById("desc").value.trim();
 
-  const res = await fetch('/api/products',{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Bearer "+token
-    },
-    body:JSON.stringify({name,price,description,image:imageBase64})
-  });
+  if(!name || !price){
+    return alert("Completa nombre y precio");
+  }
 
-  if(!res.ok) return alert("Error");
+  try{
 
-  alert("Producto creado");
-  loadProducts();
+    const res = await fetch('/api/products',{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({
+        name,
+        price:Number(price),
+        description,
+        image:imageBase64 || null
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      console.log(data);
+      return alert("Error backend: " + (data.message || "Error"));
+    }
+
+    alert("Producto creado correctamente");
+    imageBase64 = "";
+    loadProducts();
+
+  }catch(err){
+    console.log(err);
+    alert("Error conexión backend");
+  }
 }
-
 
 // ================= EDIT =================
 function editProduct(p){
