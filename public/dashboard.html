@@ -2,73 +2,88 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
+<title>Nexora Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
+body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
+  font-family:Segoe UI;
   background:linear-gradient(135deg,#0f172a,#020617);
   color:white;
   display:flex;
 }
 
-.sidebar {
+/* SIDEBAR */
+.sidebar{
   width:240px;
   background:#020617;
   padding:20px;
 }
+.sidebar h2{color:#38bdf8;}
 
-.sidebar h2 { color:#38bdf8; }
-
-.sidebar button {
+.sidebar button{
   width:100%;
   padding:12px;
   margin-top:10px;
+  border:none;
   border-radius:10px;
   background:#111827;
-  border:none;
   color:white;
   cursor:pointer;
 }
-
-.sidebar button:hover {
+.sidebar button:hover{
   background:linear-gradient(90deg,#38bdf8,#6366f1);
 }
 
-.content { flex:1; padding:30px; }
+/* CONTENT */
+.content{
+  flex:1;
+  padding:30px;
+}
 
-.grid {
+/* GRID */
+.grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
   gap:20px;
 }
 
-.card {
+/* CARD */
+.card{
   background:#111827;
-  border-radius:16px;
-  padding:20px;
+  padding:15px;
+  border-radius:15px;
 }
 
-.market-btn {
+/* BOTONES */
+.btn{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.green{background:#22c55e;color:white;}
+.blue{background:#3b82f6;color:white;}
+.red{background:#ef4444;color:white;}
+
+/* FORM */
+input, textarea{
+  width:100%;
+  margin-top:8px;
   padding:10px;
+  border-radius:8px;
   border:none;
-  border-radius:10px;
-  background:#22c55e;
-  color:white;
+}
+
+.upload{
+  border:2px dashed #38bdf8;
+  padding:20px;
+  text-align:center;
+  margin-top:10px;
   cursor:pointer;
 }
 
-.back-btn {
-  padding:10px 20px;
-  border:none;
-  border-radius:10px;
-  background:#3b82f6;
-  color:white;
-  cursor:pointer;
-  margin-bottom:20px;
-}
 </style>
 </head>
 
@@ -76,26 +91,22 @@ body {
 
 <div class="sidebar">
   <h2>NEXORA</h2>
-  <button onclick="loadStats()">📊 Dashboard</button>
-  <button onclick="loadProducts()">🛒 Marketplace</button>
+  <button onclick="loadDashboard()">📊 Dashboard</button>
+  <button onclick="loadMarketplace()">🛒 Marketplace</button>
   <button onclick="logout()">🚪 Salir</button>
 </div>
 
 <div class="content">
   <h1 id="title"></h1>
-  <div id="data"></div>
+  <div id="app"></div>
 </div>
 
 <script>
 
 const token = localStorage.getItem('token');
 
-if (!token) location.href="/login.html";
-
-
 // ================= DASHBOARD =================
-async function loadStats(){
-
+async function loadDashboard(){
   document.getElementById("title").innerText="Dashboard";
 
   let data;
@@ -105,73 +116,40 @@ async function loadStats(){
       headers:{Authorization:"Bearer "+token}
     });
 
-    if(!res.ok) throw new Error();
-
+    if(!res.ok) throw 0;
     data = await res.json();
 
   }catch{
-    // 🔥 fallback si backend falla
     data = {
       sales:0,
       users:0,
       credits:100,
-      plan:"Básico",
+      plan:"Sin plan",
       expire:"2026-05-12"
     };
   }
 
-  let expireDate = new Date(data.expire);
-  let today = new Date();
-  let days = Math.ceil((expireDate - today)/(1000*60*60*24));
+  let exp = new Date(data.expire);
+  let days = Math.ceil((exp - new Date())/(1000*60*60*24));
 
-  let color = days>0 ? "#22c55e" : "#ef4444";
-  let estado = days>0 ? "Activo" : "Expirado";
-
-  document.getElementById("data").innerHTML=`
+  document.getElementById("app").innerHTML=`
     <div class="grid">
-
-      <div class="card">
-        💰 Ventas
-        <h2>$${data.sales}</h2>
-      </div>
-
-      <div class="card">
-        👤 Usuarios
-        <h2>${data.users}</h2>
-      </div>
-
-      <div class="card">
-        💳 Créditos
-        <h2 style="color:#4ade80">$${data.credits}</h2>
-      </div>
-
+      <div class="card">💰 Ventas<br><h2>$${data.sales}</h2></div>
+      <div class="card">👤 Usuarios<br><h2>${data.users}</h2></div>
+      <div class="card">💳 Créditos<br><h2>$${data.credits}</h2></div>
       <div class="card">
         📅 Suscripción<br><br>
-
-        <b>${data.plan}</b><br>
-        ${expireDate.toLocaleDateString()}<br><br>
-
-        <span style="
-          width:10px;
-          height:10px;
-          display:inline-block;
-          border-radius:50%;
-          background:${color};
-        "></span>
-
-        <b style="color:${color}"> ${estado}</b><br><br>
-
-        ⏳ ${days>0 ? days+" días restantes" : "Vencido"}
-
+        ${data.plan}<br>
+        ${exp.toLocaleDateString()}<br><br>
+        ${days>0 ? "🟢 Activo" : "🔴 Expirado"}<br>
+        ${days>0 ? days+" días restantes" : "Vencido"}
       </div>
-
     </div>
   `;
 }
 
-
-// ================= PRODUCTS =================
-async function loadProducts(){
+// ================= MARKETPLACE =================
+async function loadMarketplace(){
 
   document.getElementById("title").innerText="Marketplace";
 
@@ -182,28 +160,101 @@ async function loadProducts(){
       headers:{Authorization:"Bearer "+token}
     });
 
-    if(res.ok){
-      products = await res.json();
-    }
+    if(res.ok) products = await res.json();
 
   }catch{}
 
-  document.getElementById("data").innerHTML=`
+  document.getElementById("app").innerHTML=`
 
-    <button class="back-btn" onclick="loadStats()">← Volver</button>
+    <button class="btn blue" onclick="loadDashboard()">← Volver</button>
 
-    <div class="grid">
+    <div class="card" style="margin-top:20px">
+      <h3>➕ Crear Producto</h3>
+
+      <input id="name" placeholder="Nombre">
+      <input id="price" placeholder="Precio">
+
+      <div class="upload" onclick="file.click()">
+        📂 Subir imagen
+      </div>
+      <input type="file" id="file" hidden>
+
+      <textarea id="desc" placeholder="Descripción"></textarea>
+
+      <button class="btn green" onclick="createProduct()">Crear</button>
+    </div>
+
+    <div class="grid" style="margin-top:20px">
       ${products.map(p=>`
         <div class="card">
           <h3>${p.name}</h3>
-          <b>$${p.price}</b>
-        </div>
-      `).join("") || "Sin productos"}
-    </div>
+          <p>${p.description || ""}</p>
+          <b>$${p.price}</b><br><br>
 
+          <button class="btn blue" onclick="editProduct(${p.id})">✏️</button>
+          <button class="btn red" onclick="deleteProduct(${p.id})">🗑️</button>
+        </div>
+      `).join("")}
+    </div>
   `;
 }
 
+// ================= CREATE =================
+async function createProduct(){
+
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const desc = document.getElementById("desc").value;
+
+  try{
+    await fetch('/api/products',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({name,price,description:desc})
+    });
+
+    loadMarketplace();
+
+  }catch{
+    alert("Error creando producto");
+  }
+}
+
+// ================= DELETE =================
+async function deleteProduct(id){
+
+  if(!confirm("Eliminar producto?")) return;
+
+  await fetch('/api/products/'+id,{
+    method:'DELETE',
+    headers:{Authorization:"Bearer "+token}
+  });
+
+  loadMarketplace();
+}
+
+// ================= EDIT =================
+async function editProduct(id){
+
+  const name = prompt("Nuevo nombre:");
+  const price = prompt("Nuevo precio:");
+
+  if(!name || !price) return;
+
+  await fetch('/api/products/'+id,{
+    method:'PUT',
+    headers:{
+      'Content-Type':'application/json',
+      Authorization:"Bearer "+token
+    },
+    body:JSON.stringify({name,price})
+  });
+
+  loadMarketplace();
+}
 
 // ================= LOGOUT =================
 function logout(){
@@ -211,7 +262,7 @@ function logout(){
   location.href="/";
 }
 
-loadStats();
+loadDashboard();
 
 </script>
 
