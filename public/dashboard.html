@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Nexora Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
   font-family:Segoe UI;
-  background:linear-gradient(135deg,#0f172a,#020617);
+  background:#020617;
   color:white;
   display:flex;
 }
@@ -21,11 +20,10 @@ body{
   padding:20px;
 }
 .sidebar h2{color:#38bdf8;}
-
 .sidebar button{
   width:100%;
-  padding:12px;
   margin-top:10px;
+  padding:12px;
   border:none;
   border-radius:10px;
   background:#111827;
@@ -33,7 +31,7 @@ body{
   cursor:pointer;
 }
 .sidebar button:hover{
-  background:linear-gradient(90deg,#38bdf8,#6366f1);
+  background:#2563eb;
 }
 
 /* CONTENT */
@@ -63,9 +61,9 @@ body{
   border-radius:8px;
   cursor:pointer;
 }
-.green{background:#22c55e;color:white;}
-.blue{background:#3b82f6;color:white;}
-.red{background:#ef4444;color:white;}
+.green{background:#22c55e;}
+.blue{background:#3b82f6;}
+.red{background:#ef4444;}
 
 /* FORM */
 input, textarea{
@@ -84,6 +82,25 @@ input, textarea{
   cursor:pointer;
 }
 
+/* MODAL */
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box{
+  background:#111827;
+  padding:20px;
+  border-radius:15px;
+  width:300px;
+}
 </style>
 </head>
 
@@ -101,6 +118,8 @@ input, textarea{
   <div id="app"></div>
 </div>
 
+<div id="modal"></div>
+
 <script>
 
 const token = localStorage.getItem('token');
@@ -109,42 +128,8 @@ const token = localStorage.getItem('token');
 async function loadDashboard(){
   document.getElementById("title").innerText="Dashboard";
 
-  let data;
-
-  try{
-    const res = await fetch('/api/dashboard',{
-      headers:{Authorization:"Bearer "+token}
-    });
-
-    if(!res.ok) throw 0;
-    data = await res.json();
-
-  }catch{
-    data = {
-      sales:0,
-      users:0,
-      credits:100,
-      plan:"Sin plan",
-      expire:"2026-05-12"
-    };
-  }
-
-  let exp = new Date(data.expire);
-  let days = Math.ceil((exp - new Date())/(1000*60*60*24));
-
   document.getElementById("app").innerHTML=`
-    <div class="grid">
-      <div class="card">💰 Ventas<br><h2>$${data.sales}</h2></div>
-      <div class="card">👤 Usuarios<br><h2>${data.users}</h2></div>
-      <div class="card">💳 Créditos<br><h2>$${data.credits}</h2></div>
-      <div class="card">
-        📅 Suscripción<br><br>
-        ${data.plan}<br>
-        ${exp.toLocaleDateString()}<br><br>
-        ${days>0 ? "🟢 Activo" : "🔴 Expirado"}<br>
-        ${days>0 ? days+" días restantes" : "Vencido"}
-      </div>
-    </div>
+    <div class="card">Panel listo ✔</div>
   `;
 }
 
@@ -174,10 +159,10 @@ async function loadMarketplace(){
       <input id="name" placeholder="Nombre">
       <input id="price" placeholder="Precio">
 
-      <div class="upload" onclick="file.click()">
-        📂 Subir imagen
-      </div>
+      <div class="upload" onclick="file.click()">📂 Subir imagen</div>
       <input type="file" id="file" hidden>
+
+      <img id="preview" style="width:100%;margin-top:10px;border-radius:10px">
 
       <textarea id="desc" placeholder="Descripción"></textarea>
 
@@ -188,71 +173,110 @@ async function loadMarketplace(){
       ${products.map(p=>`
         <div class="card">
           <h3>${p.name}</h3>
-          <p>${p.description || ""}</p>
+          <p>${p.description||""}</p>
           <b>$${p.price}</b><br><br>
 
-          <button class="btn blue" onclick="editProduct(${p.id})">✏️</button>
-          <button class="btn red" onclick="deleteProduct(${p.id})">🗑️</button>
+          ${p.image ? `<img src="${p.image}" style="width:100%;border-radius:10px">` : ""}
+
+          <br><br>
+
+          <button class="btn blue" onclick="openEdit(${p.id})">✏️</button>
         </div>
       `).join("")}
     </div>
   `;
+
+  document.getElementById("file").onchange = e=>{
+    const file = e.target.files[0];
+    if(file){
+      document.getElementById("preview").src = URL.createObjectURL(file);
+    }
+  };
 }
 
 // ================= CREATE =================
 async function createProduct(){
 
-  const name = document.getElementById("name").value;
-  const price = document.getElementById("price").value;
-  const desc = document.getElementById("desc").value;
+  const form = new FormData();
 
-  try{
-    await fetch('/api/products',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        Authorization:"Bearer "+token
-      },
-      body:JSON.stringify({name,price,description:desc})
-    });
+  form.append("name",document.getElementById("name").value);
+  form.append("price",document.getElementById("price").value);
+  form.append("description",document.getElementById("desc").value);
 
-    loadMarketplace();
+  const file = document.getElementById("file").files[0];
+  if(file) form.append("image",file);
 
-  }catch{
-    alert("Error creando producto");
-  }
+  await fetch('/api/products',{
+    method:'POST',
+    headers:{Authorization:"Bearer "+token},
+    body:form
+  });
+
+  loadMarketplace();
+}
+
+// ================= EDIT MODAL =================
+function openEdit(id){
+
+  document.getElementById("modal").innerHTML=`
+    <div class="modal">
+      <div class="modal-box">
+
+        <h3>Editar Producto</h3>
+
+        <input id="editName" placeholder="Nombre">
+        <input id="editPrice" placeholder="Precio">
+
+        <input type="file" id="editFile">
+
+        <textarea id="editDesc"></textarea>
+
+        <br><br>
+
+        <button class="btn green" onclick="updateProduct(${id})">Guardar</button>
+        <button class="btn red" onclick="deleteProduct(${id})">Eliminar</button>
+        <button class="btn" onclick="closeModal()">Cerrar</button>
+
+      </div>
+    </div>
+  `;
+}
+
+function closeModal(){
+  document.getElementById("modal").innerHTML="";
+}
+
+// ================= UPDATE =================
+async function updateProduct(id){
+
+  const form = new FormData();
+
+  form.append("name",document.getElementById("editName").value);
+  form.append("price",document.getElementById("editPrice").value);
+  form.append("description",document.getElementById("editDesc").value);
+
+  const file = document.getElementById("editFile").files[0];
+  if(file) form.append("image",file);
+
+  await fetch('/api/products/'+id,{
+    method:'PUT',
+    headers:{Authorization:"Bearer "+token},
+    body:form
+  });
+
+  closeModal();
+  loadMarketplace();
 }
 
 // ================= DELETE =================
 async function deleteProduct(id){
-
-  if(!confirm("Eliminar producto?")) return;
 
   await fetch('/api/products/'+id,{
     method:'DELETE',
     headers:{Authorization:"Bearer "+token}
   });
 
-  loadMarketplace();
-}
-
-// ================= EDIT =================
-async function editProduct(id){
-
-  const name = prompt("Nuevo nombre:");
-  const price = prompt("Nuevo precio:");
-
-  if(!name || !price) return;
-
-  await fetch('/api/products/'+id,{
-    method:'PUT',
-    headers:{
-      'Content-Type':'application/json',
-      Authorization:"Bearer "+token
-    },
-    body:JSON.stringify({name,price})
-  });
-
+  closeModal();
   loadMarketplace();
 }
 
@@ -262,7 +286,7 @@ function logout(){
   location.href="/";
 }
 
-loadDashboard();
+loadMarketplace();
 
 </script>
 
