@@ -1,120 +1,125 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-      display: flex;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #020617);
+  color: white;
+  display: flex;
+}
 
-    .sidebar {
-      width: 220px;
-      background: #020617;
-      height: 100vh;
-      padding: 20px;
-    }
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: rgba(2, 6, 23, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
 
-    .sidebar h2 {
-      color: #38bdf8;
-    }
+.sidebar h2 {
+  color: #38bdf8;
+}
 
-    .sidebar button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: transparent;
-      border: 1px solid #38bdf8;
-      color: #38bdf8;
-      cursor: pointer;
-      border-radius: 8px;
-    }
+.sidebar button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  color: #cbd5f5;
+  cursor: pointer;
+  transition: 0.2s;
+}
 
-    .content {
-      flex: 1;
-      padding: 20px;
-    }
+.sidebar button:hover {
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: white;
+  transform: translateX(5px);
+}
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 30px;
+}
 
-    .card {
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-    }
+/* CARDS */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
 
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: none;
-    }
+.card {
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: 0.3s;
+}
 
-    button {
-      margin-top: 10px;
-      background: #22c55e;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
 
-    /* 🔥 BOTÓN VOLVER PRO */
-    .btn-back {
-      padding: 10px 18px;
-      background: linear-gradient(135deg, #38bdf8, #6366f1);
-      color: white;
-      font-weight: bold;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(99,102,241,0.6);
-      transition: 0.2s;
-    }
+/* INPUTS */
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.05);
+  color: white;
+}
 
-    .btn-back:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(99,102,241,0.9);
-    }
+/* BOTÓN */
+button {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    img {
-      width: 100%;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
+/* BOTÓN VOLVER */
+.btn-back {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(99,102,241,0.6);
+}
 
-    #dropZone {
-      margin-top: 10px;
-      padding: 20px;
-      border: 2px dashed #38bdf8;
-      border-radius: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+/* DROPZONE */
+#dropZone {
+  margin-top: 10px;
+  padding: 25px;
+  border: 2px dashed #38bdf8;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+}
 
-    #dropZone:hover {
-      background: rgba(56,189,248,0.1);
-    }
-
-    #preview {
-      display: none;
-      margin-top: 10px;
-    }
-
-  </style>
+/* IMG */
+img {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+</style>
 </head>
 
 <body>
@@ -129,12 +134,11 @@
 </div>
 
 <div class="content">
-  <h1 id="title">Dashboard</h1>
+  <h1 id="title"></h1>
   <div id="data"></div>
 </div>
 
 <script>
-
 const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
 
@@ -142,9 +146,7 @@ if (!token || !role) {
   window.location.href = "/login.html";
 }
 
-const title = document.getElementById("title");
-
-title.innerText =
+document.getElementById("title").innerText =
   role === "admin" ? "Dashboard Admin" :
   role === "super_reseller" ? "Dashboard Super Reseller" :
   "Dashboard Usuario";
@@ -160,7 +162,6 @@ async function loadStats() {
     const res = await fetch('/api/dashboard', {
       headers: { Authorization: 'Bearer ' + token }
     });
-
     if (res.ok) data = await res.json();
   } catch {}
 
@@ -168,97 +169,72 @@ async function loadStats() {
     const userRes = await fetch('/api/user/me', {
       headers: { Authorization: 'Bearer ' + token }
     });
-
     if (userRes.ok) user = await userRes.json();
   } catch {}
 
   document.getElementById('data').innerHTML = `
     <div class="cards">
-      <div class="card">
-        <h3>💰 Ventas</h3>
-        <p>$${data.sales || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>👥 Usuarios</h3>
-        <p>${data.users || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💸 Créditos</h3>
-        <p>$${user.credits || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💳 Suscripción</h3>
-        <p>${user.plan || "Sin plan"}</p>
-        <p>${user.expires_at || "No definido"}</p>
-      </div>
+      <div class="card"><h3>💰 Ventas</h3><p>$${data.sales}</p></div>
+      <div class="card"><h3>👥 Usuarios</h3><p>${data.users}</p></div>
+      <div class="card"><h3>💸 Créditos</h3><p>$${user.credits}</p></div>
+      <div class="card"><h3>💳 Suscripción</h3><p>${user.plan}</p></div>
     </div>
   `;
 }
 
 
-// ===================== MARKETPLACE =====================
+// ===================== PRODUCTS =====================
 async function loadProducts() {
 
-  try {
+  const res = await fetch('/api/products', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
 
-    const res = await fetch('/api/products', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
+  const products = await res.json();
 
-    const products = await res.json();
+  let html = `
+    <div style="display:flex; justify-content:space-between;">
+      <h2>🛒 Marketplace</h2>
+      <button class="btn-back" onclick="loadStats()">⬅ Volver</button>
+    </div>
 
-    let html = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>🛒 Marketplace</h2>
-        <button class="btn-back" onclick="loadStats()">⬅ Volver</button>
+    <div class="card">
+      <h3>Crear Producto</h3>
+
+      <input id="pName" placeholder="Nombre">
+      <input id="pPrice" placeholder="Precio">
+
+      <div id="dropZone">
+        📸 Click o arrastra imagen
+        <input type="file" id="fileInput" hidden>
       </div>
 
+      <img id="preview">
+
+      <textarea id="pDesc" placeholder="Descripción"></textarea>
+
+      <button onclick="crearProducto()">Crear Producto</button>
+    </div>
+
+    <div class="cards">
+  `;
+
+  products.forEach(p => {
+    html += `
       <div class="card">
-        <h3>➕ Crear Producto</h3>
-
-        <input id="pName" placeholder="Nombre">
-        <input id="pPrice" placeholder="Precio">
-
-        <!-- 🔥 DROP ZONE -->
-        <div id="dropZone">
-          📸 Arrastra imagen aquí o haz click
-          <input type="file" id="fileInput" accept="image/*" style="display:none;">
-        </div>
-
-        <img id="preview">
-
-        <textarea id="pDesc" placeholder="Descripción"></textarea>
-
-        <button onclick="crearProducto()">Crear Producto</button>
+        ${p.image ? `<img src="${p.image}">` : ''}
+        <h3>${p.name}</h3>
+        <p>${p.description || ''}</p>
+        <p>$${p.price}</p>
       </div>
-
-      <div class="cards">
     `;
+  });
 
-    products.forEach(p => {
-      html += `
-        <div class="card">
-          ${p.image ? `<img src="${p.image}">` : ''}
-          <h3>${p.name}</h3>
-          <p>${p.description || 'Sin descripción'}</p>
-          <p>💲 $${p.price}</p>
-          <p>👤 ${p.username || 'Vendedor'}</p>
-        </div>
-      `;
-    });
+  html += '</div>';
 
-    html += '</div>';
+  document.getElementById('data').innerHTML = html;
 
-    document.getElementById('data').innerHTML = html;
-
-    activarDrop();
-
-  } catch (err) {
-    alert("Error cargando productos");
-  }
+  activarDrop();
 }
 
 
@@ -273,16 +249,12 @@ function activarDrop() {
 
   document.getElementById("fileInput").onchange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
     const reader = new FileReader();
 
-    reader.onload = function(ev) {
-      imageBase64 = ev.target.result;
-
-      const img = document.getElementById("preview");
-      img.src = imageBase64;
-      img.style.display = "block";
+    reader.onload = e => {
+      imageBase64 = e.target.result;
+      document.getElementById("preview").src = imageBase64;
+      document.getElementById("preview").style.display = "block";
     };
 
     reader.readAsDataURL(file);
@@ -290,91 +262,41 @@ function activarDrop() {
 }
 
 
-// ===================== CREAR PRODUCTO =====================
+// ===================== CREATE =====================
 async function crearProducto() {
 
-  const name = document.getElementById('pName').value;
-  const price = document.getElementById('pPrice').value;
-  const description = document.getElementById('pDesc').value;
+  const name = pName.value;
+  const price = pPrice.value;
+  const description = pDesc.value;
 
-  if (!name || !price) {
-    alert("Nombre y precio obligatorios");
-    return;
-  }
+  const res = await fetch('/api/products', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token
+    },
+    body: JSON.stringify({
+      name,
+      price,
+      image: imageBase64,
+      description
+    })
+  });
 
-  try {
+  const data = await res.json();
 
-    const res = await fetch('/api/products', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token
-      },
-      body: JSON.stringify({
-        name,
-        price,
-        image: imageBase64,
-        description
-      })
-    });
+  if (!res.ok) return alert(data.error);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Error al crear producto");
-      return;
-    }
-
-    alert("✅ Producto creado");
-
-    loadStats();
-
-  } catch (err) {
-    alert("Error conexión servidor");
-  }
+  alert("Producto creado");
+  loadStats();
 }
 
 
-// ===================== USERS =====================
-async function loadUsers() {
+// =====================
+function loadUsers(){ alert("usuarios") }
+function logout(){ localStorage.clear(); location.href="/" }
 
-  try {
-
-    const res = await fetch('/api/admin/users', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-
-    const users = await res.json();
-
-    let html = '<h2>Usuarios</h2>';
-
-    users.forEach(u => {
-      html += `
-        <div class="card">
-          <b>${u.username}</b><br>
-          💰 Créditos: ${u.credits}
-        </div>
-      `;
-    });
-
-    document.getElementById('data').innerHTML = html;
-
-  } catch (err) {
-    alert("Error cargando usuarios");
-  }
-}
-
-
-// ===================== LOGOUT =====================
-function logout() {
-  localStorage.clear();
-  window.location.href = '/';
-}
-
-
-// INIT
 loadStats();
-
 </script>
 
 </body>
