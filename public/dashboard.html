@@ -53,14 +53,6 @@
       border-radius: 10px;
     }
 
-    .card h3 {
-      color: #38bdf8;
-    }
-
-    .status-ok { color: #22c55e; }
-    .status-warn { color: orange; }
-    .status-bad { color: red; }
-
     input, textarea {
       width: 100%;
       padding: 10px;
@@ -122,91 +114,104 @@ title.innerText =
 
 // ===================== STATS =====================
 async function loadStats() {
+  try {
 
-  const res = await fetch('/api/dashboard', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
+    const res = await fetch('/api/dashboard', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
 
-  const data = await res.json();
+    if (!res.ok) throw new Error("Error stats");
 
-  const userRes = await fetch('/api/user/me', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
+    const data = await res.json();
 
-  const user = await userRes.json();
+    const userRes = await fetch('/api/user/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
 
-  document.getElementById('data').innerHTML = `
-    <div class="cards">
-      <div class="card">
-        <h3>💰 Ventas</h3>
-        <p>$${data.sales || 0}</p>
+    const user = await userRes.json();
+
+    document.getElementById('data').innerHTML = `
+      <div class="cards">
+        <div class="card">
+          <h3>💰 Ventas</h3>
+          <p>$${data.sales || 0}</p>
+        </div>
+
+        <div class="card">
+          <h3>👥 Usuarios</h3>
+          <p>${data.users || 0}</p>
+        </div>
+
+        <div class="card">
+          <h3>💸 Créditos</h3>
+          <p>$${user.credits || 0}</p>
+        </div>
+
+        <div class="card">
+          <h3>💳 Suscripción</h3>
+          <p>${user.plan || "Sin plan"}</p>
+          <p>${user.expires_at || "No definido"}</p>
+        </div>
       </div>
+    `;
 
-      <div class="card">
-        <h3>👥 Usuarios</h3>
-        <p>${data.users || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💸 Créditos</h3>
-        <p>$${user.credits || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💳 Suscripción</h3>
-        <p>${user.plan || "Sin plan"}</p>
-        <p>${user.expires_at || "No definido"}</p>
-      </div>
-    </div>
-  `;
+  } catch (err) {
+    alert("Error cargando dashboard");
+    console.error(err);
+  }
 }
 
 
 // ===================== MARKETPLACE =====================
 async function loadProducts() {
 
-  const res = await fetch('/api/products', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
+  try {
 
-  const products = await res.json();
+    const res = await fetch('/api/products', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
 
-  let html = `
-    <h2>🛒 Marketplace</h2>
+    if (!res.ok) throw new Error("Error cargando productos");
 
-    <div class="card">
-      <h3>➕ Crear Producto</h3>
+    const products = await res.json();
 
-      <input id="pName" placeholder="Nombre">
-      <input id="pPrice" placeholder="Precio">
-      <input id="pImage" placeholder="URL Imagen">
-      <textarea id="pDesc" placeholder="Descripción"></textarea>
+    let html = `
+      <h2>🛒 Marketplace</h2>
 
-      <button onclick="crearProducto()">Crear Producto</button>
-    </div>
-
-    <div class="cards">
-  `;
-
-  products.forEach(p => {
-    html += `
       <div class="card">
+        <h3>➕ Crear Producto</h3>
 
-        ${p.image ? `<img src="${p.image}">` : ''}
+        <input id="pName" placeholder="Nombre">
+        <input id="pPrice" placeholder="Precio">
+        <input id="pImage" placeholder="URL Imagen">
+        <textarea id="pDesc" placeholder="Descripción"></textarea>
 
-        <h3>${p.name}</h3>
-        <p>${p.description || 'Sin descripción'}</p>
-
-        <p>💲 $${p.price}</p>
-        <p>👤 ${p.username || 'Vendedor'}</p>
-
+        <button onclick="crearProducto()">Crear Producto</button>
       </div>
+
+      <div class="cards">
     `;
-  });
 
-  html += '</div>';
+    products.forEach(p => {
+      html += `
+        <div class="card">
+          ${p.image ? `<img src="${p.image}">` : ''}
+          <h3>${p.name}</h3>
+          <p>${p.description || 'Sin descripción'}</p>
+          <p>💲 $${p.price}</p>
+          <p>👤 ${p.username || 'Vendedor'}</p>
+        </div>
+      `;
+    });
 
-  document.getElementById('data').innerHTML = html;
+    html += '</div>';
+
+    document.getElementById('data').innerHTML = html;
+
+  } catch (err) {
+    alert("Error cargando productos");
+    console.error(err);
+  }
 }
 
 
@@ -218,44 +223,68 @@ async function crearProducto() {
   const image = document.getElementById('pImage').value;
   const description = document.getElementById('pDesc').value;
 
-  const res = await fetch('/api/products', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({ name, price, image, description })
-  });
+  if (!name || !price) {
+    alert("Nombre y precio obligatorios");
+    return;
+  }
 
-  const data = await res.json();
+  try {
 
-  alert(data.message || data.error);
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ name, price, image, description })
+    });
 
-  loadProducts();
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Error al crear producto");
+      console.error("ERROR BACK:", data);
+      return;
+    }
+
+    alert("✅ Producto creado");
+    loadProducts();
+
+  } catch (err) {
+    alert("Error conexión servidor");
+    console.error(err);
+  }
 }
 
 
 // ===================== USERS =====================
 async function loadUsers() {
 
-  const res = await fetch('/api/admin/users', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
+  try {
 
-  const users = await res.json();
+    const res = await fetch('/api/admin/users', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
 
-  let html = '<h2>Usuarios</h2>';
+    const users = await res.json();
 
-  users.forEach(u => {
-    html += `
-      <div class="card">
-        <b>${u.username}</b><br>
-        💰 Créditos: ${u.credits}
-      </div>
-    `;
-  });
+    let html = '<h2>Usuarios</h2>';
 
-  document.getElementById('data').innerHTML = html;
+    users.forEach(u => {
+      html += `
+        <div class="card">
+          <b>${u.username}</b><br>
+          💰 Créditos: ${u.credits}
+        </div>
+      `;
+    });
+
+    document.getElementById('data').innerHTML = html;
+
+  } catch (err) {
+    alert("Error cargando usuarios");
+    console.error(err);
+  }
 }
 
 

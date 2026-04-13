@@ -1,11 +1,23 @@
-const db = require('../db'); // 🔥 CORREGIDO
+const db = require('../db');
 
-// 🔹 CREAR PRODUCTO
+// 🔹 CREAR PRODUCTO (CON DEBUG REAL)
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price, description, image } = req.body;
 
-    const user_id = req.user.id;
+    // 🔥 VER EXACTAMENTE QUÉ LLEGA
+    console.log("USER COMPLETO:", req.user);
+
+    const role = req.user?.role;
+
+    // 🔥 VALIDACIÓN REAL
+    if (role !== 'admin' && role !== 'super_reseller') {
+      return res.status(403).json({
+        error: "Acceso denegado",
+        roleDetectado: role || "NO DEFINIDO"
+      });
+    }
+
+    const { name, price, description, image } = req.body;
 
     if (!name || !price) {
       return res.status(400).json({ error: 'Nombre y precio obligatorios' });
@@ -19,7 +31,7 @@ exports.createProduct = async (req, res) => {
         price,
         description || '',
         image || '',
-        user_id
+        req.user.id
       ]
     );
 
