@@ -1,5 +1,5 @@
 require('dotenv').config();
-console.log("Nuevo deploy limpio sin bcrypt");
+console.log("Nuevo deploy limpio sin crashes");
 
 const express = require('express');
 const path = require('path');
@@ -18,25 +18,23 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 🔥 IMPORTAR RUTAS
-// 🔗 USAR RUTAS
-app.use('/api', authRoutes); // <-- CORREGIDO PARA QUE /api/login FUNCIONE
-app.use('/api/user', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/commissions', commissionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/deposits', depositRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reseller', resellerRoutes);
-app.use('/uploads', express.static('uploads'));
-app.use('/api/plan', planRoutes);
-app.use('/api/webhook', webhookRoutes);
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
+const adminRoutes = require('./routes/admin.routes');
+const depositRoutes = require('./routes/deposits.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
+const resellerRoutes = require('./routes/reseller.routes');
+const commissionRoutes = require('./routes/commission.routes');
+const planRoutes = require('./routes/plan.routes');
+const webhookRoutes = require('./routes/webhook.routes');
 
 // 🔥 IMPORTAR PROCESADOR DE DEPÓSITOS
 const processDeposits = require('./utils/depositProcessor');
 
 // 🔗 USAR RUTAS
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);           // <-- ahora /api/login funciona
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -55,27 +53,18 @@ app.use('/api/webhook', webhookRoutes);
 app.get('/fix-db', async (req, res) => {
   try {
     await db.query(`ALTER TABLE users MODIFY id INT`);
-
-    try {
-      await db.query(`ALTER TABLE users DROP PRIMARY KEY`);
-    } catch (e) {
-      console.log("No tenía PK, seguimos...");
-    }
-
+    try { await db.query(`ALTER TABLE users DROP PRIMARY KEY`); } catch (e) {}
     await db.query(`
       ALTER TABLE users 
       MODIFY id INT NOT NULL AUTO_INCREMENT,
       ADD PRIMARY KEY (id)
     `);
-
     res.send("✅ DB ARREGLADA CORRECTAMENTE");
-
   } catch (err) {
     console.error(err);
     res.send("❌ ERROR: " + err.message);
   }
 });
-// =======================================
 
 // 🔥 RUTA PRINCIPAL
 app.get('/', (req, res) => {
