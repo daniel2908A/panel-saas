@@ -48,6 +48,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reseller', resellerRoutes);
+app.use('/uploads', express.static('uploads'));
 
 // 🔥 PLANES
 app.use('/api/plan', planRoutes);
