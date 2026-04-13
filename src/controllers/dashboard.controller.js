@@ -2,22 +2,25 @@ const db = require('../db');
 
 exports.getDashboard = async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Validar que req.user exista
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
 
-    if (!userId) return res.status(401).json({ error: "No autorizado" });
+    const userId = req.user.id;
 
-    // 💰 GANANCIAS (comisiones del usuario)
+    // 💰 Ganancias del usuario (comisiones)
     const [salesResult] = await db.query(
-      "SELECT SUM(amount) as total FROM commissions WHERE user_id = ?",
+      "SELECT IFNULL(SUM(amount), 0) as total FROM commissions WHERE user_id = ?",
       [userId]
     );
 
-    // 👤 TOTAL USUARIOS
+    // 👤 Total de usuarios
     const [usersResult] = await db.query(
       "SELECT COUNT(*) as total FROM users"
     );
 
-    // 💳 CRÉDITOS, PLAN Y EXPIRACIÓN
+    // 💳 Créditos, plan y expiración del usuario
     const [creditsResult] = await db.query(
       "SELECT credits, plan, expires_at FROM users WHERE id = ?",
       [userId]
@@ -25,6 +28,7 @@ exports.getDashboard = async (req, res) => {
 
     const user = creditsResult[0] || {};
 
+    // Responder con valores por defecto si son nulos
     res.json({
       sales: salesResult[0]?.total || 0,
       users: usersResult[0]?.total || 0,
@@ -34,7 +38,7 @@ exports.getDashboard = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("ERROR DASHBOARD:", error);
+    console.error("ERROR DASHBOARD:", error.message);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
