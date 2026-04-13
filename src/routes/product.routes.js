@@ -1,30 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
-const productController = require('../controllers/product.controller');
+const controller = require('../controllers/product.controller');
+const auth = require('../middlewares/auth.middleware');
 
-const auth = require('../middleware/auth.middleware');
-
-// 📦 CREAR PRODUCTO (SIN BLOQUEO POR ROLE)
-router.post(
-  '/',
-  auth,
-  productController.createProduct
-);
-
-// 📦 LISTAR PRODUCTOS
-router.get('/', auth, productController.getProducts);
-
-// 🔓 PÚBLICOS
-router.get('/public', productController.getProductsPublic);
-
-// 🔍 UNO
-router.get('/:id', auth, productController.getProductById);
-
-// ✏️ EDITAR
-router.put('/:id', auth, productController.updateProduct);
-
-// ❌ ELIMINAR
-router.delete('/:id', auth, productController.deleteProduct);
+router.get('/', auth, controller.getProducts);
+router.post('/', auth, controller.upload.single('image'), controller.createProduct);
+router.put('/:id', auth, controller.upload.single('image'), controller.updateProduct);
+router.delete('/:id', auth, controller.deleteProduct);
 
 module.exports = router;

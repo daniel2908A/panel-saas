@@ -1,147 +1,86 @@
 const db = require('../db');
+const multer = require('multer');
+const path = require('path');
 
-// 🔹 CREAR PRODUCTO (CON DEBUG REAL)
+// CONFIG MULTER
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + path.extname(file.originalname))
+});
+
+const upload = multer({ storage });
+exports.upload = upload;
+
+// CREAR PRODUCTO
 exports.createProduct = async (req, res) => {
   try {
-
-    // 🔥 VER EXACTAMENTE QUÉ LLEGA
-    console.log("USER COMPLETO:", req.user);
-
-    const role = req.user?.role;
-
-    // 🔥 VALIDACIÓN REAL
-    if (role !== 'admin' && role !== 'super_reseller') {
-      return res.status(403).json({
-        error: "Acceso denegado",
-        roleDetectado: role || "NO DEFINIDO"
-      });
-    }
-
-    const { name, price, description, image } = req.body;
-
-    if (!name || !price) {
-      return res.status(400).json({ error: 'Nombre y precio obligatorios' });
-    }
+    const { name, price, description } = req.body;
+    const image = req.file ? '/uploads/' + req.file.filename : null;
 
     await db.query(
-      `INSERT INTO products (name, price, description, image, user_id)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        name,
-        price,
-        description || '',
-        image || '',
-        req.user.id
-      ]
+      'INSERT INTO products (name, price, description, image, user_id) VALUES (?, ?, ?, ?, ?)',
+      [name, price, description, image, req.user.id]
     );
 
-    res.json({ message: 'Producto creado correctamente' });
+    res.json({ message: "Producto creado" });
 
-  } catch (error) {
-    console.error('ERROR REAL createProduct:', error);
-    res.status(500).json({ error: 'Error creando producto' });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error creando producto" });
   }
 };
 
-
-// 🔹 OBTENER PRODUCTOS
+// LISTAR PRODUCTOS
 exports.getProducts = async (req, res) => {
   try {
-    const [products] = await db.query(`
-      SELECT p.*, u.username
-      FROM products p
-      LEFT JOIN users u ON p.user_id = u.id
-      ORDER BY p.id DESC
-    `);
+    const [rows] = await db.query(
+      'SELECT * FROM products WHERE user_id = ?',
+      [req.user.id]
+    );
 
-    res.json(products);
+    res.json(rows);
 
-  } catch (error) {
-    console.error('ERROR REAL getProducts:', error);
-    res.status(500).json({ error: 'Error obteniendo productos' });
+  } catch (err) {
+    res.status(500).json({ error: "Error obteniendo productos" });
   }
 };
 
-
-// 🔓 PÚBLICOS
-exports.getProductsPublic = async (req, res) => {
-  try {
-    const [products] = await db.query(`
-      SELECT p.*, u.username
-      FROM products p
-      LEFT JOIN users u ON p.user_id = u.id
-    `);
-
-    res.json(products);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error productos públicos' });
-  }
-};
-
-
-// 🔹 UNO
-exports.getProductById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const [products] = await db.query(`
-      SELECT p.*, u.username
-      FROM products p
-      LEFT JOIN users u ON p.user_id = u.id
-      WHERE p.id = ?
-    `, [id]);
-
-    if (!products.length) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-
-    res.json(products[0]);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error obteniendo producto' });
-  }
-};
-
-
-// 🔹 ACTUALIZAR
+// ACTUALIZAR
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, description, image } = req.body;
+    const { name, price, description } = req.body;
 
-    await db.query(
-      `UPDATE products 
-       SET name = ?, price = ?, description = ?, image = ?
-       WHERE id = ?`,
-      [name, price, description, image, id]
-    );
+    let query = 'UPDATE products SET name=?, price=?, description=?';
+    let params = [name, price, description];
 
-    res.json({ message: 'Producto actualizado' });
+    if (req.file) {
+      query += ', image=?';
+      params.push('/uploads/' + req.file.filename);
+    }
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error actualizando' });
+    params.push(id);
+
+    await db.query(query + ' WHERE id=?', params);
+
+    res.json({ message: "Producto actualizado" });
+
+  } catch (err) {
+    res.status(500).json({ error: "Error actualizando producto" });
   }
 };
 
-
-// 🔹 ELIMINAR
+// ELIMINAR
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await db.query(
-      'DELETE FROM products WHERE id = ?',
-      [id]
-    );
+    await db.query('DELETE FROM products WHERE id=?', [id]);
 
-    res.json({ message: 'Producto eliminado' });
+    res.json({ message: "Producto eliminado" });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error eliminando' });
+  } catch (err) {
+    res.status(500).json({ error: "Error eliminando producto" });
   }
 };

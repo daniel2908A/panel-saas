@@ -1,126 +1,33 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Nexora Panel</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #020617, #0f172a);
-}
-
-.box {
-  background: rgba(30,41,59,0.9);
-  padding: 40px;
-  border-radius: 15px;
-  width: 340px;
-  text-align: center;
-  box-shadow: 0 0 40px rgba(0,255,100,0.15);
-}
-
-.logo {
-  width: 200px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 0 15px rgba(0,255,100,0.4));
-}
-
-h2 {
-  margin-bottom: 20px;
-  color: #4ade80;
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: #fef9c3;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(45deg, #22c55e, #16a34a);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-button:hover {
-  transform: scale(1.05);
-}
-
-#error {
-  color: #ef4444;
-  margin-top: 10px;
-}
-</style>
-</head>
-
+<html>
 <body>
 
-<div class="box">
-  <img src="/img/logo.png" class="logo">
-  <h2>NEXORA PANEL</h2>
+<h2>Login</h2>
 
-  <input id="email" placeholder="Correo">
-  <input id="password" type="password" placeholder="Contraseña">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-  <button onclick="login()">Ingresar</button>
-
-  <p id="error"></p>
-</div>
+<button onclick="login()">Entrar</button>
 
 <script>
-async function login() {
-  try {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+async function login(){
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    const data = await res.json();
+  const res = await fetch('/api/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,password})
+  });
 
-    if (data.token) {
+  const data = await res.json();
 
-      // 🔥 GUARDAR TOKEN
-      localStorage.setItem("token", data.token);
-
-      // 🔥 GUARDAR ROLE (ESTO ES LA CLAVE 🔥)
-      localStorage.setItem("role", data.role);
-
-      // 🔥 GUARDAR EMAIL
-      localStorage.setItem("email", email);
-
-      // 🔥 REDIRECCIÓN SEGÚN ROL
-      if (data.role === 'admin') {
-        window.location.href = "/admin.html";
-      } else {
-        window.location.href = "/dashboard.html";
-      }
-
-    } else {
-      document.getElementById("error").innerText = data.error || "Error login";
-    }
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById("error").innerText = "Error del servidor";
+  if(data.token){
+    localStorage.setItem("token", data.token); // 🔥 CLAVE
+    window.location.href="/dashboard.html";
+  }else{
+    alert("Credenciales incorrectas");
   }
 }
 </script>
