@@ -76,6 +76,11 @@
       border-radius: 10px;
       margin-bottom: 10px;
     }
+
+    .error {
+      color: red;
+      margin-top: 20px;
+    }
   </style>
 </head>
 
@@ -114,51 +119,66 @@ title.innerText =
 
 // ===================== STATS =====================
 async function loadStats() {
+
+  let data = { sales: 0, users: 0 };
+  let user = { credits: 0 };
+
   try {
 
     const res = await fetch('/api/dashboard', {
       headers: { Authorization: 'Bearer ' + token }
     });
 
-    if (!res.ok) throw new Error("Error stats");
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      console.warn("⚠ /api/dashboard falló");
+    }
 
-    const data = await res.json();
+  } catch (err) {
+    console.warn("Dashboard no disponible");
+  }
+
+  try {
 
     const userRes = await fetch('/api/user/me', {
       headers: { Authorization: 'Bearer ' + token }
     });
 
-    const user = await userRes.json();
-
-    document.getElementById('data').innerHTML = `
-      <div class="cards">
-        <div class="card">
-          <h3>💰 Ventas</h3>
-          <p>$${data.sales || 0}</p>
-        </div>
-
-        <div class="card">
-          <h3>👥 Usuarios</h3>
-          <p>${data.users || 0}</p>
-        </div>
-
-        <div class="card">
-          <h3>💸 Créditos</h3>
-          <p>$${user.credits || 0}</p>
-        </div>
-
-        <div class="card">
-          <h3>💳 Suscripción</h3>
-          <p>${user.plan || "Sin plan"}</p>
-          <p>${user.expires_at || "No definido"}</p>
-        </div>
-      </div>
-    `;
+    if (userRes.ok) {
+      user = await userRes.json();
+    }
 
   } catch (err) {
-    alert("Error cargando dashboard");
-    console.error(err);
+    console.warn("User no disponible");
   }
+
+  document.getElementById('data').innerHTML = `
+    <div class="cards">
+      <div class="card">
+        <h3>💰 Ventas</h3>
+        <p>$${data.sales || 0}</p>
+      </div>
+
+      <div class="card">
+        <h3>👥 Usuarios</h3>
+        <p>${data.users || 0}</p>
+      </div>
+
+      <div class="card">
+        <h3>💸 Créditos</h3>
+        <p>$${user.credits || 0}</p>
+      </div>
+
+      <div class="card">
+        <h3>💳 Suscripción</h3>
+        <p>${user.plan || "Sin plan"}</p>
+        <p>${user.expires_at || "No definido"}</p>
+      </div>
+    </div>
+
+    <p class="error">⚠ Si no ves datos completos, revisa /api/dashboard</p>
+  `;
 }
 
 
@@ -170,8 +190,6 @@ async function loadProducts() {
     const res = await fetch('/api/products', {
       headers: { Authorization: 'Bearer ' + token }
     });
-
-    if (!res.ok) throw new Error("Error cargando productos");
 
     const products = await res.json();
 
@@ -243,7 +261,6 @@ async function crearProducto() {
 
     if (!res.ok) {
       alert(data.error || "Error al crear producto");
-      console.error("ERROR BACK:", data);
       return;
     }
 
@@ -252,7 +269,6 @@ async function crearProducto() {
 
   } catch (err) {
     alert("Error conexión servidor");
-    console.error(err);
   }
 }
 
@@ -283,7 +299,6 @@ async function loadUsers() {
 
   } catch (err) {
     alert("Error cargando usuarios");
-    console.error(err);
   }
 }
 
