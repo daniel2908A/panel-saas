@@ -18,17 +18,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 🔥 IMPORTAR RUTAS
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const productRoutes = require('./routes/product.routes');
-const orderRoutes = require('./routes/order.routes');
-const adminRoutes = require('./routes/admin.routes');
-const depositRoutes = require('./routes/deposits.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const resellerRoutes = require('./routes/reseller.routes');
-const commissionRoutes = require('./routes/commission.routes');
-const planRoutes = require('./routes/plan.routes');
-const webhookRoutes = require('./routes/webhook.routes');
+// 🔗 USAR RUTAS
+app.use('/api', authRoutes); // <-- CORREGIDO PARA QUE /api/login FUNCIONE
+app.use('/api/user', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/commissions', commissionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reseller', resellerRoutes);
+app.use('/uploads', express.static('uploads'));
+app.use('/api/plan', planRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // 🔥 IMPORTAR PROCESADOR DE DEPÓSITOS
 const processDeposits = require('./utils/depositProcessor');
