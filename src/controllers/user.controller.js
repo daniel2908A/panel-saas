@@ -13,7 +13,6 @@ exports.getCredits = async (req, res) => {
       "SELECT credits FROM users WHERE id = ?",
       [userId]
     );
-
     if (!rows.length) return res.status(404).json({ error: "Usuario no encontrado" });
 
     res.json({ credits: rows[0].credits });
@@ -36,7 +35,6 @@ exports.getMe = async (req, res) => {
        FROM users WHERE id = ?`,
       [userId]
     );
-
     if (!user.length) return res.status(404).json({ error: "Usuario no encontrado" });
 
     res.json(user[0]);
