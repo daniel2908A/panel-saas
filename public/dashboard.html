@@ -43,7 +43,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
 
@@ -61,7 +61,7 @@
     .status-warn { color: orange; }
     .status-bad { color: red; }
 
-    input, select {
+    input, textarea {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -69,7 +69,7 @@
       border: none;
     }
 
-    button.activate {
+    button {
       margin-top: 10px;
       background: #22c55e;
       border: none;
@@ -78,120 +78,65 @@
       border-radius: 8px;
       cursor: pointer;
     }
+
+    img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 
 <body>
 
-  <div class="sidebar">
-    <h2>NEXORA</h2>
+<div class="sidebar">
+  <h2>NEXORA</h2>
 
-    <button onclick="loadStats()">📊 Estadísticas</button>
-    <button onclick="loadUsers()">👥 Usuarios</button>
-    <button onclick="loadProducts()">📦 Productos</button>
-    <button onclick="logout()">🚪 Salir</button>
-  </div>
+  <button onclick="loadStats()">📊 Estadísticas</button>
+  <button onclick="loadUsers()">👥 Usuarios</button>
+  <button onclick="loadProducts()">🛒 Marketplace</button>
+  <button onclick="logout()">🚪 Salir</button>
+</div>
 
-  <div class="content">
-    <h1 id="title">Dashboard</h1>
-    <div id="data"></div>
-  </div>
+<div class="content">
+  <h1 id="title">Dashboard</h1>
+  <div id="data"></div>
+</div>
 
 <script>
 
 const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
 
-if (!token) {
-  window.location.href = "/login.html";
-}
-
-if (!role) {
-  alert("Error de sesión");
+if (!token || !role) {
   window.location.href = "/login.html";
 }
 
 const title = document.getElementById("title");
 
-if (role === "admin") {
-  title.innerText = "Dashboard Admin";
-} else if (role === "super_reseller") {
-  title.innerText = "Dashboard Super Reseller";
-} else {
-  title.innerText = "Dashboard Usuario";
-}
+title.innerText =
+  role === "admin" ? "Dashboard Admin" :
+  role === "super_reseller" ? "Dashboard Super Reseller" :
+  "Dashboard Usuario";
 
+
+// ===================== STATS =====================
 async function loadStats() {
 
-  const url = role === "admin" 
-    ? '/api/admin/stats' 
-    : '/api/dashboard';
-
-  const res = await fetch(url, {
+  const res = await fetch('/api/dashboard', {
     headers: { Authorization: 'Bearer ' + token }
   });
 
   const data = await res.json();
 
-  // 🔥 ESTE ES EL IMPORTANTE
   const userRes = await fetch('/api/user/me', {
     headers: { Authorization: 'Bearer ' + token }
   });
 
   const user = await userRes.json();
 
-  let plan = user.plan || "Sin plan";
-  let exp = "No definido";
-  let days = "-";
-  let statusText = "";
-  let statusClass = "";
-
-  if (user.expires_at) {
-    const expDate = new Date(user.expires_at);
-    const today = new Date();
-
-    const diff = expDate - today;
-    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-    exp = expDate.toLocaleDateString();
-    days = d;
-
-    if (d <= 0) {
-      statusText = "❌ Vencido";
-      statusClass = "status-bad";
-    } else if (d <= 3) {
-      statusText = "⚠️ Por expirar";
-      statusClass = "status-warn";
-    } else {
-      statusText = "✅ Activo";
-      statusClass = "status-ok";
-    }
-  }
-
-  let adminSection = "";
-
-  if (role === "admin") {
-    adminSection = `
-      <div class="card">
-        <h3>⚡ Activar Usuario</h3>
-
-        <input id="emailActivate" placeholder="Correo del usuario">
-
-        <select id="planActivate">
-          <option value="1m">1 mes</option>
-          <option value="3m">3 meses</option>
-          <option value="6m">6 meses</option>
-          <option value="12m">1 año</option>
-        </select>
-
-        <button class="activate" onclick="activarUsuario()">Activar</button>
-      </div>
-    `;
-  }
-
   document.getElementById('data').innerHTML = `
     <div class="cards">
-
       <div class="card">
         <h3>💰 Ventas</h3>
         <p>$${data.sales || 0}</p>
@@ -204,56 +149,94 @@ async function loadStats() {
 
       <div class="card">
         <h3>💸 Créditos</h3>
-        <p>$${user.credits || 0}</p> <!-- 🔥 FIX AQUÍ -->
+        <p>$${user.credits || 0}</p>
       </div>
 
       <div class="card">
         <h3>💳 Suscripción</h3>
-        <p>Plan: ${plan}</p>
-        <p>Expira: ${exp}</p>
-        <p>Días restantes: ${days}</p>
-        <p class="${statusClass}">${statusText}</p>
-        <br>
-        <button onclick="window.location.href='/payment.html'">
-          🔄 Renovar Plan
-        </button>
+        <p>${user.plan || "Sin plan"}</p>
+        <p>${user.expires_at || "No definido"}</p>
       </div>
-
-      ${adminSection}
-
     </div>
   `;
 }
 
-async function activarUsuario() {
 
-  if (role !== "admin") {
-    alert("No autorizado");
-    return;
-  }
+// ===================== MARKETPLACE =====================
+async function loadProducts() {
 
-  const email = document.getElementById("emailActivate").value;
-  const plan = document.getElementById("planActivate").value;
+  const res = await fetch('/api/products', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
 
-  const res = await fetch('/api/admin/activate-user', {
+  const products = await res.json();
+
+  let html = `
+    <h2>🛒 Marketplace</h2>
+
+    <div class="card">
+      <h3>➕ Crear Producto</h3>
+
+      <input id="pName" placeholder="Nombre">
+      <input id="pPrice" placeholder="Precio">
+      <input id="pImage" placeholder="URL Imagen">
+      <textarea id="pDesc" placeholder="Descripción"></textarea>
+
+      <button onclick="crearProducto()">Crear Producto</button>
+    </div>
+
+    <div class="cards">
+  `;
+
+  products.forEach(p => {
+    html += `
+      <div class="card">
+
+        ${p.image ? `<img src="${p.image}">` : ''}
+
+        <h3>${p.name}</h3>
+        <p>${p.description || 'Sin descripción'}</p>
+
+        <p>💲 $${p.price}</p>
+        <p>👤 ${p.username || 'Vendedor'}</p>
+
+      </div>
+    `;
+  });
+
+  html += '</div>';
+
+  document.getElementById('data').innerHTML = html;
+}
+
+
+// ===================== CREAR PRODUCTO =====================
+async function crearProducto() {
+
+  const name = document.getElementById('pName').value;
+  const price = document.getElementById('pPrice').value;
+  const image = document.getElementById('pImage').value;
+  const description = document.getElementById('pDesc').value;
+
+  const res = await fetch('/api/products', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: 'Bearer ' + token
     },
-    body: JSON.stringify({ email, plan })
+    body: JSON.stringify({ name, price, image, description })
   });
 
   const data = await res.json();
+
   alert(data.message || data.error);
+
+  loadProducts();
 }
 
-async function loadUsers() {
 
-  if (role !== "admin") {
-    alert("No autorizado");
-    return;
-  }
+// ===================== USERS =====================
+async function loadUsers() {
 
   const res = await fetch('/api/admin/users', {
     headers: { Authorization: 'Bearer ' + token }
@@ -266,8 +249,8 @@ async function loadUsers() {
   users.forEach(u => {
     html += `
       <div class="card">
-        <b>${u.username}</b> (${u.role})<br>
-        💰 Créditos: ${u.credits}<br>
+        <b>${u.username}</b><br>
+        💰 Créditos: ${u.credits}
       </div>
     `;
   });
@@ -275,28 +258,15 @@ async function loadUsers() {
   document.getElementById('data').innerHTML = html;
 }
 
-async function loadProducts() {
-  const res = await fetch('/api/products', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
 
-  const products = await res.json();
-
-  let html = '<h2>Productos</h2>';
-
-  products.forEach(p => {
-    html += `<p>${p.name}</p>`;
-  });
-
-  document.getElementById('data').innerHTML = html;
-}
-
+// ===================== LOGOUT =====================
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('role');
+  localStorage.clear();
   window.location.href = '/';
 }
 
+
+// INIT
 loadStats();
 
 </script>
