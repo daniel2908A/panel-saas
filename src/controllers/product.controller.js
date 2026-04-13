@@ -1,4 +1,4 @@
-const db = require('../config/db'); // 🔥 CORREGIDO
+const db = require('../db'); // 🔥 CORREGIDO
 
 // 🔹 CREAR PRODUCTO
 exports.createProduct = async (req, res) => {
