@@ -1,67 +1,109 @@
-// src/app.js
-const express = require("express");
-const path = require("path");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const authRoutes = require("./routes/auth.routes");
-const userRoutes = require("./routes/user.routes");
-const dashboardRoutes = require("./routes/dashboard.routes");
-const depositRoutes = require("./routes/deposits.routes");
-const { authMiddleware } = require("./middleware/auth.middleware");
-const { adminMiddleware } = require("./middleware/admin.middleware");
+require('dotenv').config();
+console.log("Nuevo deploy limpio sin bcrypt");
+
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// 🔥 BASE DE DATOS
+const db = require('./db');
+
+// 🔥 MIDDLEWARES
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Servir archivos estáticos
-app.use(express.static(path.join(__dirname, "../public")));
+// 🔥 SERVIR FRONTEND
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Redirigir raíz a login
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/login.html"));
+// 🔥 IMPORTAR RUTAS
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
+const adminRoutes = require('./routes/admin.routes');
+const depositRoutes = require('./routes/deposits.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
+const resellerRoutes = require('./routes/reseller.routes');
+const commissionRoutes = require('./routes/commission.routes');
+const planRoutes = require('./routes/plan.routes');
+const webhookRoutes = require('./routes/webhook.routes');
+
+// 🔥 IMPORTAR PROCESADOR DE DEPÓSITOS
+const processDeposits = require('./utils/depositProcessor');
+
+// 🔗 USAR RUTAS
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/commissions', commissionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reseller', resellerRoutes);
+app.use('/uploads', express.static('uploads'));
+app.use('/api/plan', planRoutes);
+app.use('/api/webhook', webhookRoutes);
+
+// =======================================
+// 🔥🔥🔥 FIX BASE DE DATOS TEMPORAL
+// =======================================
+app.get('/fix-db', async (req, res) => {
+  try {
+    await db.query(`ALTER TABLE users MODIFY id INT`);
+
+    try {
+      await db.query(`ALTER TABLE users DROP PRIMARY KEY`);
+    } catch (e) {
+      console.log("No tenía PK, seguimos...");
+    }
+
+    await db.query(`
+      ALTER TABLE users 
+      MODIFY id INT NOT NULL AUTO_INCREMENT,
+      ADD PRIMARY KEY (id)
+    `);
+
+    res.send("✅ DB ARREGLADA CORRECTAMENTE");
+
+  } catch (err) {
+    console.error(err);
+    res.send("❌ ERROR: " + err.message);
+  }
+});
+// =======================================
+
+// 🔥 RUTA PRINCIPAL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/register.html'));
 });
 
-// Rutas de autenticación
-app.use("/api/auth", authRoutes);
-
-// Rutas protegidas por login
-app.use("/api/users", authMiddleware, userRoutes);
-app.use("/api/dashboard", authMiddleware, dashboardRoutes);
-app.use("/api/deposit", authMiddleware, depositRoutes);
-
-// Redirección según rol (ejemplo login)
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  // Aquí debería ir tu función real de login que devuelve usuario y token
-  const user = await loginUser(email, password); // <- tu función de login
-  if (!user) return res.status(401).json({ message: "Usuario o contraseña inválidos" });
-
-  const token = generateToken(user); // <- tu función de JWT
-  res.json({
-    message: "Login exitoso",
-    token,
-    role: user.role,
-    user: {
-      id: user.id,
-      role: user.role,
-      status: user.status || "active",
-    },
-    redirect: user.role === "owner" ? "/admin.html" : "/dashboard.html",
-  });
+// 🔥 TEST API
+app.get('/api', (req, res) => {
+  res.json({ message: "API funcionando 🚀" });
 });
 
-// Manejo de rutas no encontradas
+// 🔁 CRON AUTOMÁTICO: revisar depósitos cada 60s
+setInterval(() => {
+  console.log("🔄 Revisando depósitos...");
+  processDeposits();
+}, 60000);
+
+// 🚫 404 HANDLER
 app.use((req, res) => {
-  res.status(404).send("Página no encontrada");
+  res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// Start
+// 🚨 ERROR HANDLER GLOBAL
+app.use((err, req, res, next) => {
+  console.error("Error global:", err);
+  res.status(500).json({ error: "Error interno del servidor" });
+});
+
+// 🚀 SERVER
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
