@@ -33,7 +33,6 @@ body {
   border: none;
   color: white;
   cursor: pointer;
-  transition: 0.3s;
 }
 
 .sidebar button:hover {
@@ -45,25 +44,23 @@ body {
   padding: 30px;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
 .card {
   background: rgba(255,255,255,0.03);
   border-radius: 16px;
   padding: 20px;
 }
 
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:20px;
+}
+
 .market-btn {
-  margin-top: 20px;
   padding: 12px;
   border-radius: 10px;
   background: linear-gradient(90deg, #22c55e, #4ade80);
   border: none;
-  color: black;
   font-weight: bold;
   cursor: pointer;
 }
@@ -78,6 +75,14 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+
+.drop {
+  border:2px dashed #38bdf8;
+  padding:20px;
+  text-align:center;
+  border-radius:10px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -85,7 +90,6 @@ body {
 
 <div class="sidebar">
   <h2>NEXORA</h2>
-
   <button onclick="loadStats()">📊 Estadísticas</button>
   <button onclick="loadProducts()">🛒 Marketplace</button>
   <button onclick="logout()">🚪 Salir</button>
@@ -99,175 +103,130 @@ body {
 <script>
 
 const token = localStorage.getItem('token');
+let imageBase64 = "";
 
 if (!token) location.href = "/login.html";
 
 document.getElementById("title").innerText = "Dashboard Super Reseller";
 
 
-// ===================== STATS =====================
+// ===================== DASHBOARD =====================
 async function loadStats() {
 
-  let data = { sales: 0, users: 0 };
-  let user = { credits: 0 };
-
-  try {
-    const res = await fetch('/api/dashboard', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if (res.ok) data = await res.json();
-  } catch {}
-
-  try {
-    const userRes = await fetch('/api/user/me', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if (userRes.ok) user = await userRes.json();
-  } catch {}
-
-  let dias = 0;
-  let activo = false;
-
-  if (user.expires_at) {
-    dias = Math.floor((new Date(user.expires_at) - new Date()) / (1000*60*60*24));
-    activo = new Date(user.expires_at) > new Date();
-  }
-
   document.getElementById('data').innerHTML = `
-    <div class="cards">
-
-      <div class="card">
-        <h3>💰 Ventas</h3>
-        <p>$${data.sales || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>👥 Usuarios</h3>
-        <p>${data.users || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💸 Créditos</h3>
-        <p>$${user.credits || 0}</p>
-      </div>
-
-      <div class="card">
-        <h3>💳 Suscripción</h3>
-
-        <p><b>${activo ? "PLAN ACTIVO" : "SIN PLAN"}</b></p>
-
-        <p>
-          ${user.expires_at 
-            ? new Date(user.expires_at).toLocaleDateString() 
-            : "No definido"}
-        </p>
-
-        <p style="color:${activo ? "#22c55e" : "#ef4444"};">
-          ${activo ? "🟢 Activo" : "🔴 Sin plan"}
-        </p>
-
-        ${
-          activo 
-          ? `<p>⏳ ${dias} días restantes</p>` 
-          : ""
-        }
-
-      </div>
-
+    <div class="card">
+      <h3>Bienvenido al panel</h3>
+      <button class="market-btn" onclick="loadProducts()">Ir al Marketplace</button>
     </div>
-
-    <button class="market-btn" onclick="loadProducts()">
-      🛒 Ir al Marketplace
-    </button>
   `;
 }
 
 
-// ===================== MARKETPLACE =====================
+// ===================== MARKET =====================
 async function loadProducts() {
 
   document.getElementById("title").innerText = "Marketplace";
 
-  try {
-    const res = await fetch('/api/products', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
+  const res = await fetch('/api/products', {
+    headers: { Authorization: 'Bearer ' + token }
+  });
 
-    if (!res.ok) {
-      alert("❌ Error cargando productos");
-      return;
-    }
+  const products = await res.json();
 
-    const products = await res.json();
+  document.getElementById('data').innerHTML = `
 
-    document.getElementById('data').innerHTML = `
+    <button class="back-btn" onclick="loadStats()">← Volver</button>
 
-      <button class="back-btn" onclick="loadStats()">← Volver</button>
+    <div class="card">
+      <h3>➕ Crear Producto</h3>
 
-      <h2>🛒 Marketplace</h2>
+      <input id="name" placeholder="Nombre" style="width:100%;margin:5px;padding:10px;border-radius:8px;">
+      <input id="price" type="number" placeholder="Precio" style="width:100%;margin:5px;padding:10px;border-radius:8px;">
 
-      <!-- CREAR PRODUCTO -->
-      <div class="card" style="margin-bottom:20px;">
-        <h3>➕ Crear Producto</h3>
-
-        <input id="name" placeholder="Nombre" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
-        <input id="price" type="number" placeholder="Precio" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
-        <input id="image" placeholder="URL Imagen" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
-        <textarea id="desc" placeholder="Descripción" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;"></textarea>
-
-        <button onclick="createProduct()" class="market-btn">
-          Crear Producto
-        </button>
+      <div class="drop" id="dropZone">
+        📂 Arrastra imagen o haz click
+        <input type="file" id="fileInput" hidden>
       </div>
 
-      <!-- LISTA -->
+      <img id="preview" style="width:100%;max-height:200px;margin-top:10px;border-radius:10px;display:none;">
+
+      <textarea id="desc" placeholder="Descripción" style="width:100%;margin:5px;padding:10px;border-radius:8px;"></textarea>
+
+      <button class="market-btn" onclick="createProduct()">Crear Producto</button>
+    </div>
+
+    <div class="grid">
       ${products.map(p => `
-        <div class="card" style="margin-bottom:15px;">
-          ${p.image ? `<img src="${p.image}" style="width:100%;border-radius:10px;margin-bottom:10px;">` : ""}
+        <div class="card">
+          ${p.image ? `<img src="${p.image}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;">` : ""}
           <h3>${p.name}</h3>
-          <p>${p.description || "Sin descripción"}</p>
-          <p><b>$${p.price}</b></p>
+          <p>${p.description || ""}</p>
+          <b>$${p.price}</b>
         </div>
       `).join('')}
-    `;
+    </div>
+  `;
 
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error servidor");
+  // activar subida imagen
+  initUpload();
+}
+
+
+// ===================== UPLOAD =====================
+function initUpload() {
+
+  const dropZone = document.getElementById("dropZone");
+  const input = document.getElementById("fileInput");
+  const preview = document.getElementById("preview");
+
+  dropZone.onclick = () => input.click();
+
+  input.onchange = e => loadFile(e.target.files[0]);
+
+  dropZone.ondrop = e => {
+    e.preventDefault();
+    loadFile(e.dataTransfer.files[0]);
+  };
+
+  dropZone.ondragover = e => e.preventDefault();
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      imageBase64 = reader.result;
+      preview.src = imageBase64;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
   }
 }
 
 
-// ===================== CREAR PRODUCTO =====================
+// ===================== CREATE =====================
 async function createProduct() {
 
   const name = document.getElementById("name").value;
   const price = document.getElementById("price").value;
-  const image = document.getElementById("image").value;
   const description = document.getElementById("desc").value;
 
-  try {
-    const res = await fetch('/api/products', {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ name, price, image, description })
-    });
+  const res = await fetch('/api/products', {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({
+      name,
+      price,
+      description,
+      image: imageBase64
+    })
+  });
 
-    if (!res.ok) {
-      alert("❌ Error creando producto (backend permisos)");
-      return;
-    }
+  if (!res.ok) return alert("Error backend");
 
-    alert("✅ Producto creado");
-    loadProducts();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error servidor");
-  }
+  alert("Producto creado");
+  loadProducts();
 }
 
 
