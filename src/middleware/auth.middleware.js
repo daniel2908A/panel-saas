@@ -13,14 +13,13 @@ module.exports = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 🔥 IMPORTANTE: pasar TODO el usuario
+    // 🔥 IMPORTANTE: guardar TODO
     req.user = {
       id: decoded.id,
       role: decoded.role
     };
 
-    // 🧪 DEBUG
-    console.log("USER AUTH:", req.user);
+    console.log("USER DESDE TOKEN:", req.user); // 👈 DEBUG
 
     next();
 
