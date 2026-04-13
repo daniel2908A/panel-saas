@@ -68,7 +68,6 @@ button:hover{
 </div>
 
 <script>
-
 async function login(){
   try{
     const email = document.getElementById("email").value;
@@ -95,16 +94,16 @@ async function login(){
     if(data.token){
       localStorage.setItem("token", data.token);
 
-      // Redirección según rol
+      // 🔑 REDIRECCIÓN SEGÚN ROL
       const role = data.role?.toLowerCase();
 
-      if(role === "owner"){           // admin
+      if(role === "owner"){         // Admin
         window.location.href = "/admin.html";
-      } else {                        // resellers / otros usuarios
+      } else {                       // Resellers y otros usuarios
         window.location.href = "/dashboard.html";
       }
 
-    }else{
+    } else {
       alert(data.error || "Credenciales incorrectas");
     }
 
@@ -113,7 +112,6 @@ async function login(){
     alert(err.message || "Error conectando con el servidor");
   }
 }
-
 </script>
 
 </body>
