@@ -21,14 +21,14 @@ const login = async (req, res) => {
 
     if (!match) return res.status(400).json({ error: "Contraseña incorrecta" });
 
-    // Migración automática a bcrypt si es necesario
+    // Migración a bcrypt
     if (user.password && !user.password.startsWith("$2")) {
       const newHash = await bcrypt.hash(password, 10);
       await db.query("UPDATE users SET password = ? WHERE id = ?", [newHash, user.id]);
       console.log("🔄 Password migrada:", user.email);
     }
 
-    // Normalizar el rol en minúscula para evitar problemas de redirección
+    // Normalizar rol
     const normalizedRole = String(user.role || "").toLowerCase();
 
     const token = jwt.sign(
@@ -42,10 +42,10 @@ const login = async (req, res) => {
     res.json({
       message: "Login exitoso",
       token,
-      role: normalizedRole,   // rol normalizado en minúscula
+      role: normalizedRole,
       user: {
         id: user.id,
-        role: normalizedRole, // también aquí
+        role: normalizedRole,
         status: user.status || "active"
       }
     });
@@ -56,4 +56,4 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+module.exports = { login }; // <-- clave para que no sea undefined
