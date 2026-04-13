@@ -1,52 +1,45 @@
+// app.js
 const express = require('express');
-const app = express();
 const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+
+// Importar rutas
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const depositRoutes = require('./routes/deposit.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 // Middlewares
 const authMiddleware = require('./middleware/auth.middleware');
 const adminMiddleware = require('./middleware/admin.middleware');
 
-// Routes
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const resellerRoutes = require('./routes/reseller.routes');
-const adminRoutes = require('./routes/admin.routes');
-const productRoutes = require('./routes/product.routes');
-const orderRoutes = require('./routes/order.routes');
-const depositRoutes = require('./routes/deposits.routes');
-const commissionRoutes = require('./routes/commission.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const planRoutes = require('./routes/plan.routes');
-const webhookRoutes = require('./routes/webhook.routes');
-const usersRoutes = require('./routes/user.routes'); // para Owner Panel
+const app = express();
 
-// Configuración global
+// Middlewares generales
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public'))); // servir archivos estáticos (html, js, css)
 
 // Rutas
-app.use('/api', authRoutes);
-app.use('/api', userRoutes);
-app.use('/api', resellerRoutes);
-app.use('/api', adminRoutes);
-app.use('/api', productRoutes);
-app.use('/api', orderRoutes);
-app.use('/api', depositRoutes);
-app.use('/api', commissionRoutes);
-app.use('/api', dashboardRoutes);
-app.use('/api', planRoutes);
-app.use('/api', webhookRoutes);
-app.use('/api', usersRoutes); // Owner Panel
+app.use('/api/auth', authRoutes);
+app.use('/api/users', authMiddleware, adminMiddleware, userRoutes); // solo admin puede acceder
+app.use('/api/deposit', authMiddleware, depositRoutes);
+app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 
-// Error handler general
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Error del servidor" });
+// Redirección de raíz
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// Ruta 404
+app.use((req, res) => {
+  res.status(404).send('Página no encontrada');
 });
 
 // Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor Nexora corriendo en puerto ${PORT}`);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
