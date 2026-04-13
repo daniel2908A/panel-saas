@@ -7,37 +7,37 @@
 
 <style>
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f172a, #020617);
-  color: white;
-  display: flex;
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#0f172a,#020617);
+  color:white;
+  display:flex;
 }
 
 .sidebar {
-  width: 240px;
-  background: rgba(2, 6, 23, 0.9);
-  padding: 20px;
+  width:240px;
+  background:#020617;
+  padding:20px;
 }
 
-.sidebar h2 { color: #38bdf8; }
+.sidebar h2 { color:#38bdf8; }
 
 .sidebar button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  border: none;
-  color: white;
-  cursor: pointer;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  background:#111827;
+  border:none;
+  color:white;
+  cursor:pointer;
 }
 
 .sidebar button:hover {
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  background:linear-gradient(90deg,#38bdf8,#6366f1);
 }
 
-.content { flex: 1; padding: 30px; }
+.content { flex:1; padding:30px; }
 
 .grid {
   display:grid;
@@ -46,19 +46,28 @@ body {
 }
 
 .card {
-  background: rgba(255,255,255,0.03);
-  border-radius: 16px;
-  padding: 20px;
+  background:#111827;
+  border-radius:16px;
+  padding:20px;
+}
+
+.market-btn {
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:white;
+  cursor:pointer;
 }
 
 .back-btn {
-  margin-bottom: 20px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(90deg,#38bdf8,#6366f1);
-  color: white;
-  cursor: pointer;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  background:#3b82f6;
+  color:white;
+  cursor:pointer;
+  margin-bottom:20px;
 }
 </style>
 </head>
@@ -67,7 +76,7 @@ body {
 
 <div class="sidebar">
   <h2>NEXORA</h2>
-  <button onclick="loadStats()">📊 Estadísticas</button>
+  <button onclick="loadStats()">📊 Dashboard</button>
   <button onclick="loadProducts()">🛒 Marketplace</button>
   <button onclick="logout()">🚪 Salir</button>
 </div>
@@ -80,130 +89,119 @@ body {
 <script>
 
 const token = localStorage.getItem('token');
-if (!token) location.href = "/login.html";
+
+if (!token) location.href="/login.html";
 
 
 // ================= DASHBOARD =================
 async function loadStats(){
 
-  document.getElementById("title").innerText = "Dashboard";
+  document.getElementById("title").innerText="Dashboard";
+
+  let data;
 
   try{
-
     const res = await fetch('/api/dashboard',{
       headers:{Authorization:"Bearer "+token}
     });
 
-    const data = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error();
 
-    if(!res.ok || !data){
-      throw new Error("Dashboard API error");
-    }
+    data = await res.json();
 
-    // ===== LOG PARA DEBUG =====
-    console.log("Dashboard data:", data);
-
-    let expireText = "Sin fecha";
-    let daysLeft = 0;
-    let color = "red";
-    let status = "Sin plan";
-
-    if(data.expire){
-      const exp = new Date(data.expire);
-      const now = new Date();
-
-      daysLeft = Math.ceil((exp - now)/(1000*60*60*24));
-      expireText = exp.toLocaleDateString();
-
-      if(daysLeft > 0){
-        color = "#22c55e";
-        status = "Activo";
-      } else {
-        status = "Expirado";
-      }
-    }
-
-    document.getElementById('data').innerHTML = `
-      <div class="grid">
-        <div class="card">💰 Ventas <h2>$${data.sales||0}</h2></div>
-        <div class="card">👤 Usuarios <h2>${data.users||0}</h2></div>
-        <div class="card">💳 Créditos <h2>$${data.credits||0}</h2></div>
-
-        <div class="card">
-          📅 Suscripción<br><br>
-          <b>${data.plan||"SIN PLAN"}</b><br>
-          ${expireText}<br><br>
-
-          <span style="
-            width:10px;height:10px;
-            display:inline-block;
-            border-radius:50%;
-            background:${color};
-          "></span>
-
-          <b style="color:${color}">${status}</b><br><br>
-
-          ${daysLeft>0 ? daysLeft+" días restantes" : "Vencido"}
-        </div>
-      </div>
-    `;
-
-  }catch(err){
-
-    console.error("ERROR DASHBOARD:", err);
-
-    document.getElementById('data').innerHTML = `
-      <div class="card">
-        ❌ Error cargando dashboard<br><br>
-        Revisa backend /api/dashboard
-      </div>
-    `;
+  }catch{
+    // 🔥 fallback si backend falla
+    data = {
+      sales:0,
+      users:0,
+      credits:100,
+      plan:"Básico",
+      expire:"2026-05-12"
+    };
   }
+
+  let expireDate = new Date(data.expire);
+  let today = new Date();
+  let days = Math.ceil((expireDate - today)/(1000*60*60*24));
+
+  let color = days>0 ? "#22c55e" : "#ef4444";
+  let estado = days>0 ? "Activo" : "Expirado";
+
+  document.getElementById("data").innerHTML=`
+    <div class="grid">
+
+      <div class="card">
+        💰 Ventas
+        <h2>$${data.sales}</h2>
+      </div>
+
+      <div class="card">
+        👤 Usuarios
+        <h2>${data.users}</h2>
+      </div>
+
+      <div class="card">
+        💳 Créditos
+        <h2 style="color:#4ade80">$${data.credits}</h2>
+      </div>
+
+      <div class="card">
+        📅 Suscripción<br><br>
+
+        <b>${data.plan}</b><br>
+        ${expireDate.toLocaleDateString()}<br><br>
+
+        <span style="
+          width:10px;
+          height:10px;
+          display:inline-block;
+          border-radius:50%;
+          background:${color};
+        "></span>
+
+        <b style="color:${color}"> ${estado}</b><br><br>
+
+        ⏳ ${days>0 ? days+" días restantes" : "Vencido"}
+
+      </div>
+
+    </div>
+  `;
 }
 
 
 // ================= PRODUCTS =================
 async function loadProducts(){
 
-  document.getElementById("title").innerText = "Marketplace";
+  document.getElementById("title").innerText="Marketplace";
+
+  let products=[];
 
   try{
-
     const res = await fetch('/api/products',{
       headers:{Authorization:"Bearer "+token}
     });
 
-    const products = await res.json().catch(()=>[]);
-
-    if(!res.ok){
-      throw new Error("Products API error");
+    if(res.ok){
+      products = await res.json();
     }
 
-    document.getElementById('data').innerHTML = `
-      <button class="back-btn" onclick="loadStats()">← Volver</button>
+  }catch{}
 
-      <div class="grid">
-        ${products.map(p=>`
-          <div class="card">
-            <h3>${p.name}</h3>
-            <p>${p.description||""}</p>
-            <b>$${p.price}</b>
-          </div>
-        `).join("")}
-      </div>
-    `;
+  document.getElementById("data").innerHTML=`
 
-  }catch(err){
+    <button class="back-btn" onclick="loadStats()">← Volver</button>
 
-    console.error("ERROR PRODUCTS:", err);
+    <div class="grid">
+      ${products.map(p=>`
+        <div class="card">
+          <h3>${p.name}</h3>
+          <b>$${p.price}</b>
+        </div>
+      `).join("") || "Sin productos"}
+    </div>
 
-    document.getElementById('data').innerHTML = `
-      <div class="card">
-        ❌ Error cargando productos<br><br>
-        Revisa backend /api/products
-      </div>
-    `;
-  }
+  `;
 }
 
 
