@@ -39,12 +39,10 @@ const login = async (req, res) => {
     // MIGRACIÓN AUTOMÁTICA A BCRYPT
     if (user.password && !user.password.startsWith("$2")) {
       const newHash = await bcrypt.hash(password, 10);
-
       await db.query(
         "UPDATE users SET password = ? WHERE id = ?",
         [newHash, user.id]
       );
-
       console.log("🔄 Password migrada:", user.email);
     }
 
@@ -116,10 +114,7 @@ const register = async (req, res) => {
       const [owner] = await db.query(
         "SELECT id FROM users WHERE role = 'owner' LIMIT 1"
       );
-
-      if (owner.length > 0) {
-        parentId = owner[0].id;
-      }
+      if (owner.length > 0) parentId = owner[0].id;
     }
 
     const referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
