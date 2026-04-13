@@ -71,6 +71,12 @@
       cursor: pointer;
     }
 
+    .btn-back {
+      width: auto;
+      padding: 8px 15px;
+      background: #334155;
+    }
+
     img {
       width: 100%;
       border-radius: 10px;
@@ -124,34 +130,20 @@ async function loadStats() {
   let user = { credits: 0 };
 
   try {
-
     const res = await fetch('/api/dashboard', {
       headers: { Authorization: 'Bearer ' + token }
     });
 
-    if (res.ok) {
-      data = await res.json();
-    } else {
-      console.warn("⚠ /api/dashboard falló");
-    }
-
-  } catch (err) {
-    console.warn("Dashboard no disponible");
-  }
+    if (res.ok) data = await res.json();
+  } catch {}
 
   try {
-
     const userRes = await fetch('/api/user/me', {
       headers: { Authorization: 'Bearer ' + token }
     });
 
-    if (userRes.ok) {
-      user = await userRes.json();
-    }
-
-  } catch (err) {
-    console.warn("User no disponible");
-  }
+    if (userRes.ok) user = await userRes.json();
+  } catch {}
 
   document.getElementById('data').innerHTML = `
     <div class="cards">
@@ -176,8 +168,6 @@ async function loadStats() {
         <p>${user.expires_at || "No definido"}</p>
       </div>
     </div>
-
-    <p class="error">⚠ Si no ves datos completos, revisa /api/dashboard</p>
   `;
 }
 
@@ -194,7 +184,10 @@ async function loadProducts() {
     const products = await res.json();
 
     let html = `
-      <h2>🛒 Marketplace</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>🛒 Marketplace</h2>
+        <button class="btn-back" onclick="loadStats()">⬅ Volver</button>
+      </div>
 
       <div class="card">
         <h3>➕ Crear Producto</h3>
@@ -228,7 +221,6 @@ async function loadProducts() {
 
   } catch (err) {
     alert("Error cargando productos");
-    console.error(err);
   }
 }
 
@@ -265,7 +257,9 @@ async function crearProducto() {
     }
 
     alert("✅ Producto creado");
-    loadProducts();
+
+    // 🔥 AQUÍ CAMBIAMOS
+    loadStats();
 
   } catch (err) {
     alert("Error conexión servidor");
