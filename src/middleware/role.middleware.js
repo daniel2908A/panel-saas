@@ -10,13 +10,20 @@ module.exports = function requireRole(rolesPermitidos = [], options = {}) {
 
       const { allowAdmin = true } = options;
 
-      // 🔥 admin puede todo (si está permitido)
+      // 🔥 admin puede todo
       if (allowAdmin && user.role === 'admin') {
         return next();
       }
 
-      // ❌ validar rol permitido
-      if (!rolesPermitidos.includes(user.role)) {
+      // 🧠 NORMALIZAR (acepta string o array)
+      let roles = rolesPermitidos;
+
+      if (!Array.isArray(rolesPermitidos)) {
+        roles = [rolesPermitidos];
+      }
+
+      // ❌ validar rol
+      if (!roles.includes(user.role)) {
         return res.status(403).json({ error: "Acceso denegado" });
       }
 
