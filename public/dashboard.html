@@ -1,158 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f172a, #020617);
-  color: white;
-  display: flex;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 240px;
-  background: rgba(2, 6, 23, 0.9);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-right: 1px solid rgba(255,255,255,0.05);
-}
-
-.sidebar h2 {
-  color: #38bdf8;
-}
-
-.sidebar button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  color: #cbd5f5;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.sidebar button:hover {
-  background: linear-gradient(135deg, #38bdf8, #6366f1);
-  color: white;
-  transform: translateX(5px);
-}
-
-/* CONTENT */
-.content {
-  flex: 1;
-  padding: 30px;
-}
-
-/* CARDS */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.card {
-  background: rgba(255,255,255,0.03);
-  border-radius: 16px;
-  padding: 20px;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.05);
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-/* INPUTS */
-input, textarea {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.05);
-  color: white;
-}
-
-/* BOTÓN */
-button {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* BOTÓN VOLVER */
-.btn-back {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #38bdf8, #6366f1);
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(99,102,241,0.6);
-}
-
-/* DROPZONE */
-#dropZone {
-  margin-top: 10px;
-  padding: 25px;
-  border: 2px dashed #38bdf8;
-  border-radius: 12px;
-  text-align: center;
-  cursor: pointer;
-}
-
-/* IMG */
-img {
-  width: 100%;
-  border-radius: 12px;
-  margin-bottom: 10px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="sidebar">
-  <h2>NEXORA</h2>
-
-  <button onclick="loadStats()">📊 Estadísticas</button>
-  <button onclick="loadUsers()">👥 Usuarios</button>
-  <button onclick="loadProducts()">🛒 Marketplace</button>
-  <button onclick="logout()">🚪 Salir</button>
-</div>
-
-<div class="content">
-  <h1 id="title"></h1>
-  <div id="data"></div>
-</div>
+<!-- SOLO TE MUESTRO LA PARTE MODIFICADA (loadStats COMPLETO) -->
 
 <script>
-const token = localStorage.getItem('token');
-const role = localStorage.getItem('role');
 
-if (!token || !role) {
-  window.location.href = "/login.html";
-}
-
-document.getElementById("title").innerText =
-  role === "admin" ? "Dashboard Admin" :
-  role === "super_reseller" ? "Dashboard Super Reseller" :
-  "Dashboard Usuario";
-
-
-// ===================== STATS =====================
 async function loadStats() {
 
   let data = { sales: 0, users: 0 };
@@ -172,132 +21,68 @@ async function loadStats() {
     if (userRes.ok) user = await userRes.json();
   } catch {}
 
+  // 🔥 CALCULAMOS DÍAS
+  let diasRestantes = 0;
+  if (user.expires_at) {
+    diasRestantes = Math.max(
+      0,
+      Math.floor((new Date(user.expires_at) - new Date()) / (1000*60*60*24))
+    );
+  }
+
   document.getElementById('data').innerHTML = `
     <div class="cards">
-      <div class="card"><h3>💰 Ventas</h3><p>$${data.sales}</p></div>
-      <div class="card"><h3>👥 Usuarios</h3><p>${data.users}</p></div>
-      <div class="card"><h3>💸 Créditos</h3><p>$${user.credits}</p></div>
-      <div class="card"><h3>💳 Suscripción</h3><p>${user.plan}</p></div>
-    </div>
-  `;
-}
 
-
-// ===================== PRODUCTS =====================
-async function loadProducts() {
-
-  const res = await fetch('/api/products', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
-
-  const products = await res.json();
-
-  let html = `
-    <div style="display:flex; justify-content:space-between;">
-      <h2>🛒 Marketplace</h2>
-      <button class="btn-back" onclick="loadStats()">⬅ Volver</button>
-    </div>
-
-    <div class="card">
-      <h3>Crear Producto</h3>
-
-      <input id="pName" placeholder="Nombre">
-      <input id="pPrice" placeholder="Precio">
-
-      <div id="dropZone">
-        📸 Click o arrastra imagen
-        <input type="file" id="fileInput" hidden>
-      </div>
-
-      <img id="preview">
-
-      <textarea id="pDesc" placeholder="Descripción"></textarea>
-
-      <button onclick="crearProducto()">Crear Producto</button>
-    </div>
-
-    <div class="cards">
-  `;
-
-  products.forEach(p => {
-    html += `
       <div class="card">
-        ${p.image ? `<img src="${p.image}">` : ''}
-        <h3>${p.name}</h3>
-        <p>${p.description || ''}</p>
-        <p>$${p.price}</p>
+        <h3>💰 Ventas</h3>
+        <p>$${data.sales || 0}</p>
       </div>
-    `;
-  });
 
-  html += '</div>';
+      <div class="card">
+        <h3>👥 Usuarios</h3>
+        <p>${data.users || 0}</p>
+      </div>
 
-  document.getElementById('data').innerHTML = html;
+      <div class="card">
+        <h3>💸 Créditos</h3>
+        <p>$${user.credits || 0}</p>
+      </div>
 
-  activarDrop();
+      <div class="card">
+        <h3>💳 Suscripción</h3>
+
+        <p style="font-size:18px; font-weight:bold;">
+          ${user.plan ? user.plan.toUpperCase() : "SIN PLAN"}
+        </p>
+
+        <p>
+          ${
+            user.expires_at
+            ? new Date(user.expires_at).toLocaleDateString()
+            : "No definido"
+          }
+        </p>
+
+        <p style="
+          font-weight:bold;
+          margin-top:10px;
+          color:${user.plan ? "#22c55e" : "#ef4444"};
+        ">
+          ${user.plan ? "🟢 Activo" : "🔴 Sin plan"}
+        </p>
+
+        ${
+          user.expires_at
+          ? `<p style="color:#38bdf8;">
+              ⏳ ${diasRestantes} días restantes
+            </p>`
+          : ""
+        }
+
+      </div>
+
+    </div>
+  `;
 }
 
-
-// ===================== IMAGE =====================
-let imageBase64 = "";
-
-function activarDrop() {
-
-  document.getElementById("dropZone").onclick = () => {
-    document.getElementById("fileInput").click();
-  };
-
-  document.getElementById("fileInput").onchange = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = e => {
-      imageBase64 = e.target.result;
-      document.getElementById("preview").src = imageBase64;
-      document.getElementById("preview").style.display = "block";
-    };
-
-    reader.readAsDataURL(file);
-  };
-}
-
-
-// ===================== CREATE =====================
-async function crearProducto() {
-
-  const name = pName.value;
-  const price = pPrice.value;
-  const description = pDesc.value;
-
-  const res = await fetch('/api/products', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({
-      name,
-      price,
-      image: imageBase64,
-      description
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) return alert(data.error);
-
-  alert("Producto creado");
-  loadStats();
-}
-
-
-// =====================
-function loadUsers(){ alert("usuarios") }
-function logout(){ localStorage.clear(); location.href="/" }
-
-loadStats();
 </script>
-
-</body>
-</html>
