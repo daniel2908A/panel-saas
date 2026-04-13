@@ -1,100 +1,52 @@
-require('dotenv').config();
-console.log("Nuevo deploy limpio sin crashes");
-
 const express = require('express');
-const path = require('path');
+const app = express();
 const cors = require('cors');
 
-const app = express();
+// Middlewares
+const authMiddleware = require('./middlewares/auth.middleware');
+const adminMiddleware = require('./middlewares/admin.middleware');
 
-// 🔥 BASE DE DATOS
-const db = require('./db');
-
-// 🔥 MIDDLEWARES
-app.use(cors());
-app.use(express.json());
-
-// 🔥 SERVIR FRONTEND
-app.use(express.static(path.join(__dirname, '../public')));
-
-// 🔥 IMPORTAR RUTAS
+// Routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const resellerRoutes = require('./routes/reseller.routes');
+const adminRoutes = require('./routes/admin.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
-const adminRoutes = require('./routes/admin.routes');
-const depositRoutes = require('./routes/deposits.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const resellerRoutes = require('./routes/reseller.routes');
+const depositRoutes = require('./routes/deposit.routes');
 const commissionRoutes = require('./routes/commission.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 const planRoutes = require('./routes/plan.routes');
 const webhookRoutes = require('./routes/webhook.routes');
+const usersRoutes = require('./routes/users.routes'); // para Owner Panel
 
-// 🔥 IMPORTAR PROCESADOR DE DEPÓSITOS
-const processDeposits = require('./utils/depositProcessor');
+// Configuración global
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 🔗 USAR RUTAS
-app.use('/api', authRoutes);           // <-- ahora /api/login funciona
-app.use('/api/user', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/commissions', commissionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/deposits', depositRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reseller', resellerRoutes);
-app.use('/uploads', express.static('uploads'));
-app.use('/api/plan', planRoutes);
-app.use('/api/webhook', webhookRoutes);
+// Rutas
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+app.use('/api', resellerRoutes);
+app.use('/api', adminRoutes);
+app.use('/api', productRoutes);
+app.use('/api', orderRoutes);
+app.use('/api', depositRoutes);
+app.use('/api', commissionRoutes);
+app.use('/api', dashboardRoutes);
+app.use('/api', planRoutes);
+app.use('/api', webhookRoutes);
+app.use('/api', usersRoutes); // Owner Panel
 
-// =======================================
-// 🔥🔥🔥 FIX BASE DE DATOS TEMPORAL
-// =======================================
-app.get('/fix-db', async (req, res) => {
-  try {
-    await db.query(`ALTER TABLE users MODIFY id INT`);
-    try { await db.query(`ALTER TABLE users DROP PRIMARY KEY`); } catch (e) {}
-    await db.query(`
-      ALTER TABLE users 
-      MODIFY id INT NOT NULL AUTO_INCREMENT,
-      ADD PRIMARY KEY (id)
-    `);
-    res.send("✅ DB ARREGLADA CORRECTAMENTE");
-  } catch (err) {
-    console.error(err);
-    res.send("❌ ERROR: " + err.message);
-  }
-});
-
-// 🔥 RUTA PRINCIPAL
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/register.html'));
-});
-
-// 🔥 TEST API
-app.get('/api', (req, res) => {
-  res.json({ message: "API funcionando 🚀" });
-});
-
-// 🔁 CRON AUTOMÁTICO: revisar depósitos cada 60s
-setInterval(() => {
-  console.log("🔄 Revisando depósitos...");
-  processDeposits();
-}, 60000);
-
-// 🚫 404 HANDLER
-app.use((req, res) => {
-  res.status(404).json({ error: "Ruta no encontrada" });
-});
-
-// 🚨 ERROR HANDLER GLOBAL
+// Error handler general
 app.use((err, req, res, next) => {
-  console.error("Error global:", err);
-  res.status(500).json({ error: "Error interno del servidor" });
+  console.error(err.stack);
+  res.status(500).json({ error: "Error del servidor" });
 });
 
-// 🚀 SERVER
+// Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`Servidor Nexora corriendo en puerto ${PORT}`);
 });
