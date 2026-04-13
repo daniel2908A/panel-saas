@@ -2,30 +2,35 @@ module.exports = (...roles) => {
   return (req, res, next) => {
     try {
 
-      const user = req.user;
-
-      if (!user) {
+      if (!req.user) {
         return res.status(401).json({ error: "No autorizado" });
       }
 
-      // 🔥 DEBUG (muy importante)
-      console.log("ROL USUARIO:", user.role);
+      const userRole = req.user.role;
+
+      console.log("ROL ACTUAL:", userRole);
       console.log("ROLES PERMITIDOS:", roles);
 
-      // 🔥 permitir admin siempre
-      if (user.role === 'admin') {
+      // 🔥 ADMIN SIEMPRE PASA
+      if (userRole === 'admin') {
         return next();
       }
 
-      // 🔥 validar roles
-      if (!roles.includes(user.role)) {
-        return res.status(403).json({ error: "Acceso denegado" });
+      // 🔥 VALIDACIÓN FLEXIBLE
+      if (!roles.includes(userRole)) {
+        return res.status(403).json({
+          error: "Acceso denegado",
+          debug: {
+            userRole,
+            rolesPermitidos: roles
+          }
+        });
       }
 
       next();
 
-    } catch (error) {
-      console.error("ERROR ROLE:", error);
+    } catch (err) {
+      console.error("ROLE ERROR:", err);
       res.status(500).json({ error: "Error interno" });
     }
   };
