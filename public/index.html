@@ -14,7 +14,6 @@ body {
   overflow-x: hidden;
 }
 
-/* 🔥 IMAGEN DE FONDO */
 .hero-bg {
   position: fixed;
   top: 0;
@@ -27,7 +26,6 @@ body {
   filter: brightness(0.9);
 }
 
-/* 🔥 OVERLAY */
 .overlay {
   position: fixed;
   top: 0;
@@ -38,7 +36,6 @@ body {
   background: rgba(2,6,23,0.6);
 }
 
-/* 🔥 LÍNEAS ANIMADAS */
 .background-animation {
   position: fixed;
   width: 100%;
@@ -66,22 +63,11 @@ header {
   padding: 20px 50px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-}
-
 .logo img {
   width: clamp(120px, 15vw, 220px);
-  height: auto;
-  object-fit: contain;
   filter: drop-shadow(0 0 10px rgba(56,189,248,0.7));
-  transition: 0.3s;
 }
 
-.logo img:hover {
-  transform: scale(1.05);
-}
 .btn {
   padding: 10px 20px;
   border-radius: 8px;
@@ -105,18 +91,11 @@ header {
   padding: 100px 20px;
 }
 
-.hero h1 {
-  font-size: 52px;
-}
+.hero h1 { font-size: 52px; }
 
-.hero span {
-  color: #38bdf8;
-}
+.hero span { color: #38bdf8; }
 
-.hero p {
-  color: #94a3b8;
-  margin: 20px 0;
-}
+.hero p { color: #94a3b8; }
 
 .hero button {
   padding: 15px 30px;
@@ -127,18 +106,13 @@ header {
   cursor: pointer;
 }
 
-.counter {
-  margin-top: 20px;
-  color: #4ade80;
-}
+.counter { margin-top: 20px; color: #4ade80; }
 
-/* 💎 GLASS */
 .card, .testimonial, .product {
   backdrop-filter: blur(10px);
   background: rgba(2,6,23,0.7);
 }
 
-/* FEATURES */
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -146,12 +120,8 @@ header {
   padding: 50px;
 }
 
-.card {
-  padding: 20px;
-  border-radius: 12px;
-}
+.card { padding: 20px; border-radius: 12px; }
 
-/* 🔥 DASHBOARD */
 .dashboard-preview {
   margin-top: 40px;
   display: flex;
@@ -173,7 +143,6 @@ header {
   font-size: 18px;
 }
 
-/* TESTIMONIOS */
 .testimonials {
   padding: 50px;
   text-align: center;
@@ -184,10 +153,8 @@ header {
   max-width: 400px;
   margin: auto;
   border-radius: 10px;
-  transition: 0.3s;
 }
 
-/* PRODUCTOS */
 .products {
   padding: 50px;
   text-align: center;
@@ -232,8 +199,8 @@ footer {
 
 <header>
   <div class="logo">
-  <img src="logo.png" alt="Nexora">
-</div>
+    <img src="logo.png" alt="Nexora">
+  </div>
   <div>
     <button class="btn login" onclick="goLogin()">Login</button>
     <button class="btn register" onclick="goRegister()">Registrarse</button>
@@ -252,7 +219,6 @@ footer {
     <div class="dash-card">👥 Usuarios<div id="users">12</div></div>
     <div class="dash-card">📈 Ganancias<div id="earnings">$45</div></div>
   </div>
-
 </section>
 
 <section class="features">
@@ -269,7 +235,7 @@ footer {
 
 <section class="products">
   <h2>🛒 Productos disponibles</h2>
-  <div id="products"></div>
+  <div id="products">Cargando...</div>
 </section>
 
 <section class="cta">
@@ -284,9 +250,9 @@ footer {
 
 <script>
 
-function goLogin(){window.location.href='/login.html'}
-function goRegister(){window.location.href='/register.html'}
-function goWhats(){window.open('https://wa.me/50239779827')}
+function goLogin(){ window.location.href='/login.html' }
+function goRegister(){ window.location.href='/register.html' }
+function goWhats(){ window.open('https://wa.me/50239779827') }
 
 // contador
 let total=0;
@@ -310,16 +276,16 @@ setInterval(()=>{
 
 // testimonios
 const testimonialList=[
-"“Ya recuperé mi inversión en 2 días 💸”",
-"“El sistema trabaja solo 🔥”",
-"“Genero ingresos diarios sin esfuerzo”",
-"“Vendo mientras duermo 😴💰”"
+"Ya recuperé mi inversión en 2 días 💸",
+"El sistema trabaja solo 🔥",
+"Genero ingresos diarios sin esfuerzo",
+"Vendo mientras duermo 😴💰"
 ];
 
 let i=0;
 
 function rotateTestimonial(){
-  const box = document.getElementById("testimonialBox");
+  const box=document.getElementById("testimonialBox");
   box.style.opacity=0;
   setTimeout(()=>{
     box.innerText=testimonialList[i];
@@ -331,18 +297,27 @@ function rotateTestimonial(){
 rotateTestimonial();
 setInterval(rotateTestimonial,3000);
 
-// productos
+// productos (con manejo de error)
 async function loadProducts(){
-  const res=await fetch('/api/products/public');
-  const data=await res.json();
+  try{
+    const res=await fetch('/api/products/public');
 
-  let html="";
-  data.forEach(p=>{
-    const price=p.price||(p.plans&&p.plans[0]?.price)||0;
-    html+=`<div class="product"><b>${p.name}</b><br>$${price}</div>`;
-  });
+    if(!res.ok) throw new Error("error");
 
-  document.getElementById("products").innerHTML=html;
+    const data=await res.json();
+
+    let html="";
+    data.forEach(p=>{
+      const price=p.price||(p.plans&&p.plans[0]?.price)||0;
+      html+=`<div class="product"><b>${p.name}</b><br>$${price}</div>`;
+    });
+
+    document.getElementById("products").innerHTML=html;
+
+  }catch(err){
+    document.getElementById("products").innerHTML="❌ Error cargando productos";
+    console.error(err);
+  }
 }
 
 loadProducts();

@@ -2,8 +2,9 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-
-// 🔐 LOGIN (FIX COMPLETO)
+// =======================
+// LOGIN
+// =======================
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -25,12 +26,9 @@ const login = async (req, res) => {
 
     let match = false;
 
-    // 🔥 DETECTAR SI PASSWORD ES HASH O TEXTO
     if (user.password && user.password.startsWith("$2")) {
-      // bcrypt
       match = await bcrypt.compare(password, user.password);
     } else {
-      // texto plano (usuarios antiguos)
       match = password === user.password;
     }
 
@@ -38,8 +36,8 @@ const login = async (req, res) => {
       return res.status(400).json({ error: "Contraseña incorrecta" });
     }
 
-    // 🔥 MIGRAR AUTOMÁTICAMENTE A BCRYPT (MUY PRO)
-    if (!user.password.startsWith("$2")) {
+    // MIGRACIÓN AUTOMÁTICA A BCRYPT
+    if (user.password && !user.password.startsWith("$2")) {
       const newHash = await bcrypt.hash(password, 10);
 
       await db.query(
@@ -47,7 +45,7 @@ const login = async (req, res) => {
         [newHash, user.id]
       );
 
-      console.log("🔄 Password migrada a bcrypt:", user.email);
+      console.log("🔄 Password migrada:", user.email);
     }
 
     const token = jwt.sign(
@@ -59,24 +57,23 @@ const login = async (req, res) => {
     res.json({
       message: "Login exitoso",
       token,
-      role: user.role, // 🔥 IMPORTANTE PARA FRONTEND
+      role: user.role,
       user: {
         id: user.id,
         role: user.role,
-        status: user.status
+        status: user.status || "active"
       }
     });
 
   } catch (err) {
     console.error("ERROR LOGIN:", err);
-    res.status(500).json({
-      error: "Error en login"
-    });
+    res.status(500).json({ error: "Error en login" });
   }
 };
 
-
-// 📝 REGISTER (AUTO LOGIN + REFERIDOS)
+// =======================
+// REGISTER
+// =======================
 const register = async (req, res) => {
   try {
     const { username, email, password, role, referral } = req.body;
@@ -85,7 +82,6 @@ const register = async (req, res) => {
       return res.status(400).json({ error: "Faltan datos" });
     }
 
-    // 🔥 CONTROL DE ROLES
     const userRole = ['reseller', 'super_reseller'].includes(role)
       ? role
       : 'reseller';
@@ -99,12 +95,11 @@ const register = async (req, res) => {
       return res.status(400).json({ error: "Email ya existe" });
     }
 
-    // 🔐 HASH PASSWORD (IMPORTANTE)
     const hashedPassword = await bcrypt.hash(password, 10);
 
     let parentId = null;
 
-    // 🔗 REFERIDO
+    // REFERIDO
     if (referral) {
       const [refUser] = await db.query(
         "SELECT id FROM users WHERE referral_code = ?",
@@ -116,7 +111,7 @@ const register = async (req, res) => {
       }
     }
 
-    // 👑 SI NO HAY REFERIDO → OWNER
+    // OWNER SI NO HAY REFERIDO
     if (!parentId) {
       const [owner] = await db.query(
         "SELECT id FROM users WHERE role = 'owner' LIMIT 1"
@@ -129,14 +124,13 @@ const register = async (req, res) => {
 
     const referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // 🔥 CREAR USUARIO
     const [result] = await db.query(
-      `INSERT INTO users (username, email, password, role, credits, parent_id, referral_code)
-       VALUES (?, ?, ?, ?, 0, ?, ?)`,
+      `INSERT INTO users 
+      (username, email, password, role, credits, parent_id, referral_code)
+      VALUES (?, ?, ?, ?, 0, ?, ?)`,
       [username, email, hashedPassword, userRole, parentId, referralCode]
     );
 
-    // 🔥 AUTO LOGIN
     const token = jwt.sign(
       { id: result.insertId, role: userRole },
       process.env.JWT_SECRET || "secretkey",
@@ -151,16 +145,11 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("🔥 ERROR REGISTRO:", error);
-
-    res.status(500).json({
-      error: "Error en registro"
-    });
+    console.error("ERROR REGISTER:", error);
+    res.status(500).json({ error: "Error en registro" });
   }
 };
 
-
-// 🔥 EXPORT
 module.exports = {
   login,
   register

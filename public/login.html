@@ -1,35 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Nexora</title>
+
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#020617;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container{
+  background:#111827;
+  padding:30px;
+  border-radius:12px;
+  width:300px;
+  text-align:center;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+  background:#1f2937;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:15px;
+  border:none;
+  border-radius:6px;
+  background:#38bdf8;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  background:#0ea5e9;
+}
+</style>
+</head>
+
 <body>
 
-<h2>Login</h2>
+<div class="container">
+  <h2>🔐 Login</h2>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Entrar</button>
+  <button onclick="login()">Entrar</button>
+</div>
 
 <script>
+
 async function login(){
+  try{
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+    if(!email || !password){
+      alert("Completa todos los campos");
+      return;
+    }
 
-  const res = await fetch('/api/login',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email,password})
-  });
+    const res = await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,password})
+    });
 
-  const data = await res.json();
+    if(!res.ok){
+      throw new Error("Error en login");
+    }
 
-  if(data.token){
-    localStorage.setItem("token", data.token); // 🔥 CLAVE
-    window.location.href="/dashboard.html";
-  }else{
-    alert("Credenciales incorrectas");
+    const data = await res.json();
+
+    if(data.token){
+      localStorage.setItem("token", data.token);
+
+      // redirección segura
+      window.location.href="/dashboard.html";
+    }else{
+      alert(data.error || "Credenciales incorrectas");
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("Error conectando con el servidor");
   }
 }
+
 </script>
 
 </body>

@@ -1,6 +1,5 @@
 require('dotenv').config();
-
-console.log("nuevo deploy limpio sin bcrypt");
+console.log("Nuevo deploy limpio sin bcrypt");
 
 const express = require('express');
 const path = require('path');
@@ -8,8 +7,8 @@ const cors = require('cors');
 
 const app = express();
 
-// 🔥 IMPORTANTE: DB
-const db = require('./db'); // 👈 ASEGÚRATE QUE ESTA RUTA ES CORRECTA
+// 🔥 BASE DE DATOS
+const db = require('./db');
 
 // 🔥 MIDDLEWARES
 app.use(cors());
@@ -28,14 +27,10 @@ const depositRoutes = require('./routes/deposits.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const resellerRoutes = require('./routes/reseller.routes');
 const commissionRoutes = require('./routes/commission.routes');
-
-// 🔥 NUEVO: PLANES
 const planRoutes = require('./routes/plan.routes');
-
-// 🔥 NUEVO: WEBHOOK BINANCE
 const webhookRoutes = require('./routes/webhook.routes');
 
-// 🔥 IMPORTAR PROCESADOR
+// 🔥 IMPORTAR PROCESADOR DE DEPÓSITOS
 const processDeposits = require('./utils/depositProcessor');
 
 // 🔗 USAR RUTAS
@@ -49,32 +44,22 @@ app.use('/api/deposits', depositRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reseller', resellerRoutes);
 app.use('/uploads', express.static('uploads'));
-
-// 🔥 PLANES
 app.use('/api/plan', planRoutes);
-
-// 🔥 WEBHOOK
 app.use('/api/webhook', webhookRoutes);
 
 // =======================================
-// 🔥🔥🔥 FIX BASE DE DATOS (TEMPORAL)
+// 🔥🔥🔥 FIX BASE DE DATOS TEMPORAL
 // =======================================
 app.get('/fix-db', async (req, res) => {
   try {
+    await db.query(`ALTER TABLE users MODIFY id INT`);
 
-    // 1. quitar AUTO_INCREMENT primero (si existe mal)
-    await db.query(`
-      ALTER TABLE users MODIFY id INT
-    `);
-
-    // 2. eliminar primary key si existe (evita conflicto)
     try {
       await db.query(`ALTER TABLE users DROP PRIMARY KEY`);
     } catch (e) {
       console.log("No tenía PK, seguimos...");
     }
 
-    // 3. ahora sí dejarlo correcto
     await db.query(`
       ALTER TABLE users 
       MODIFY id INT NOT NULL AUTO_INCREMENT,
@@ -90,7 +75,6 @@ app.get('/fix-db', async (req, res) => {
 });
 // =======================================
 
-
 // 🔥 RUTA PRINCIPAL
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/register.html'));
@@ -101,7 +85,7 @@ app.get('/api', (req, res) => {
   res.json({ message: "API funcionando 🚀" });
 });
 
-// 🔁 CRON AUTOMÁTICO
+// 🔁 CRON AUTOMÁTICO: revisar depósitos cada 60s
 setInterval(() => {
   console.log("🔄 Revisando depósitos...");
   processDeposits();
@@ -112,7 +96,7 @@ app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// 🚨 ERROR HANDLER
+// 🚨 ERROR HANDLER GLOBAL
 app.use((err, req, res, next) => {
   console.error("Error global:", err);
   res.status(500).json({ error: "Error interno del servidor" });
@@ -120,7 +104,6 @@ app.use((err, req, res, next) => {
 
 // 🚀 SERVER
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });

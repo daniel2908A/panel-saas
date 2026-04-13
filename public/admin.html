@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexora Admin Panel</title>
 
 <style>
@@ -10,6 +11,7 @@ body {
   background: linear-gradient(135deg, #020617, #0f172a);
   color: white;
   padding: 20px;
+  margin: 0;
 }
 
 .header {
@@ -59,11 +61,12 @@ button {
 </div>
 
 <div class="card">
-<h3>Usuarios</h3>
-<div id="users"></div>
+  <h3>Usuarios</h3>
+  <div id="users">Cargando...</div>
 </div>
 
 <script>
+
 const TOKEN = localStorage.getItem("token");
 
 if (!TOKEN) {
@@ -75,130 +78,167 @@ function logout() {
   window.location.href = "/login.html";
 }
 
-// 🔥 ACTIVAR SUPER RESELLER
+// =======================
+// ACTIVAR SUPER RESELLER
+// =======================
 async function activarSuper(userId, months) {
-
-  if (!userId) {
-    alert("Error: userId no definido");
-    return;
-  }
-
-  const res = await fetch('/api/admin/activar-superreseller', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + TOKEN
-    },
-    body: JSON.stringify({ userId, months })
-  });
-
-  const data = await res.json();
-  console.log("USERS RAW:", data);
-  alert(data.message || data.error);
-  cargarUsers();
-}
-
-// 💰 SUMAR CRÉDITOS
-async function addCredits(userId, amount) {
-
-  if (!userId) {
-    alert("Error: userId no definido");
-    return;
-  }
-
-  const res = await fetch('/api/admin/add', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + TOKEN
-    },
-    body: JSON.stringify({ userId, amount })
-  });
-
-  const data = await res.json();
-  alert(data.message || data.error);
-  cargarUsers();
-}
-
-// ❌ RESTAR CRÉDITOS
-async function removeCredits(userId, amount) {
-
-  if (!userId) {
-    alert("Error: userId no definido");
-    return;
-  }
-
-  const res = await fetch('/api/admin/remove', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + TOKEN
-    },
-    body: JSON.stringify({ userId, amount })
-  });
-
-  const data = await res.json();
-  alert(data.message || data.error);
-  cargarUsers();
-}
-
-// 👥 cargar usuarios
-async function cargarUsers() {
-  const res = await fetch('/api/admin/users', {
-    headers: { 'Authorization': 'Bearer ' + TOKEN }
-  });
-
-  const data = await res.json();
-
-  console.log("DATA USERS:", data); // 🔥 DEBUG
-
-  users.innerHTML = "";
-
-  data.forEach(u => {
-
-    // 🔥 DETECTAR ID REAL
-    const userId = u.id || u.user_id || u.id_user;
-
+  try{
     if (!userId) {
-      console.error("Usuario sin ID:", u);
+      alert("Error: userId no definido");
       return;
     }
 
-    const div = document.createElement("div");
-    div.className = "user-card";
+    const res = await fetch('/api/admin/activar-superreseller', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ userId, months })
+    });
 
-    div.innerHTML = `
-      <b>${u.username}</b> (${u.role})  
-      <br>💰 Créditos: $${u.credits || 0}
-      <br><br>
+    if(!res.ok) throw new Error("Error activando plan");
 
-      <button class="btn-green" onclick="addCredits(${userId}, 5)">+5</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 10)">+10</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 15)">+15</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 20)">+20</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 30)">+30</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 50)">+50</button>
-      <button class="btn-green" onclick="addCredits(${userId}, 100)">+100</button>
+    const data = await res.json();
+    alert(data.message || data.error || "Actualizado");
 
-      <br><br>
+    cargarUsers();
 
-      <button class="btn-red" onclick="removeCredits(${userId}, 5)">-5</button>
-      <button class="btn-red" onclick="removeCredits(${userId}, 10)">-10</button>
-      <button class="btn-red" onclick="removeCredits(${userId}, 20)">-20</button>
-
-      <br><br>
-
-      <button class="btn-orange" onclick="activarSuper(${userId}, 1)">1 Mes</button>
-      <button class="btn-orange" onclick="activarSuper(${userId}, 3)">3 Meses</button>
-      <button class="btn-orange" onclick="activarSuper(${userId}, 6)">6 Meses</button>
-      <button class="btn-orange" onclick="activarSuper(${userId}, 12)">12 Meses</button>
-    `;
-
-    users.appendChild(div);
-  });
+  }catch(err){
+    console.error(err);
+    alert("Error activando super reseller");
+  }
 }
 
+// =======================
+// SUMAR CRÉDITOS
+// =======================
+async function addCredits(userId, amount) {
+  try{
+    if (!userId) {
+      alert("Error: userId no definido");
+      return;
+    }
+
+    const res = await fetch('/api/admin/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ userId, amount })
+    });
+
+    if(!res.ok) throw new Error("Error sumando créditos");
+
+    const data = await res.json();
+    alert(data.message || data.error || "Créditos añadidos");
+
+    cargarUsers();
+
+  }catch(err){
+    console.error(err);
+    alert("Error agregando créditos");
+  }
+}
+
+// =======================
+// RESTAR CRÉDITOS
+// =======================
+async function removeCredits(userId, amount) {
+  try{
+    if (!userId) {
+      alert("Error: userId no definido");
+      return;
+    }
+
+    const res = await fetch('/api/admin/remove', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ userId, amount })
+    });
+
+    if(!res.ok) throw new Error("Error restando créditos");
+
+    const data = await res.json();
+    alert(data.message || data.error || "Créditos descontados");
+
+    cargarUsers();
+
+  }catch(err){
+    console.error(err);
+    alert("Error quitando créditos");
+  }
+}
+
+// =======================
+// CARGAR USUARIOS
+// =======================
+async function cargarUsers() {
+  try{
+    const res = await fetch('/api/admin/users', {
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    });
+
+    if(!res.ok) throw new Error("Error cargando usuarios");
+
+    const data = await res.json();
+
+    const container = document.getElementById("users");
+    container.innerHTML = "";
+
+    data.forEach(u => {
+
+      const userId = u.id || u.user_id || u.id_user;
+
+      if (!userId) {
+        console.error("Usuario sin ID:", u);
+        return;
+      }
+
+      const div = document.createElement("div");
+      div.className = "user-card";
+
+      div.innerHTML = `
+        <b>${u.username}</b> (${u.role})  
+        <br>💰 Créditos: $${u.credits || 0}
+        <br><br>
+
+        <button class="btn-green" onclick="addCredits(${userId}, 5)">+5</button>
+        <button class="btn-green" onclick="addCredits(${userId}, 10)">+10</button>
+        <button class="btn-green" onclick="addCredits(${userId}, 20)">+20</button>
+        <button class="btn-green" onclick="addCredits(${userId}, 50)">+50</button>
+
+        <br><br>
+
+        <button class="btn-red" onclick="removeCredits(${userId}, 5)">-5</button>
+        <button class="btn-red" onclick="removeCredits(${userId}, 10)">-10</button>
+
+        <br><br>
+
+        <button class="btn-orange" onclick="activarSuper(${userId}, 1)">1 Mes</button>
+        <button class="btn-orange" onclick="activarSuper(${userId}, 3)">3 Meses</button>
+        <button class="btn-orange" onclick="activarSuper(${userId}, 6)">6 Meses</button>
+        <button class="btn-orange" onclick="activarSuper(${userId}, 12)">12 Meses</button>
+      `;
+
+      container.appendChild(div);
+    });
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("users").innerHTML = "❌ Error cargando usuarios";
+  }
+}
+
+// =======================
+// INIT
+// =======================
 window.onload = cargarUsers;
+
 </script>
 
 </body>

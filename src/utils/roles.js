@@ -1,29 +1,50 @@
-// 🔥 ROLES DEL SISTEMA
+// =======================
+// ROLES DEL SISTEMA
+// =======================
 const ROLES = {
   ADMIN: 'admin',
-  SUPERRESELLER: 'superreseller',
+  SUPER_RESELLER: 'super_reseller',
   RESELLER: 'reseller',
-  CLIENTE: 'cliente',
-  SOCIO: 'socio'
+  CLIENT: 'client'
 };
 
-// 🔥 JERARQUÍA (IMPORTANTE)
+// =======================
+// JERARQUÍA
+// =======================
 const ROLE_LEVEL = {
-  admin: 5,
-  superreseller: 4,
-  reseller: 3,
-  cliente: 2,
-  socio: 1
+  admin: 4,
+  super_reseller: 3,
+  reseller: 2,
+  client: 1
 };
 
-// 🔥 VERIFICAR SI UN ROL TIENE PERMISO SOBRE OTRO
+// =======================
+// NORMALIZAR ROL
+// =======================
+const normalizeRole = (role) => {
+  return String(role || '').toLowerCase().trim();
+};
+
+// =======================
+// PERMISOS
+// =======================
 const canManage = (actorRole, targetRole) => {
-  return ROLE_LEVEL[actorRole] > ROLE_LEVEL[targetRole];
+  const actor = normalizeRole(actorRole);
+  const target = normalizeRole(targetRole);
+
+  if (!ROLE_LEVEL[actor] || !ROLE_LEVEL[target]) {
+    return false;
+  }
+
+  return ROLE_LEVEL[actor] > ROLE_LEVEL[target];
 };
 
-// 🔥 EXPORTAR
+// =======================
+// EXPORT
+// =======================
 module.exports = {
   ROLES,
   ROLE_LEVEL,
-  canManage
+  canManage,
+  normalizeRole
 };

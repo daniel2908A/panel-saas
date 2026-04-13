@@ -1,8 +1,9 @@
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 
-
-// 👑 CREAR RESELLER
+// =======================
+// CREAR RESELLER
+// =======================
 exports.createReseller = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -32,13 +33,14 @@ exports.createReseller = async (req, res) => {
     res.json({ message: "Reseller creado correctamente" });
 
   } catch (error) {
-    console.error(error);
+    console.error("ERROR CREATE RESELLER:", error);
     res.status(500).json({ error: "Error creando reseller" });
   }
 };
 
-
-// 👥 LISTAR USUARIOS
+// =======================
+// LISTAR USUARIOS
+// =======================
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
@@ -48,13 +50,14 @@ exports.getAllUsers = async (req, res) => {
     res.json(users);
 
   } catch (error) {
-    console.error(error);
+    console.error("ERROR GET USERS:", error);
     res.status(500).json({ error: "Error obteniendo usuarios" });
   }
 };
 
-
-// 💰 AGREGAR CRÉDITOS
+// =======================
+// AGREGAR CRÉDITOS
+// =======================
 exports.addCreditsToUser = async (req, res) => {
   try {
     let { userId, amount } = req.body;
@@ -83,14 +86,23 @@ exports.addCreditsToUser = async (req, res) => {
   }
 };
 
-
-// ❌ RESTAR CRÉDITOS
+// =======================
+// RESTAR CRÉDITOS
+// =======================
 exports.removeCreditsFromUser = async (req, res) => {
   try {
     let { userId, amount } = req.body;
 
+    if (!userId || amount === undefined) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
     userId = parseInt(userId);
     amount = parseFloat(amount);
+
+    if (isNaN(userId) || isNaN(amount)) {
+      return res.status(400).json({ error: "Datos inválidos" });
+    }
 
     const [users] = await db.query(
       "SELECT credits FROM users WHERE id = ?",
@@ -118,8 +130,9 @@ exports.removeCreditsFromUser = async (req, res) => {
   }
 };
 
-
-// 🔥 ACTIVAR SUSCRIPCIÓN (LO QUE TE FALTABA)
+// =======================
+// ACTIVAR PLAN
+// =======================
 exports.activateUserPlan = async (req, res) => {
   try {
     const { email, plan } = req.body;
@@ -150,8 +163,9 @@ exports.activateUserPlan = async (req, res) => {
   }
 };
 
-
-// ❌ ELIMINAR USUARIO
+// =======================
+// ELIMINAR USUARIO
+// =======================
 exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -168,13 +182,14 @@ exports.deleteUser = async (req, res) => {
     res.json({ message: "Usuario eliminado" });
 
   } catch (error) {
-    console.error(error);
+    console.error("ERROR DELETE USER:", error);
     res.status(500).json({ error: "Error eliminando usuario" });
   }
 };
 
-
-// 📊 ESTADÍSTICAS
+// =======================
+// ESTADÍSTICAS
+// =======================
 exports.getStats = async (req, res) => {
   try {
 
@@ -192,7 +207,7 @@ exports.getStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("ERROR STATS:", error);
     res.status(500).json({ error: "Error obteniendo estadísticas" });
   }
 };

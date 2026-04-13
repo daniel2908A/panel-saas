@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexora Store</title>
 
 <style>
@@ -12,7 +13,6 @@ body {
   color: white;
 }
 
-/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
@@ -32,7 +32,6 @@ body {
   cursor: pointer;
 }
 
-/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -40,7 +39,6 @@ body {
   padding: 20px;
 }
 
-/* CARD */
 .card {
   background: rgba(30,41,59,0.8);
   padding: 25px;
@@ -60,7 +58,6 @@ body {
   color: #4ade80;
 }
 
-/* MODAL */
 .modal {
   position: fixed;
   top: 0;
@@ -78,15 +75,8 @@ body {
   padding: 30px;
   border-radius: 15px;
   width: 320px;
-  animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* PLAN */
 .plan {
   background: #334155;
   padding: 12px;
@@ -94,7 +84,6 @@ body {
   border-radius: 8px;
 }
 
-/* BOTON */
 button {
   width: 100%;
   padding: 10px;
@@ -104,7 +93,6 @@ button {
   border-radius: 8px;
   cursor: pointer;
   color: white;
-  transition: 0.2s;
 }
 
 button:hover {
@@ -120,9 +108,8 @@ button:hover {
   <button class="logout" onclick="logout()">Salir</button>
 </div>
 
-<div class="grid" id="productos"></div>
+<div class="grid" id="productos">Cargando...</div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 id="productName"></h3>
@@ -132,102 +119,144 @@ button:hover {
 </div>
 
 <script>
+
 const TOKEN = localStorage.getItem("token");
 
-// 🔒 protección
+// =======================
+// PROTECCIÓN
+// =======================
 if (!TOKEN || TOKEN.length < 20) {
   localStorage.removeItem("token");
   window.location.href = "/login.html";
 }
 
-// logout
+// =======================
+// LOGOUT
+// =======================
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "/login.html";
 }
 
-// 🔥 cargar productos
+// =======================
+// CARGAR PRODUCTOS
+// =======================
 async function cargarProductos() {
-  const res = await fetch('/api/products', {
-    headers: { 'Authorization': 'Bearer ' + TOKEN }
-  });
+  try{
+    const res = await fetch('/api/products', {
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    });
 
-  const productos = await res.json();
-  productosDiv.innerHTML = "";
+    if(!res.ok) throw new Error("Error productos");
 
-  productos.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `<h2>${p.name}</h2>`;
-    div.onclick = () => verPlanes(p.id, p.name);
-    productosDiv.appendChild(div);
-  });
+    const productos = await res.json();
+
+    const container = document.getElementById("productos");
+    container.innerHTML = "";
+
+    productos.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `<h2>${p.name}</h2>`;
+      div.onclick = () => verPlanes(p.id, p.name);
+      container.appendChild(div);
+    });
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("productos").innerHTML = "❌ Error cargando productos";
+  }
 }
 
-// 🔥 ver planes
+// =======================
+// VER PLANES
+// =======================
 async function verPlanes(productId, name) {
-  modal.style.display = "flex";
-  productName.innerText = name;
+  try{
+    modal.style.display = "flex";
+    productName.innerText = name;
 
-  const res = await fetch(`/api/plans/${productId}`, {
-    headers: { 'Authorization': 'Bearer ' + TOKEN }
-  });
+    const res = await fetch(`/api/plans/${productId}`, {
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    });
 
-  const planes = await res.json();
-  planesDiv.innerHTML = "";
+    if(!res.ok) throw new Error("Error planes");
 
-  planes.forEach(plan => {
-    const div = document.createElement("div");
-    div.className = "plan";
+    const planes = await res.json();
 
-    div.innerHTML = `
-      ${plan.name} - $${plan.price}
-      <button onclick="comprar(${plan.id})">Comprar</button>
-    `;
+    planesDiv.innerHTML = "";
 
-    planesDiv.appendChild(div);
-  });
+    planes.forEach(plan => {
+      const div = document.createElement("div");
+      div.className = "plan";
+
+      div.innerHTML = `
+        ${plan.name} - $${plan.price}
+        <button onclick="comprar(${plan.id})">Comprar</button>
+      `;
+
+      planesDiv.appendChild(div);
+    });
+
+  }catch(err){
+    console.error(err);
+    alert("Error cargando planes");
+  }
 }
 
-// 🔥 comprar
+// =======================
+// COMPRAR
+// =======================
 async function comprar(planId) {
-  if (!confirm("¿Confirmar compra?")) return;
+  try{
+    if (!confirm("¿Confirmar compra?")) return;
 
-  const res = await fetch('/api/orders/buy', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + TOKEN
-    },
-    body: JSON.stringify({ planId })
-  });
+    const res = await fetch('/api/orders/buy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ planId })
+    });
 
-  const data = await res.json();
+    if(!res.ok) throw new Error("Error compra");
 
-  if (data.account) {
-    alert(`🔥 Compra exitosa
+    const data = await res.json();
+
+    if (data.account) {
+      alert(`🔥 Compra exitosa
 
 Usuario: ${data.account.username}
 Password: ${data.account.password}`);
-  } else {
-    alert(data.error || "Error en compra");
-  }
+    } else {
+      alert(data.error || "Error en compra");
+    }
 
-  cerrar();
+    cerrar();
+
+  }catch(err){
+    console.error(err);
+    alert("Error procesando compra");
+  }
 }
 
-// cerrar modal
+// =======================
+// CERRAR MODAL
+// =======================
 function cerrar() {
   modal.style.display = "none";
 }
 
-// init
-const productosDiv = document.getElementById("productos");
+// =======================
+// INIT
+// =======================
 const modal = document.getElementById("modal");
 const productName = document.getElementById("productName");
 const planesDiv = document.getElementById("planes");
 
 cargarProductos();
+
 </script>
 
 </body>

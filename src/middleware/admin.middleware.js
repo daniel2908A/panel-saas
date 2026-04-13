@@ -1,11 +1,15 @@
 module.exports = (req, res, next) => {
   try {
-    // 🔎 verificar usuario
-    if (!req.user) {
+    // =======================
+    // VALIDAR USUARIO
+    // =======================
+    if (!req.user || !req.user.role) {
       return res.status(401).json({ error: "No autorizado" });
     }
 
-    // 🔥 validar rol admin
+    // =======================
+    // VALIDAR ADMIN
+    // =======================
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: "Acceso solo para admin" });
     }
@@ -13,7 +17,10 @@ module.exports = (req, res, next) => {
     next();
 
   } catch (error) {
-    console.error("Error en admin.middleware:", error);
-    res.status(500).json({ error: "Error interno" });
+    console.error("ERROR ADMIN MIDDLEWARE:", error);
+
+    return res.status(500).json({
+      error: "Error interno del servidor"
+    });
   }
 };

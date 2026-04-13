@@ -1,16 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexora</title>
 
 <style>
-body{font-family:Segoe UI;background:#020617;color:white;display:flex;}
-.sidebar{width:220px;padding:20px;}
-.sidebar button{width:100%;margin-top:10px;padding:10px;}
-.content{flex:1;padding:20px;}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
-.card{background:#111827;padding:15px;border-radius:10px;}
+body{
+  font-family: Segoe UI;
+  background: #020617;
+  color: white;
+  display: flex;
+  margin: 0;
+}
+
+.sidebar{
+  width: 220px;
+  padding: 20px;
+}
+
+.sidebar button{
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #111827;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar button:hover{
+  background: #1f2937;
+}
+
+.content{
+  flex: 1;
+  padding: 20px;
+}
+
+.grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
+  gap: 20px;
+}
+
+.card{
+  background: #111827;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+input, textarea{
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #1f2937;
+  color: white;
+}
+
+img{
+  margin-top: 10px;
+  border-radius: 8px;
+}
 </style>
 </head>
 
@@ -22,89 +76,131 @@ body{font-family:Segoe UI;background:#020617;color:white;display:flex;}
 </div>
 
 <div class="content">
-  <div id="app"></div>
+  <div id="app">Cargando...</div>
 </div>
 
 <script>
 
 const token = localStorage.getItem("token");
 
-if(!token) location.href="/login.html";
+if(!token){
+  location.href = "/login.html";
+}
 
+// =======================
 // DASHBOARD
+// =======================
 async function dashboard(){
-  const res = await fetch('/api/dashboard',{
-    headers:{Authorization:"Bearer "+token}
-  });
+  try{
+    const res = await fetch('/api/dashboard',{
+      headers:{ Authorization: "Bearer " + token }
+    });
 
-  const data = await res.json();
+    if(!res.ok) throw new Error("Error dashboard");
 
-  document.getElementById("app").innerHTML=`
-    <div class="grid">
-      <div class="card">💰 Ventas: ${data.sales}</div>
-      <div class="card">👤 Usuarios: ${data.users}</div>
-      <div class="card">💳 Créditos: $${data.credits}</div>
-    </div>
-  `;
-}
+    const data = await res.json();
 
-// MARKETPLACE
-async function market(){
-
-  const res = await fetch('/api/products',{
-    headers:{Authorization:"Bearer "+token}
-  });
-
-  const products = await res.json();
-
-  document.getElementById("app").innerHTML=`
-
-    <h3>Crear Producto</h3>
-
-    <input id="name" placeholder="Nombre">
-    <input id="price" placeholder="Precio">
-    <input type="file" id="file">
-    <textarea id="desc" placeholder="Descripción"></textarea>
-
-    <button onclick="create()">Crear</button>
-
-    <hr>
-
-    <div class="grid">
-      ${products.map(p=>`
-        <div class="card">
-          <h3>${p.name}</h3>
-          <p>${p.description || ""}</p>
-          <b>$${p.price}</b><br>
-          ${p.image ? `<img src="${p.image}" width="100%">` : ""}
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-// CREAR PRODUCTO
-async function create(){
-
-  const form = new FormData();
-
-  form.append("name",name.value);
-  form.append("price",price.value);
-  form.append("description",desc.value);
-
-  if(file.files[0]){
-    form.append("image",file.files[0]);
+    document.getElementById("app").innerHTML = `
+      <div class="grid">
+        <div class="card">💰 Ventas: ${data.sales}</div>
+        <div class="card">👤 Usuarios: ${data.users}</div>
+        <div class="card">💳 Créditos: $${data.credits}</div>
+      </div>
+    `;
+  }catch(err){
+    document.getElementById("app").innerHTML = `❌ Error cargando dashboard`;
+    console.error(err);
   }
-
-  await fetch('/api/products',{
-    method:'POST',
-    headers:{Authorization:"Bearer "+token},
-    body:form
-  });
-
-  market();
 }
 
+// =======================
+// MARKETPLACE
+// =======================
+async function market(){
+  try{
+    const res = await fetch('/api/products',{
+      headers:{ Authorization: "Bearer " + token }
+    });
+
+    if(!res.ok) throw new Error("Error productos");
+
+    const products = await res.json();
+
+    document.getElementById("app").innerHTML = `
+      <h3>Crear Producto</h3>
+
+      <input id="name" placeholder="Nombre">
+      <input id="price" placeholder="Precio">
+      <input type="file" id="file">
+      <textarea id="desc" placeholder="Descripción"></textarea>
+
+      <button onclick="create()">Crear</button>
+
+      <hr>
+
+      <div class="grid">
+        ${products.map(p => `
+          <div class="card">
+            <h3>${p.name}</h3>
+            <p>${p.description || ""}</p>
+            <b>$${p.price}</b><br>
+            ${p.image ? `<img src="/uploads/${p.image}" width="100%">` : ""}
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }catch(err){
+    document.getElementById("app").innerHTML = `❌ Error cargando productos`;
+    console.error(err);
+  }
+}
+
+// =======================
+// CREAR PRODUCTO
+// =======================
+async function create(){
+  try{
+    const nameInput = document.getElementById("name");
+    const priceInput = document.getElementById("price");
+    const fileInput = document.getElementById("file");
+    const descInput = document.getElementById("desc");
+
+    if(!nameInput.value || !priceInput.value){
+      alert("Completa nombre y precio");
+      return;
+    }
+
+    const form = new FormData();
+    form.append("name", nameInput.value);
+    form.append("price", priceInput.value);
+    form.append("description", descInput.value);
+
+    if(fileInput.files[0]){
+      form.append("image", fileInput.files[0]);
+    }
+
+    const res = await fetch('/api/products',{
+      method: 'POST',
+      headers:{
+        Authorization: "Bearer " + token
+      },
+      body: form
+    });
+
+    if(!res.ok) throw new Error("Error creando producto");
+
+    alert("Producto creado correctamente");
+    market();
+
+  }catch(err){
+    console.error(err);
+    alert("Error creando producto");
+  }
+}
+
+// =======================
+// INIT
+// =======================
 dashboard();
 
 </script>

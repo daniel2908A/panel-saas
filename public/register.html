@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registro - Nexora Panel</title>
 
 <style>
@@ -122,8 +123,12 @@ button:hover {
 </div>
 
 <script>
+
 let role = "reseller";
 
+// =======================
+// CAMBIAR ROL
+// =======================
 function setRole(r, el) {
   role = r;
 
@@ -139,7 +144,9 @@ function setRole(r, el) {
   }
 }
 
+// =======================
 // REFERIDO DESDE URL
+// =======================
 const urlParams = new URLSearchParams(window.location.search);
 const refFromUrl = urlParams.get('ref');
 
@@ -147,7 +154,9 @@ if (refFromUrl) {
   document.getElementById('ref').value = refFromUrl;
 }
 
-// 🚀 REGISTRO
+// =======================
+// REGISTRO
+// =======================
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -155,6 +164,11 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const referral = document.getElementById("ref").value.trim();
+
+  if(!username || !email || !password){
+    alert("Completa todos los campos");
+    return;
+  }
 
   try {
     const res = await fetch("/api/auth/register", {
@@ -169,6 +183,10 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       })
     });
 
+    if(!res.ok){
+      throw new Error("Error en registro");
+    }
+
     const data = await res.json();
 
     if (data.error) {
@@ -176,18 +194,22 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
-    // 🔥 GUARDAR TOKEN (ESTO ES LO QUE FALTABA)
+    if(!data.token){
+      alert("Registro incompleto");
+      return;
+    }
+
     localStorage.setItem("token", data.token);
     localStorage.setItem("email", email);
 
-    // 🔥 REDIRECCIÓN CORRECTA
     window.location.href = "/payment.html";
 
   } catch (err) {
-    alert("Error de conexión con el servidor");
     console.error(err);
+    alert("Error de conexión con el servidor");
   }
 });
+
 </script>
 
 </body>

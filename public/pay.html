@@ -14,7 +14,6 @@ body {
   color: white;
 }
 
-/* CONTENEDOR */
 .container {
   max-width: 480px;
   margin: auto;
@@ -22,7 +21,6 @@ body {
   text-align: center;
 }
 
-/* CARD */
 .card {
   background: rgba(30, 41, 59, 0.95);
   padding: 25px;
@@ -30,19 +28,16 @@ body {
   box-shadow: 0 0 40px rgba(0,255,150,0.15);
 }
 
-/* TITULO */
 h2 {
   margin-bottom: 10px;
 }
 
-/* PLAN */
 .plan {
   font-size: 14px;
   color: #94a3b8;
   margin-bottom: 20px;
 }
 
-/* QR */
 img {
   width: 100%;
   max-width: 300px;
@@ -51,7 +46,6 @@ img {
   border-radius: 12px;
 }
 
-/* CAJA BINANCE */
 .binance-box {
   background: #020617;
   padding: 18px;
@@ -59,7 +53,6 @@ img {
   margin-top: 15px;
 }
 
-/* TEXTO ID */
 .binance-box p:first-child {
   font-size: 13px;
   color: #94a3b8;
@@ -70,7 +63,6 @@ img {
   font-weight: bold;
 }
 
-/* BOTONES EXTRA */
 .actions {
   display: flex;
   gap: 10px;
@@ -83,7 +75,6 @@ img {
   font-size: 13px;
 }
 
-/* INPUT */
 input {
   width: 100%;
   padding: 10px;
@@ -94,7 +85,6 @@ input {
   border-radius: 8px;
 }
 
-/* BOTON */
 button {
   width: 100%;
   padding: 12px;
@@ -112,7 +102,6 @@ button:hover {
   box-shadow: 0 0 10px #22c55e;
 }
 
-/* RESPONSIVE */
 @media (max-width: 480px) {
   img {
     max-width: 260px;
@@ -124,7 +113,6 @@ button:hover {
 <body>
 
 <div class="container">
-
 <div class="card">
 
 <h2>💳 Pago Binance</h2>
@@ -150,29 +138,37 @@ button:hover {
 <button onclick="enviar()">Enviar comprobante</button>
 
 </div>
-
 </div>
 
 <script>
 
+// =======================
+// PLAN
+// =======================
 const params = new URLSearchParams(window.location.search);
-const plan = params.get("plan");
+const plan = params.get("plan") || "No especificado";
 
 document.getElementById("planInfo").innerText = "Plan seleccionado: " + plan;
 
-/* COPIAR ID */
+// =======================
+// COPIAR ID
+// =======================
 function copiarID() {
   const id = document.getElementById("binanceId").innerText;
   navigator.clipboard.writeText(id);
   alert("ID copiado");
 }
 
-/* DETECTAR MOVIL */
+// =======================
+// DETECTAR MOVIL
+// =======================
 function esMovil() {
   return /Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
-/* ABRIR BINANCE */
+// =======================
+// ABRIR BINANCE
+// =======================
 function abrirBinance() {
   if (esMovil()) {
     window.location.href = "bnc://app.binance.com";
@@ -181,40 +177,55 @@ function abrirBinance() {
   }
 }
 
-/* ENVIAR COMPROBANTE */
+// =======================
+// ENVIAR COMPROBANTE
+// =======================
 async function enviar() {
+  try{
+    const file = document.getElementById("proof").files[0];
 
-  const file = document.getElementById("proof").files[0];
+    if (!file) {
+      alert("Sube comprobante");
+      return;
+    }
 
-  if (!file) {
-    alert("Sube comprobante");
-    return;
+    const token = localStorage.getItem("token");
+
+    if(!token){
+      alert("Debes iniciar sesión");
+      window.location.href="/login.html";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/payment/upload", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token
+      },
+      body: formData
+    });
+
+    if(!res.ok) throw new Error("Error subiendo comprobante");
+
+    const numero = "56946184516";
+
+    const mensaje = encodeURIComponent(
+      "Hola, ya realicé el pago en Nexora Panel (" + plan + ")"
+    );
+
+    window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
+
+    alert("Comprobante enviado correctamente");
+
+    window.location.href = "/dashboard.html";
+
+  }catch(err){
+    console.error(err);
+    alert("Error enviando comprobante");
   }
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const token = localStorage.getItem("token");
-
-  await fetch("/api/payment/upload", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + token
-    },
-    body: formData
-  });
-
-  const numero = "56946184516";
-
-  const mensaje = encodeURIComponent(
-    "Hola, ya realicé el pago en Nexora Panel (" + plan + ")"
-  );
-
-  window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
-
-  alert("Comprobante enviado correctamente");
-
-  window.location.href = "/dashboard.html";
 }
 
 </script>

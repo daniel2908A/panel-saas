@@ -1,71 +1,99 @@
 const db = require("../db");
 const verifyTransaction = require("./verifyTx");
 
-// 🔥 IMPORTAMOS COMISIONES
-const processCommission = require("./commissionProcessor");
+// 🔥 USAR SOLO ESTE (EL BUENO)
+const { processCommissions } = require("./commission.service");
 
 async function processDeposits() {
   try {
+
     const [deposits] = await db.query(
-      "SELECT * FROM deposits WHERE status = 'pending' AND txid IS NOT NULL"
+      "SELECT * FROM deposits WHERE status = 'waiting' AND txid IS NOT NULL"
     );
 
     for (const dep of deposits) {
-      console.log("🔍 Verificando depósito:", dep.id);
 
-      // 🔒 Validar que no esté ya aprobado
-      if (dep.status === "approved") {
-        console.log("⚠️ Ya aprobado, saltando...");
-        continue;
-      }
+      try {
+        console.log("🔍 Verificando depósito:", dep.id);
 
-      // 🔒 Evitar TXID duplicado
-      const [existing] = await db.query(
-        "SELECT id FROM deposits WHERE txid = ? AND id != ?",
-        [dep.txid, dep.id]
-      );
+        // =======================
+        // VALIDAR ESTADO
+        // =======================
+        if (dep.status !== "waiting") continue;
 
-      if (existing.length > 0) {
-        console.log("❌ TXID duplicado detectado");
+        // =======================
+        // EVITAR TXID DUPLICADO
+        // =======================
+        const [existing] = await db.query(
+          "SELECT id FROM deposits WHERE txid = ? AND id != ?",
+          [dep.txid, dep.id]
+        );
 
+        if (existing.length > 0) {
+          console.log("❌ TXID duplicado");
+
+          await db.query(
+            "UPDATE deposits SET status = 'rejected' WHERE id = ?",
+            [dep.id]
+          );
+
+          continue;
+        }
+
+        // =======================
+        // VALIDAR TRANSACCIÓN
+        // =======================
+        const isValid = await verifyTransaction(dep.txid, dep.amount);
+
+        if (!isValid) {
+          console.log("❌ TX inválida");
+          continue;
+        }
+
+        // =======================
+        // APROBAR DEPÓSITO
+        // =======================
         await db.query(
-          "UPDATE deposits SET status = 'rejected' WHERE id = ?",
+          "UPDATE deposits SET status = 'approved' WHERE id = ?",
           [dep.id]
         );
 
-        continue;
+        // =======================
+        // SUMAR CRÉDITOS
+        // =======================
+        await db.query(
+          "UPDATE users SET credits = credits + ? WHERE id = ?",
+          [dep.amount, dep.user_id]
+        );
+
+        console.log(`💰 Depósito aprobado ID ${dep.id}`);
+
+        // =======================
+        // COMISIONES
+        // =======================
+        const conn = await db.getConnection();
+
+        try {
+          await conn.beginTransaction();
+
+          await processCommissions(conn, dep.user_id, dep.amount);
+
+          await conn.commit();
+
+        } catch (err) {
+          await conn.rollback();
+          console.error("❌ Error comisiones:", err);
+        } finally {
+          conn.release();
+        }
+
+      } catch (err) {
+        console.error(`❌ Error procesando depósito ${dep.id}:`, err);
       }
-
-      const isValid = await verifyTransaction(dep.txid, dep.amount);
-
-      if (!isValid) {
-        console.log("❌ TX inválida o monto incorrecto");
-        continue;
-      }
-
-      // ✅ Aprobar depósito
-      await db.query(
-        "UPDATE deposits SET status = 'approved' WHERE id = ?",
-        [dep.id]
-      );
-
-      // 💰 SUMAR SALDO AL USUARIO
-      await db.query(
-        "UPDATE users SET balance = balance + ? WHERE id = ?",
-        [dep.amount, dep.user_id]
-      );
-
-      console.log(`💰 Depósito aprobado ID ${dep.id}`);
-
-      // ======================================
-      // 💸 APLICAR COMISIÓN AUTOMÁTICA
-      // ======================================
-      await processCommission(dep.user_id, dep.amount);
-
     }
 
   } catch (error) {
-    console.error("💥 Error procesando depósitos:", error);
+    console.error("💥 Error global depósitos:", error);
   }
 }
 

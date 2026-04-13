@@ -1,29 +1,49 @@
 const db = require('../db');
 
-// 📦 CREAR SUSCRIPCIÓN
+// =======================
+// CREAR SUSCRIPCIÓN
+// =======================
 const subscribe = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { plan, amount } = req.body;
+    const userId = req.user?.id;
+    let { plan, amount } = req.body;
 
-    if (!plan || !amount) {
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
+    if (!plan || amount === undefined) {
       return res.status(400).json({ error: "Datos incompletos" });
     }
 
-    // 🔥 GENERAR REFERENCIA ÚNICA
-    const reference = "PLAN-" + Date.now();
+    amount = parseFloat(amount);
 
-    // 📅 CALCULAR DURACIÓN
-    let days = 30;
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Monto inválido" });
+    }
 
-    if (plan === "3m") days = 90;
-    if (plan === "6m") days = 180;
-    if (plan === "12m") days = 365;
+    // VALIDAR PLANES
+    const validPlans = {
+      "1m": 30,
+      "3m": 90,
+      "6m": 180,
+      "12m": 365
+    };
 
-    // 📝 GUARDAR EN DB
+    if (!validPlans[plan]) {
+      return res.status(400).json({ error: "Plan inválido" });
+    }
+
+    const days = validPlans[plan];
+
+    // REFERENCIA ÚNICA
+    const reference = "PLAN-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+
+    // INSERT
     const [result] = await db.query(
-      `INSERT INTO subscriptions (user_id, plan, amount, reference, status, duration_days)
-       VALUES (?, ?, ?, ?, 'pending', ?)`,
+      `INSERT INTO subscriptions 
+      (user_id, plan, amount, reference, status, duration_days)
+      VALUES (?, ?, ?, ?, 'pending', ?)`,
       [userId, plan, amount, reference, days]
     );
 
@@ -35,7 +55,10 @@ const subscribe = async (req, res) => {
 
   } catch (error) {
     console.error("ERROR SUBSCRIBE:", error);
-    res.status(500).json({ error: "Error al crear suscripción" });
+
+    res.status(500).json({
+      error: "Error al crear suscripción"
+    });
   }
 };
 

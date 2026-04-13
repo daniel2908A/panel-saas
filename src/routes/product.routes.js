@@ -1,12 +1,31 @@
 const express = require('express');
 const router = express.Router();
 
-const controller = require('../controllers/product.controller');
-const auth = require('../middlewares/auth.middleware');
+const {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  upload
+} = require('../controllers/product.controller');
 
-router.get('/', auth, controller.getProducts);
-router.post('/', auth, controller.upload.single('image'), controller.createProduct);
-router.put('/:id', auth, controller.upload.single('image'), controller.updateProduct);
-router.delete('/:id', auth, controller.deleteProduct);
+// 🔥 RUTA CORRECTA (SIN S)
+const auth = require('../middleware/auth.middleware');
+
+// =======================
+// PRODUCTOS
+// =======================
+
+// LISTAR
+router.get('/', auth, getProducts);
+
+// CREAR
+router.post('/', auth, upload.single('image'), createProduct);
+
+// ACTUALIZAR
+router.put('/:id', auth, upload.single('image'), updateProduct);
+
+// ELIMINAR
+router.delete('/:id', auth, deleteProduct);
 
 module.exports = router;

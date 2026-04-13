@@ -1,17 +1,23 @@
 const db = require('../db');
 
-// 💰 PANEL DE GANANCIAS
+// =======================
+// PANEL DE GANANCIAS
+// =======================
 exports.getMyEarnings = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
-    // 🔹 Total ganado
+    if (!userId) {
+      return res.status(401).json({ error: "Usuario no autenticado" });
+    }
+
+    // TOTAL
     const [total] = await db.query(
       'SELECT SUM(amount) as total FROM commissions WHERE user_id = ?',
       [userId]
     );
 
-    // 🔹 Hoy
+    // HOY
     const [today] = await db.query(
       `SELECT SUM(amount) as total 
        FROM commissions 
@@ -20,7 +26,7 @@ exports.getMyEarnings = async (req, res) => {
       [userId]
     );
 
-    // 🔹 Por niveles
+    // POR NIVELES
     const [levels] = await db.query(
       `SELECT level, SUM(amount) as total 
        FROM commissions 
@@ -29,23 +35,27 @@ exports.getMyEarnings = async (req, res) => {
       [userId]
     );
 
-    // 🔹 Historial
+    // HISTORIAL
     const [history] = await db.query(
-      `SELECT * FROM commissions 
+      `SELECT id, amount, level, created_at 
+       FROM commissions 
        WHERE user_id = ? 
        ORDER BY id DESC`,
       [userId]
     );
 
     res.json({
-      total: total[0].total || 0,
-      today: today[0].total || 0,
-      levels,
-      history
+      total: total[0]?.total || 0,
+      today: today[0]?.total || 0,
+      levels: levels || [],
+      history: history || []
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    console.error("ERROR COMMISSIONS:", error);
+
+    res.status(500).json({
+      error: "Error obteniendo ganancias"
+    });
   }
 };

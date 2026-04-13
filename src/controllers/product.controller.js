@@ -2,62 +2,90 @@ const db = require('../db');
 const multer = require('multer');
 const path = require('path');
 
-// CONFIG MULTER
+// =======================
+// MULTER CONFIG
+// =======================
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + path.extname(file.originalname))
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
 });
 
 const upload = multer({ storage });
-exports.upload = upload;
 
+// =======================
 // CREAR PRODUCTO
-exports.createProduct = async (req, res) => {
+// =======================
+const createProduct = async (req, res) => {
   try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
     const { name, price, description } = req.body;
-    const image = req.file ? '/uploads/' + req.file.filename : null;
+
+    if (!name || !price) {
+      return res.status(400).json({ error: "Faltan datos" });
+    }
+
+    const image = req.file ? req.file.filename : null;
 
     await db.query(
       'INSERT INTO products (name, price, description, image, user_id) VALUES (?, ?, ?, ?, ?)',
-      [name, price, description, image, req.user.id]
+      [name, price, description || "", image, userId]
     );
 
     res.json({ message: "Producto creado" });
 
   } catch (err) {
-    console.log(err);
+    console.error("ERROR CREATE PRODUCT:", err);
     res.status(500).json({ error: "Error creando producto" });
   }
 };
 
+// =======================
 // LISTAR PRODUCTOS
-exports.getProducts = async (req, res) => {
+// =======================
+const getProducts = async (req, res) => {
   try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
     const [rows] = await db.query(
       'SELECT * FROM products WHERE user_id = ?',
-      [req.user.id]
+      [userId]
     );
 
     res.json(rows);
 
   } catch (err) {
+    console.error("ERROR GET PRODUCTS:", err);
     res.status(500).json({ error: "Error obteniendo productos" });
   }
 };
 
-// ACTUALIZAR
-exports.updateProduct = async (req, res) => {
+// =======================
+// ACTUALIZAR PRODUCTO
+// =======================
+const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, description } = req.body;
 
     let query = 'UPDATE products SET name=?, price=?, description=?';
-    let params = [name, price, description];
+    let params = [name, price, description || ""];
 
     if (req.file) {
       query += ', image=?';
-      params.push('/uploads/' + req.file.filename);
+      params.push(req.file.filename);
     }
 
     params.push(id);
@@ -67,12 +95,15 @@ exports.updateProduct = async (req, res) => {
     res.json({ message: "Producto actualizado" });
 
   } catch (err) {
+    console.error("ERROR UPDATE PRODUCT:", err);
     res.status(500).json({ error: "Error actualizando producto" });
   }
 };
 
-// ELIMINAR
-exports.deleteProduct = async (req, res) => {
+// =======================
+// ELIMINAR PRODUCTO
+// =======================
+const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -81,6 +112,18 @@ exports.deleteProduct = async (req, res) => {
     res.json({ message: "Producto eliminado" });
 
   } catch (err) {
+    console.error("ERROR DELETE PRODUCT:", err);
     res.status(500).json({ error: "Error eliminando producto" });
   }
+};
+
+// =======================
+// EXPORT CORRECTO
+// =======================
+module.exports = {
+  upload,
+  createProduct,
+  getProducts,
+  updateProduct,
+  deleteProduct
 };

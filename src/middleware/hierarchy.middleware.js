@@ -3,21 +3,38 @@ module.exports = function allowRoles(...rolesPermitidos) {
     try {
       const user = req.user;
 
-      // 🔒 validar login
-      if (!user) {
-        return res.status(401).json({ error: "No autorizado" });
+      // =======================
+      // VALIDAR USUARIO
+      // =======================
+      if (!user || !user.role) {
+        return res.status(401).json({
+          error: "No autorizado"
+        });
       }
 
-      // 🔎 validar rol
-      if (!rolesPermitidos.includes(user.role)) {
-        return res.status(403).json({ error: "No tienes permisos" });
+      // =======================
+      // NORMALIZAR ROLES
+      // =======================
+      const userRole = String(user.role).toLowerCase();
+      const roles = rolesPermitidos.map(r => String(r).toLowerCase());
+
+      // =======================
+      // VALIDAR PERMISOS
+      // =======================
+      if (!roles.includes(userRole)) {
+        return res.status(403).json({
+          error: "No tienes permisos"
+        });
       }
 
       next();
 
     } catch (error) {
-      console.error("Error en hierarchy.middleware:", error);
-      res.status(500).json({ error: "Error interno" });
+      console.error("ERROR ROLE MIDDLEWARE:", error);
+
+      return res.status(500).json({
+        error: "Error interno del servidor"
+      });
     }
   };
 };

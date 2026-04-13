@@ -1,16 +1,25 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const depositController = require("../controllers/deposit.controller");
-const auth = require("../middleware/auth.middleware");
+const {
+  createDeposit,
+  confirmDeposit,
+  getDeposits
+} = require('../controllers/deposit.controller');
 
-// Crear depósito
-router.post("/", auth, depositController.createDeposit);
+const auth = require('../middleware/auth.middleware');
 
-// Confirmar TXID
-router.post("/confirm", auth, depositController.confirmDeposit);
+// =======================
+// DEPÓSITOS
+// =======================
 
-// Listar depósitos
-router.get("/", auth, depositController.getDeposits);
+// CREAR
+router.post('/', auth, createDeposit);
+
+// CONFIRMAR
+router.post('/confirm', auth, confirmDeposit);
+
+// LISTAR
+router.get('/', auth, getDeposits);
 
 module.exports = router;

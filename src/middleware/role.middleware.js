@@ -1,37 +1,42 @@
-module.exports = (...roles) => {
+module.exports = (...rolesPermitidos) => {
   return (req, res, next) => {
     try {
-
-      if (!req.user) {
-        return res.status(401).json({ error: "No autorizado" });
+      // =======================
+      // VALIDAR USUARIO
+      // =======================
+      if (!req.user || !req.user.role) {
+        return res.status(401).json({
+          error: "No autorizado"
+        });
       }
 
-      const userRole = req.user.role;
+      const userRole = String(req.user.role).toLowerCase();
+      const roles = rolesPermitidos.map(r => String(r).toLowerCase());
 
-      console.log("ROL ACTUAL:", userRole);
-      console.log("ROLES PERMITIDOS:", roles);
-
-      // 🔥 ADMIN SIEMPRE PASA
+      // =======================
+      // ADMIN SIEMPRE PASA
+      // =======================
       if (userRole === 'admin') {
         return next();
       }
 
-      // 🔥 VALIDACIÓN FLEXIBLE
+      // =======================
+      // VALIDAR PERMISOS
+      // =======================
       if (!roles.includes(userRole)) {
         return res.status(403).json({
-          error: "Acceso denegado",
-          debug: {
-            userRole,
-            rolesPermitidos: roles
-          }
+          error: "Acceso denegado"
         });
       }
 
       next();
 
     } catch (err) {
-      console.error("ROLE ERROR:", err);
-      res.status(500).json({ error: "Error interno" });
+      console.error("ERROR ROLE MIDDLEWARE:", err);
+
+      return res.status(500).json({
+        error: "Error interno del servidor"
+      });
     }
   };
 };

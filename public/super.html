@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Reseller Panel</title>
 
 <style>
@@ -10,6 +11,7 @@ body {
   background: #0f172a;
   color: white;
   padding: 20px;
+  margin: 0;
 }
 
 h1 {
@@ -51,79 +53,111 @@ button {
 
 <div class="card">
   <h3>🛒 Productos</h3>
-  <div id="products"></div>
+  <div id="products">Cargando...</div>
 </div>
 
 <script>
 
 const token = localStorage.getItem('token');
 
-// 🔒 protección
-if (!token) {
+// =======================
+// PROTECCIÓN
+// =======================
+if (!token || token.length < 20) {
+  localStorage.removeItem("token");
   window.location.href = "/login.html";
 }
 
-// 💰 cargar saldo
+// =======================
+// CARGAR SALDO
+// =======================
 async function loadBalance() {
-  const res = await fetch('/api/user/me', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
+  try{
+    const res = await fetch('/api/user/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
 
-  const data = await res.json();
+    if(!res.ok) throw new Error("Error usuario");
 
-  balance.innerText = "$" + data.credits;
+    const data = await res.json();
+
+    document.getElementById("balance").innerText = "$" + (data.credits || 0);
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("balance").innerText = "❌ Error";
+  }
 }
 
-// 🛒 cargar productos
+// =======================
+// CARGAR PRODUCTOS
+// =======================
 async function loadProducts() {
-  const res = await fetch('/api/products/public');
+  try{
+    const res = await fetch('/api/products/public');
 
-  const products = await res.json();
+    if(!res.ok) throw new Error("Error productos");
 
-  let html = "";
+    const products = await res.json();
 
-products.forEach(p => {
+    let html = "";
 
-  const price = p.price || (p.plans && p.plans[0]?.price) || 0;
+    products.forEach(p => {
+      const price = p.price || (p.plans && p.plans[0]?.price) || 0;
 
-  html += `
-    <div class="product">
-      <b>${p.name}</b><br>
-      Precio: $${price}<br><br>
-      <button onclick="buyProduct(${p.id}, ${price})">
-        Comprar
-      </button>
-    </div>
-  `;
-});
+      html += `
+        <div class="product">
+          <b>${p.name}</b><br>
+          Precio: $${price}<br><br>
+          <button onclick="buyProduct(${p.id}, ${price})">
+            Comprar
+          </button>
+        </div>
+      `;
+    });
 
-  document.getElementById('products').innerHTML = html;
+    document.getElementById('products').innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("products").innerHTML = "❌ Error cargando productos";
+  }
 }
 
-// 💸 comprar producto
+// =======================
+// COMPRAR
+// =======================
 async function buyProduct(productId, price) {
+  try{
+    const confirmBuy = confirm("¿Comprar producto por $" + price + "?");
+    if (!confirmBuy) return;
 
-  const confirmBuy = confirm("¿Comprar producto por $" + price + "?");
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ productId })
+    });
 
-  if (!confirmBuy) return;
+    if(!res.ok) throw new Error("Error compra");
 
-  const res = await fetch('/api/orders', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({ productId })
-  });
+    const data = await res.json();
 
-  const data = await res.json();
+    alert(data.message || data.error || "Compra realizada");
 
-  alert(data.message || data.error);
+    loadBalance();
 
-  loadBalance();
+  }catch(err){
+    console.error(err);
+    alert("Error procesando compra");
+  }
 }
 
-// 🚀 init
+// =======================
+// INIT
+// =======================
 loadBalance();
 loadProducts();
 

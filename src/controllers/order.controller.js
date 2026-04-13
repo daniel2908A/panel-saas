@@ -1,40 +1,50 @@
 const db = require('../db');
 const commissionService = require('../services/commission.service');
 
-// 🛒 COMPRA CON ENTREGA + COMISIONES
+// =======================
+// COMPRA PRODUCTO
+// =======================
 exports.buyProduct = async (req, res) => {
-  const conn = await db.getConnection();
+  let conn;
 
   try {
-    await conn.beginTransaction();
+    const userId = req.user?.id;
 
-    const userId = req.user.id;
-    const { productId, quantity } = req.body;
-
-    if (!productId || !quantity) {
-      throw new Error('Datos incompletos');
+    if (!userId) {
+      return res.status(401).json({ message: "No autorizado" });
     }
 
-    // 🔹 1. Obtener producto
+    const { productId, quantity } = req.body;
+
+    const qty = parseInt(quantity);
+
+    if (!productId || !qty || qty <= 0) {
+      return res.status(400).json({ message: 'Datos inválidos' });
+    }
+
+    conn = await db.getConnection();
+    await conn.beginTransaction();
+
+    // PRODUCTO
     const [products] = await conn.query(
       'SELECT * FROM products WHERE id = ?',
       [productId]
     );
 
-    if (products.length === 0) {
+    if (!products.length) {
       throw new Error('Producto no encontrado');
     }
 
     const product = products[0];
-    const total = product.price * quantity;
+    const total = product.price * qty;
 
-    // 🔹 2. Obtener usuario
+    // USUARIO
     const [users] = await conn.query(
       'SELECT * FROM users WHERE id = ?',
       [userId]
     );
 
-    if (users.length === 0) {
+    if (!users.length) {
       throw new Error('Usuario no encontrado');
     }
 
@@ -44,31 +54,31 @@ exports.buyProduct = async (req, res) => {
       throw new Error('Saldo insuficiente');
     }
 
-    // 🔹 3. Ver stock disponible
+    // STOCK
     const [accounts] = await conn.query(
       'SELECT * FROM accounts WHERE product_id = ? AND status = "available" LIMIT ?',
-      [productId, quantity]
+      [productId, qty]
     );
 
-    if (accounts.length < quantity) {
+    if (accounts.length < qty) {
       throw new Error('Stock insuficiente');
     }
 
-    // 🔹 4. Descontar saldo
+    // DESCONTAR SALDO
     await conn.query(
       'UPDATE users SET credits = credits - ? WHERE id = ?',
       [total, userId]
     );
 
-    // 🔹 5. Crear orden
+    // CREAR ORDEN
     const [orderResult] = await conn.query(
       'INSERT INTO orders (user_id, product_id, quantity, total) VALUES (?, ?, ?, ?)',
-      [userId, productId, quantity, total]
+      [userId, productId, qty, total]
     );
 
     const orderId = orderResult.insertId;
 
-    // 🔥 6. ENTREGA AUTOMÁTICA
+    // ENTREGA
     for (let acc of accounts) {
       await conn.query(
         'UPDATE accounts SET status = "sold", order_id = ? WHERE id = ?',
@@ -76,26 +86,23 @@ exports.buyProduct = async (req, res) => {
       );
     }
 
-    // 💰 7. COMISIONES MULTINIVEL (YA TENÍAS)
+    // COMISIONES MULTINIVEL
     await commissionService.processCommissions(conn, userId, total);
 
-    // 🔥 8. COMISIÓN DIRECTA PARA SUPER RESELLER
+    // COMISIÓN DIRECTA
     const [buyer] = await conn.query(
       "SELECT parent_id FROM users WHERE id = ?",
       [userId]
     );
 
-    if (buyer[0].parent_id) {
-
-      const commissionPercent = 10; // puedes ajustar
-      const commission = total * (commissionPercent / 100);
+    if (buyer.length && buyer[0].parent_id) {
+      const commission = total * 0.10;
 
       await conn.query(
         "UPDATE users SET credits = credits + ? WHERE id = ?",
         [commission, buyer[0].parent_id]
       );
 
-      // guardar registro
       await conn.query(
         "INSERT INTO commissions (user_id, from_user, amount) VALUES (?, ?, ?)",
         [buyer[0].parent_id, userId, commission]
@@ -114,27 +121,42 @@ exports.buyProduct = async (req, res) => {
     });
 
   } catch (error) {
-    await conn.rollback();
-    console.error(error);
-    res.status(400).json({ message: error.message });
+    if (conn) await conn.rollback();
+
+    console.error("ERROR BUY PRODUCT:", error);
+
+    res.status(500).json({
+      message: error.message || "Error en compra"
+    });
+
   } finally {
-    conn.release();
+    if (conn) conn.release();
   }
 };
 
-
-// 📦 MIS ORDENES
+// =======================
+// MIS ÓRDENES
+// =======================
 exports.getMyOrders = async (req, res) => {
   try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "No autorizado" });
+    }
+
     const [orders] = await db.query(
       'SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC',
-      [req.user.id]
+      [userId]
     );
 
     res.json(orders);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    console.error("ERROR GET ORDERS:", error);
+
+    res.status(500).json({
+      message: "Error obteniendo órdenes"
+    });
   }
 };

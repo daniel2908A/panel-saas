@@ -2,31 +2,35 @@ const express = require('express');
 const router = express.Router();
 
 const userController = require('../controllers/user.controller');
-
-// ✅ CORREGIDO
 const auth = require('../middleware/auth.middleware');
 const requireRole = require('../middleware/role.middleware');
 
-const db = require('../db');
+// =======================
+// USUARIO
+// =======================
 
-// 🔥 DATOS DEL USUARIO
+// DATOS DEL USUARIO
 router.get('/me', auth, userController.getMe);
 
-// 💰 VER CRÉDITOS
+// CRÉDITOS
 router.get('/credits', auth, userController.getCredits);
 
-// 💸 HISTORIAL DE COMISIONES
+// COMISIONES
 router.get('/commissions', auth, userController.getMyCommissions);
 
-// ➕ AGREGAR CRÉDITOS
+// =======================
+// ADMIN / RESELLER
+// =======================
+
+// AGREGAR CRÉDITOS
 router.post(
   '/add-credits',
   auth,
-  requireRole('admin', 'superreseller'),
+  requireRole('admin', 'super_reseller'),
   userController.addCredits
 );
 
-// 👥 CLIENTES DEL RESELLER
+// CLIENTES
 router.get(
   '/my-clients',
   auth,
@@ -34,7 +38,7 @@ router.get(
   userController.getMyClients
 );
 
-// 📊 ESTADÍSTICAS
+// ESTADÍSTICAS
 router.get(
   '/my-stats',
   auth,
@@ -42,7 +46,7 @@ router.get(
   userController.getMyStats
 );
 
-// 👤 CREAR CLIENTE
+// CREAR CLIENTE
 router.post(
   '/create-client',
   auth,
@@ -50,34 +54,9 @@ router.post(
   userController.createClient
 );
 
-// ======================================
-// 🔥 REFERIDOS
-// ======================================
-
-router.get('/referrals', auth, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const [referrals] = await db.query(
-      "SELECT id, username, email, created_at FROM users WHERE parent_id = ?",
-      [userId]
-    );
-
-    const [me] = await db.query(
-      "SELECT ref_code FROM users WHERE id = ?",
-      [userId]
-    );
-
-    res.json({
-      myCode: me[0]?.ref_code || null,
-      total: referrals.length,
-      referrals
-    });
-
-  } catch (err) {
-    console.error("Error referrals:", err);
-    res.status(500).json({ error: "Error obteniendo referidos" });
-  }
-});
+// =======================
+// REFERIDOS
+// =======================
+router.get('/referrals', auth, userController.getReferrals);
 
 module.exports = router;

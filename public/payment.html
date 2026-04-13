@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Selecciona tu plan</title>
 
 <style>
@@ -70,7 +71,6 @@ button {
   transform: scale(1.05);
   box-shadow: 0 0 15px #f59e0b;
 }
-
 </style>
 </head>
 
@@ -88,9 +88,29 @@ button {
 </div>
 
 <script>
-function goPay(plan) {
-  window.location.href = "/pay.html?plan=" + plan;
+
+// =======================
+// VALIDAR LOGIN
+// =======================
+const token = localStorage.getItem("token");
+
+if(!token){
+  alert("Debes iniciar sesión primero");
+  window.location.href = "/login.html";
 }
+
+// =======================
+// REDIRECCIÓN A PAGO
+// =======================
+function goPay(plan) {
+  if(!plan){
+    alert("Error seleccionando plan");
+    return;
+  }
+
+  window.location.href = "/pay.html?plan=" + encodeURIComponent(plan);
+}
+
 </script>
 
 </body>
