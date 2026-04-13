@@ -67,6 +67,17 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+
+.back-btn {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(90deg,#38bdf8,#6366f1);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -183,21 +194,36 @@ async function loadProducts() {
     });
 
     if (!res.ok) {
-      alert("❌ Error cargando productos (posible problema de permisos)");
+      alert("❌ Error cargando productos");
       return;
     }
 
     const products = await res.json();
 
-    if (!Array.isArray(products)) {
-      alert("❌ Error de formato en productos");
-      return;
-    }
-
     document.getElementById('data').innerHTML = `
-      <h2>🛒 Productos</h2>
+
+      <button class="back-btn" onclick="loadStats()">← Volver</button>
+
+      <h2>🛒 Marketplace</h2>
+
+      <!-- CREAR PRODUCTO -->
+      <div class="card" style="margin-bottom:20px;">
+        <h3>➕ Crear Producto</h3>
+
+        <input id="name" placeholder="Nombre" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
+        <input id="price" type="number" placeholder="Precio" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
+        <input id="image" placeholder="URL Imagen" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;">
+        <textarea id="desc" placeholder="Descripción" style="width:100%;margin:5px 0;padding:10px;border-radius:8px;"></textarea>
+
+        <button onclick="createProduct()" class="market-btn">
+          Crear Producto
+        </button>
+      </div>
+
+      <!-- LISTA -->
       ${products.map(p => `
-        <div class="card">
+        <div class="card" style="margin-bottom:15px;">
+          ${p.image ? `<img src="${p.image}" style="width:100%;border-radius:10px;margin-bottom:10px;">` : ""}
           <h3>${p.name}</h3>
           <p>${p.description || "Sin descripción"}</p>
           <p><b>$${p.price}</b></p>
@@ -207,7 +233,40 @@ async function loadProducts() {
 
   } catch (err) {
     console.error(err);
-    alert("❌ Error real del servidor");
+    alert("❌ Error servidor");
+  }
+}
+
+
+// ===================== CREAR PRODUCTO =====================
+async function createProduct() {
+
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const image = document.getElementById("image").value;
+  const description = document.getElementById("desc").value;
+
+  try {
+    const res = await fetch('/api/products', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ name, price, image, description })
+    });
+
+    if (!res.ok) {
+      alert("❌ Error creando producto (backend permisos)");
+      return;
+    }
+
+    alert("✅ Producto creado");
+    loadProducts();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error servidor");
   }
 }
 
