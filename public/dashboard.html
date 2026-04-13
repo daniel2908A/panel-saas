@@ -33,6 +33,11 @@ body {
   border: none;
   color: white;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+.sidebar button:hover {
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
 }
 
 .content {
@@ -50,6 +55,17 @@ body {
   background: rgba(255,255,255,0.03);
   border-radius: 16px;
   padding: 20px;
+}
+
+.market-btn {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  border: none;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -72,7 +88,6 @@ body {
 <script>
 
 const token = localStorage.getItem('token');
-const role = localStorage.getItem('role');
 
 if (!token) location.href = "/login.html";
 
@@ -100,8 +115,11 @@ async function loadStats() {
   } catch {}
 
   let dias = 0;
+  let activo = false;
+
   if (user.expires_at) {
     dias = Math.floor((new Date(user.expires_at) - new Date()) / (1000*60*60*24));
+    activo = new Date(user.expires_at) > new Date();
   }
 
   document.getElementById('data').innerHTML = `
@@ -125,7 +143,7 @@ async function loadStats() {
       <div class="card">
         <h3>💳 Suscripción</h3>
 
-        <p><b>${user.plan ? user.plan.toUpperCase() : "SIN PLAN"}</b></p>
+        <p><b>${activo ? "PLAN ACTIVO" : "SIN PLAN"}</b></p>
 
         <p>
           ${user.expires_at 
@@ -133,12 +151,12 @@ async function loadStats() {
             : "No definido"}
         </p>
 
-        <p style="color:${user.plan ? "green" : "red"};">
-          ${user.plan ? "🟢 Activo" : "🔴 Sin plan"}
+        <p style="color:${activo ? "#22c55e" : "#ef4444"};">
+          ${activo ? "🟢 Activo" : "🔴 Sin plan"}
         </p>
 
         ${
-          user.expires_at 
+          activo 
           ? `<p>⏳ ${dias} días restantes</p>` 
           : ""
         }
@@ -146,15 +164,55 @@ async function loadStats() {
       </div>
 
     </div>
+
+    <button class="market-btn" onclick="loadProducts()">
+      🛒 Ir al Marketplace
+    </button>
   `;
 }
 
 
-// =====================
-function loadProducts() {
-  alert("Marketplace listo");
+// ===================== MARKETPLACE =====================
+async function loadProducts() {
+
+  document.getElementById("title").innerText = "Marketplace";
+
+  try {
+    const res = await fetch('/api/products', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+
+    if (!res.ok) {
+      alert("❌ Error cargando productos (posible problema de permisos)");
+      return;
+    }
+
+    const products = await res.json();
+
+    if (!Array.isArray(products)) {
+      alert("❌ Error de formato en productos");
+      return;
+    }
+
+    document.getElementById('data').innerHTML = `
+      <h2>🛒 Productos</h2>
+      ${products.map(p => `
+        <div class="card">
+          <h3>${p.name}</h3>
+          <p>${p.description || "Sin descripción"}</p>
+          <p><b>$${p.price}</b></p>
+        </div>
+      `).join('')}
+    `;
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error real del servidor");
+  }
 }
 
+
+// =====================
 function logout() {
   localStorage.clear();
   location.href = "/";
