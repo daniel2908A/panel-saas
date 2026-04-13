@@ -164,7 +164,7 @@ let editingId = null;
 if (!token) location.href = "/login.html";
 
 
-// ================= DASHBOARD BONITO =================
+// ================= DASHBOARD =================
 async function loadStats(){
 
   document.getElementById("title").innerText = "Dashboard";
@@ -175,16 +175,68 @@ async function loadStats(){
 
   const data = await res.json();
 
+  let expireText = "Sin fecha";
+  let daysLeft = 0;
+  let statusColor = "#ef4444";
+  let statusText = "Sin plan";
+
+  if(data.expire){
+    const expireDate = new Date(data.expire);
+    const today = new Date();
+
+    const diff = expireDate - today;
+    daysLeft = Math.ceil(diff / (1000*60*60*24));
+
+    expireText = expireDate.toLocaleDateString();
+
+    if(daysLeft > 0){
+      statusColor = "#22c55e";
+      statusText = "Activo";
+    } else {
+      statusText = "Expirado";
+    }
+  }
+
   document.getElementById('data').innerHTML = `
     <div class="grid">
-      <div class="card">💰 Ventas<br><b>$${data.sales || 0}</b></div>
-      <div class="card">👤 Usuarios<br><b>${data.users || 0}</b></div>
-      <div class="card">💳 Créditos<br><b>$${data.credits || 0}</b></div>
+
       <div class="card">
-        📅 Suscripción<br>
-        <b>${data.plan || "SIN PLAN"}</b><br>
-        ${data.expire || ""}
+        💰 Ventas
+        <h2>$${data.sales || 0}</h2>
       </div>
+
+      <div class="card">
+        👤 Usuarios
+        <h2>${data.users || 0}</h2>
+      </div>
+
+      <div class="card">
+        💳 Créditos
+        <h2 style="color:#4ade80;">$${data.credits || 0}</h2>
+      </div>
+
+      <div class="card">
+        📅 Suscripción<br><br>
+
+        <b>${data.plan || "SIN PLAN"}</b><br>
+        ${expireText}<br><br>
+
+        <span style="
+          display:inline-block;
+          width:10px;
+          height:10px;
+          border-radius:50%;
+          background:${statusColor};
+        "></span>
+
+        <b style="color:${statusColor};"> ${statusText}</b>
+
+        <br><br>
+
+        ⏳ ${daysLeft > 0 ? daysLeft + " días restantes" : "Vencido"}
+
+      </div>
+
     </div>
   `;
 }
