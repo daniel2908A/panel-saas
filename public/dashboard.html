@@ -39,20 +39,26 @@ body {
 
 .content { flex: 1; padding: 30px; }
 
-.card {
-  background: rgba(255,255,255,0.03);
-  border-radius: 16px;
-  padding: 20px;
-}
-
 .grid {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
   gap:20px;
 }
 
+.card {
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 20px;
+  transition:0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
 .market-btn {
-  padding: 12px;
+  padding: 10px 16px;
   border-radius: 10px;
   background: linear-gradient(90deg, #22c55e, #4ade80);
   border: none;
@@ -71,12 +77,33 @@ body {
   cursor: pointer;
 }
 
+/* FORM */
+.form-row {
+  display:flex;
+  gap:10px;
+}
+
+input, textarea {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-top:10px;
+}
+
+/* DROP */
 .drop {
   border:2px dashed #38bdf8;
-  padding:20px;
+  padding:25px;
   text-align:center;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
+  margin-top:10px;
+  transition:0.2s;
+}
+
+.drop:hover {
+  background: rgba(56,189,248,0.1);
 }
 
 /* MODAL */
@@ -119,13 +146,12 @@ body {
 <div id="modal" class="modal">
   <div class="modal-content">
     <h3>Editar Producto</h3>
-    <input id="editName" placeholder="Nombre" style="width:100%;margin:5px;padding:10px;">
-    <input id="editPrice" type="number" placeholder="Precio" style="width:100%;margin:5px;padding:10px;">
-    <textarea id="editDesc" placeholder="Descripción" style="width:100%;margin:5px;padding:10px;"></textarea>
-    <input type="file" id="editImage">
-    <br><br>
+    <input id="editName">
+    <input id="editPrice" type="number">
+    <textarea id="editDesc"></textarea>
+    <br>
     <button onclick="updateProduct()" class="market-btn">Guardar</button>
-    <button onclick="closeModal()" style="background:#444;color:white;padding:10px;border:none;">Cancelar</button>
+    <button onclick="closeModal()">Cancelar</button>
   </div>
 </div>
 
@@ -137,69 +163,82 @@ let editingId = null;
 
 if (!token) location.href = "/login.html";
 
-document.getElementById("title").innerText = "Dashboard Super Reseller";
 
+// ================= DASHBOARD BONITO =================
+async function loadStats(){
 
-// DASHBOARD
-function loadStats(){
+  document.getElementById("title").innerText = "Dashboard";
+
+  const res = await fetch('/api/dashboard',{
+    headers:{Authorization:"Bearer "+token}
+  });
+
+  const data = await res.json();
+
   document.getElementById('data').innerHTML = `
-    <div class="card">
-      <h3>Bienvenido</h3>
-      <button class="market-btn" onclick="loadProducts()">Ir al Marketplace</button>
+    <div class="grid">
+      <div class="card">💰 Ventas<br><b>$${data.sales || 0}</b></div>
+      <div class="card">👤 Usuarios<br><b>${data.users || 0}</b></div>
+      <div class="card">💳 Créditos<br><b>$${data.credits || 0}</b></div>
+      <div class="card">
+        📅 Suscripción<br>
+        <b>${data.plan || "SIN PLAN"}</b><br>
+        ${data.expire || ""}
+      </div>
     </div>
   `;
 }
 
 
-// MARKET
+// ================= MARKET =================
 async function loadProducts(){
 
   document.getElementById("title").innerText = "Marketplace";
 
-  const res = await fetch('/api/products', {
-    headers: { Authorization: 'Bearer ' + token }
+  const res = await fetch('/api/products',{
+    headers:{Authorization:"Bearer "+token}
   });
 
   const products = await res.json();
 
   document.getElementById('data').innerHTML = `
+
     <button class="back-btn" onclick="loadStats()">← Volver</button>
 
     <div class="card">
       <h3>➕ Crear Producto</h3>
 
-      <input id="name" placeholder="Nombre">
-      <input id="price" type="number" placeholder="Precio">
+      <div class="form-row">
+        <input id="name" placeholder="Nombre">
+        <input id="price" type="number" placeholder="Precio">
+      </div>
 
       <div class="drop" id="dropZone">
-        📂 Subir imagen
+        📂 Click o arrastra imagen
         <input type="file" id="fileInput" hidden>
       </div>
 
-      <img id="preview" style="width:100%;display:none;margin-top:10px;">
+      <img id="preview" style="width:100%;display:none;margin-top:10px;border-radius:10px;">
 
       <textarea id="desc" placeholder="Descripción"></textarea>
 
-      <button class="market-btn" onclick="createProduct()">Crear</button>
+      <button class="market-btn" onclick="createProduct()">Crear Producto</button>
     </div>
 
     <div class="grid">
-      ${products.map(p => `
+      ${products.map(p=>`
         <div class="card">
-
-          ${p.image ? `<img src="${p.image}" style="width:100%;height:150px;object-fit:cover;">` : ""}
-
+          ${p.image ? `<img src="${p.image}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;">`:""}
           <h3>${p.name}</h3>
-          <p>${p.description || ""}</p>
+          <p>${p.description||""}</p>
           <b>$${p.price}</b>
 
-          <div style="margin-top:10px;display:flex;gap:10px;">
+          <div style="display:flex;gap:10px;margin-top:10px;">
             <button onclick='editProduct(${JSON.stringify(p)})'>✏️</button>
             <button onclick='deleteProduct(${p.id})'>🗑</button>
           </div>
-
         </div>
-      `).join('')}
+      `).join("")}
     </div>
   `;
 
@@ -207,8 +246,9 @@ async function loadProducts(){
 }
 
 
-// UPLOAD
+// ================= UPLOAD =================
 function initUpload(){
+
   const dz = document.getElementById("dropZone");
   const input = document.getElementById("fileInput");
   const preview = document.getElementById("preview");
@@ -227,7 +267,7 @@ function initUpload(){
 }
 
 
-// CREATE
+// ================= CREATE =================
 async function createProduct(){
 
   const name = document.getElementById("name").value;
@@ -245,12 +285,12 @@ async function createProduct(){
 
   if(!res.ok) return alert("Error");
 
-  alert("Creado");
+  alert("Producto creado");
   loadProducts();
 }
 
 
-// EDIT
+// ================= EDIT =================
 function editProduct(p){
   editingId = p.id;
   document.getElementById("editName").value = p.name;
@@ -264,12 +304,8 @@ function closeModal(){
 }
 
 
-// UPDATE
+// ================= UPDATE =================
 async function updateProduct(){
-
-  const name = document.getElementById("editName").value;
-  const price = document.getElementById("editPrice").value;
-  const description = document.getElementById("editDesc").value;
 
   const res = await fetch(`/api/products/${editingId}`,{
     method:"PUT",
@@ -277,7 +313,11 @@ async function updateProduct(){
       "Content-Type":"application/json",
       Authorization:"Bearer "+token
     },
-    body:JSON.stringify({name,price,description})
+    body:JSON.stringify({
+      name:editName.value,
+      price:editPrice.value,
+      description:editDesc.value
+    })
   });
 
   if(!res.ok) return alert("Error");
@@ -288,10 +328,10 @@ async function updateProduct(){
 }
 
 
-// DELETE
+// ================= DELETE =================
 async function deleteProduct(id){
 
-  if(!confirm("Eliminar?")) return;
+  if(!confirm("Eliminar producto?")) return;
 
   const res = await fetch(`/api/products/${id}`,{
     method:"DELETE",
@@ -305,11 +345,12 @@ async function deleteProduct(id){
 }
 
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout(){
   localStorage.clear();
   location.href="/";
 }
+
 
 loadStats();
 
