@@ -4,22 +4,20 @@ exports.getDashboard = async (req, res) => {
   try {
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ error: "No autorizado" });
-    }
+    if (!userId) return res.status(401).json({ error: "No autorizado" });
 
-    // 💰 GANANCIAS (sales)
+    // 💰 GANANCIAS (comisiones del usuario)
     const [salesResult] = await db.query(
       "SELECT SUM(amount) as total FROM commissions WHERE user_id = ?",
       [userId]
     );
 
-    // 👤 TOTAL USUARIOS (opcional, global)
+    // 👤 TOTAL USUARIOS
     const [usersResult] = await db.query(
       "SELECT COUNT(*) as total FROM users"
     );
 
-    // 💳 CRÉDITOS
+    // 💳 CRÉDITOS, PLAN Y EXPIRACIÓN
     const [creditsResult] = await db.query(
       "SELECT credits, plan, expires_at FROM users WHERE id = ?",
       [userId]
@@ -27,7 +25,7 @@ exports.getDashboard = async (req, res) => {
 
     const user = creditsResult[0] || {};
 
-    return res.json({
+    res.json({
       sales: salesResult[0]?.total || 0,
       users: usersResult[0]?.total || 0,
       credits: user.credits || 0,
@@ -37,9 +35,6 @@ exports.getDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("ERROR DASHBOARD:", error);
-
-    return res.status(500).json({
-      error: "Error interno del servidor"
-    });
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
