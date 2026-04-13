@@ -94,15 +94,14 @@ async function login(){
     if(data.token){
       localStorage.setItem("token", data.token);
 
-      // 🔑 LOG PARA VER ROL
+      // 🔑 REDIRECCIÓN SEGÚN ROL
       console.log("ROL DETECTADO EN LOGIN:", data.role);
 
-      // Redirección según rol
       const role = data.role?.toLowerCase();
 
-      if(role === "owner"){         // Admin
+      if(role === "owner"){              // Admin
         window.location.href = "/admin.html";
-      } else {                       // Resellers y otros usuarios
+      } else {                             // Super reseller / otros usuarios
         window.location.href = "/dashboard.html";
       }
 
