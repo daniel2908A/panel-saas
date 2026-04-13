@@ -18,7 +18,7 @@ const commissionRoutes = require('./routes/commission.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const planRoutes = require('./routes/plan.routes');
 const webhookRoutes = require('./routes/webhook.routes');
-const usersRoutes = require('./routes/users.routes'); // para Owner Panel
+const usersRoutes = require('./routes/user.routes'); // para Owner Panel
 
 // Configuración global
 app.use(cors());
