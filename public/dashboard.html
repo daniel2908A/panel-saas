@@ -49,21 +49,6 @@ body {
   background: rgba(255,255,255,0.03);
   border-radius: 16px;
   padding: 20px;
-  transition:0.2s;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow:0 10px 30px rgba(0,0,0,0.3);
-}
-
-.market-btn {
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 .back-btn {
@@ -73,57 +58,7 @@ body {
   border: none;
   background: linear-gradient(90deg,#38bdf8,#6366f1);
   color: white;
-  font-weight: bold;
   cursor: pointer;
-}
-
-/* FORM */
-.form-row {
-  display:flex;
-  gap:10px;
-}
-
-input, textarea {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  margin-top:10px;
-}
-
-/* DROP */
-.drop {
-  border:2px dashed #38bdf8;
-  padding:25px;
-  text-align:center;
-  border-radius:12px;
-  cursor:pointer;
-  margin-top:10px;
-  transition:0.2s;
-}
-
-.drop:hover {
-  background: rgba(56,189,248,0.1);
-}
-
-/* MODAL */
-.modal {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.7);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal-content {
-  background:#020617;
-  padding:20px;
-  border-radius:12px;
-  width:350px;
 }
 </style>
 </head>
@@ -142,25 +77,9 @@ input, textarea {
   <div id="data"></div>
 </div>
 
-<!-- MODAL -->
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <h3>Editar Producto</h3>
-    <input id="editName">
-    <input id="editPrice" type="number">
-    <textarea id="editDesc"></textarea>
-    <br>
-    <button onclick="updateProduct()" class="market-btn">Guardar</button>
-    <button onclick="closeModal()">Cancelar</button>
-  </div>
-</div>
-
 <script>
 
 const token = localStorage.getItem('token');
-let imageBase64 = "";
-let editingId = null;
-
 if (!token) location.href = "/login.html";
 
 
@@ -175,263 +94,116 @@ async function loadStats(){
       headers:{Authorization:"Bearer "+token}
     });
 
-    if(!res.ok) throw new Error("API FALLÓ");
+    const data = await res.json().catch(()=>null);
 
-    const data = await res.json();
+    if(!res.ok || !data){
+      throw new Error("Dashboard API error");
+    }
+
+    // ===== LOG PARA DEBUG =====
+    console.log("Dashboard data:", data);
 
     let expireText = "Sin fecha";
     let daysLeft = 0;
-    let statusColor = "#ef4444";
-    let statusText = "Sin plan";
+    let color = "red";
+    let status = "Sin plan";
 
     if(data.expire){
+      const exp = new Date(data.expire);
+      const now = new Date();
 
-      const expireDate = new Date(data.expire);
-      const today = new Date();
-
-      const diff = expireDate - today;
-      daysLeft = Math.ceil(diff / (1000*60*60*24));
-
-      expireText = expireDate.toLocaleDateString();
+      daysLeft = Math.ceil((exp - now)/(1000*60*60*24));
+      expireText = exp.toLocaleDateString();
 
       if(daysLeft > 0){
-        statusColor = "#22c55e";
-        statusText = "Activo";
+        color = "#22c55e";
+        status = "Activo";
       } else {
-        statusText = "Expirado";
+        status = "Expirado";
       }
     }
 
     document.getElementById('data').innerHTML = `
       <div class="grid">
-
-        <div class="card">
-          💰 Ventas
-          <h2>$${data.sales || 0}</h2>
-        </div>
-
-        <div class="card">
-          👤 Usuarios
-          <h2>${data.users || 0}</h2>
-        </div>
-
-        <div class="card">
-          💳 Créditos
-          <h2 style="color:#4ade80;">$${data.credits ?? 0}</h2>
-        </div>
+        <div class="card">💰 Ventas <h2>$${data.sales||0}</h2></div>
+        <div class="card">👤 Usuarios <h2>${data.users||0}</h2></div>
+        <div class="card">💳 Créditos <h2>$${data.credits||0}</h2></div>
 
         <div class="card">
           📅 Suscripción<br><br>
-
-          <b>${data.plan || "SIN PLAN"}</b><br>
+          <b>${data.plan||"SIN PLAN"}</b><br>
           ${expireText}<br><br>
 
           <span style="
+            width:10px;height:10px;
             display:inline-block;
-            width:10px;
-            height:10px;
             border-radius:50%;
-            background:${statusColor};
+            background:${color};
           "></span>
 
-          <b style="color:${statusColor};"> ${statusText}</b>
+          <b style="color:${color}">${status}</b><br><br>
 
-          <br><br>
-
-          ⏳ ${daysLeft > 0 ? daysLeft + " días restantes" : "Vencido"}
-
+          ${daysLeft>0 ? daysLeft+" días restantes" : "Vencido"}
         </div>
-
       </div>
     `;
 
   }catch(err){
 
-    console.log(err);
+    console.error("ERROR DASHBOARD:", err);
 
     document.getElementById('data').innerHTML = `
       <div class="card">
         ❌ Error cargando dashboard<br><br>
-        Revisa /api/dashboard
+        Revisa backend /api/dashboard
       </div>
     `;
   }
 }
 
 
-// ================= MARKET =================
+// ================= PRODUCTS =================
 async function loadProducts(){
 
   document.getElementById("title").innerText = "Marketplace";
 
-  const res = await fetch('/api/products',{
-    headers:{Authorization:"Bearer "+token}
-  });
-
-  const products = await res.json();
-
-  document.getElementById('data').innerHTML = `
-
-    <button class="back-btn" onclick="loadStats()">← Volver</button>
-
-    <div class="card">
-      <h3>➕ Crear Producto</h3>
-
-      <div class="form-row">
-        <input id="name" placeholder="Nombre">
-        <input id="price" type="number" placeholder="Precio">
-      </div>
-
-      <div class="drop" id="dropZone">
-        📂 Click o arrastra imagen
-        <input type="file" id="fileInput" hidden>
-      </div>
-
-      <img id="preview" style="width:100%;display:none;margin-top:10px;border-radius:10px;">
-
-      <textarea id="desc" placeholder="Descripción"></textarea>
-
-      <button class="market-btn" onclick="createProduct()">Crear Producto</button>
-    </div>
-
-    <div class="grid">
-      ${products.map(p=>`
-        <div class="card">
-          ${p.image ? `<img src="${p.image}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;">`:""}
-          <h3>${p.name}</h3>
-          <p>${p.description||""}</p>
-          <b>$${p.price}</b>
-
-          <div style="display:flex;gap:10px;margin-top:10px;">
-            <button onclick='editProduct(${JSON.stringify(p)})'>✏️</button>
-            <button onclick='deleteProduct(${p.id})'>🗑</button>
-          </div>
-        </div>
-      `).join("")}
-    </div>
-  `;
-
-  initUpload();
-}
-
-
-// ================= UPLOAD =================
-function initUpload(){
-
-  const dz = document.getElementById("dropZone");
-  const input = document.getElementById("fileInput");
-  const preview = document.getElementById("preview");
-
-  dz.onclick = ()=> input.click();
-
-  input.onchange = e=>{
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      imageBase64 = reader.result;
-      preview.src = imageBase64;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(e.target.files[0]);
-  };
-}
-
-
-// ================= CREATE =================
-async function createProduct(){
-
-  const name = document.getElementById("name").value.trim();
-  const price = document.getElementById("price").value.trim();
-  const description = document.getElementById("desc").value.trim();
-
-  if(!name || !price){
-    return alert("Completa nombre y precio");
-  }
-
   try{
 
     const res = await fetch('/api/products',{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:"Bearer "+token
-      },
-      body:JSON.stringify({
-        name,
-        price:Number(price),
-        description,
-        image:imageBase64 || null
-      })
+      headers:{Authorization:"Bearer "+token}
     });
 
-    const data = await res.json();
+    const products = await res.json().catch(()=>[]);
 
     if(!res.ok){
-      console.log(data);
-      return alert("Error backend: " + (data.message || "Error"));
+      throw new Error("Products API error");
     }
 
-    alert("Producto creado correctamente");
-    imageBase64 = "";
-    loadProducts();
+    document.getElementById('data').innerHTML = `
+      <button class="back-btn" onclick="loadStats()">← Volver</button>
+
+      <div class="grid">
+        ${products.map(p=>`
+          <div class="card">
+            <h3>${p.name}</h3>
+            <p>${p.description||""}</p>
+            <b>$${p.price}</b>
+          </div>
+        `).join("")}
+      </div>
+    `;
 
   }catch(err){
-    console.log(err);
-    alert("Error conexión backend");
+
+    console.error("ERROR PRODUCTS:", err);
+
+    document.getElementById('data').innerHTML = `
+      <div class="card">
+        ❌ Error cargando productos<br><br>
+        Revisa backend /api/products
+      </div>
+    `;
   }
-}
-
-// ================= EDIT =================
-function editProduct(p){
-  editingId = p.id;
-  document.getElementById("editName").value = p.name;
-  document.getElementById("editPrice").value = p.price;
-  document.getElementById("editDesc").value = p.description || "";
-  document.getElementById("modal").style.display="flex";
-}
-
-function closeModal(){
-  document.getElementById("modal").style.display="none";
-}
-
-
-// ================= UPDATE =================
-async function updateProduct(){
-
-  const res = await fetch(`/api/products/${editingId}`,{
-    method:"PUT",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Bearer "+token
-    },
-    body:JSON.stringify({
-      name:editName.value,
-      price:editPrice.value,
-      description:editDesc.value
-    })
-  });
-
-  if(!res.ok) return alert("Error");
-
-  alert("Actualizado");
-  closeModal();
-  loadProducts();
-}
-
-
-// ================= DELETE =================
-async function deleteProduct(id){
-
-  if(!confirm("Eliminar producto?")) return;
-
-  const res = await fetch(`/api/products/${id}`,{
-    method:"DELETE",
-    headers:{Authorization:"Bearer "+token}
-  });
-
-  if(!res.ok) return alert("Error");
-
-  alert("Eliminado");
-  loadProducts();
 }
 
 
@@ -440,7 +212,6 @@ function logout(){
   localStorage.clear();
   location.href="/";
 }
-
 
 loadStats();
 
