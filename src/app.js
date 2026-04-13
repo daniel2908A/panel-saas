@@ -7,7 +7,7 @@ const path = require('path');
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
-const depositRoutes = require('./routes/deposit.routes');
+const depositRoutes = require('./routes/deposits.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 
 // Middlewares
