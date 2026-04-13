@@ -1,78 +1,75 @@
-const db = require('../db');
+const db = require('../config/db'); // 🔥 CORREGIDO
 
-// 🔹 CREAR PRODUCTO (🔥 MARKETPLACE)
+// 🔹 CREAR PRODUCTO
 exports.createProduct = async (req, res) => {
   try {
     const { name, price, description, image } = req.body;
 
-    const owner_id = req.user.id; // 🔥 quien crea el producto
+    const user_id = req.user.id;
 
     if (!name || !price) {
       return res.status(400).json({ error: 'Nombre y precio obligatorios' });
     }
 
-    const [result] = await db.query(
-      `INSERT INTO products (name, price, description, image, owner_id)
+    await db.query(
+      `INSERT INTO products (name, price, description, image, user_id)
        VALUES (?, ?, ?, ?, ?)`,
       [
         name,
         price,
         description || '',
         image || '',
-        owner_id
+        user_id
       ]
     );
 
-    res.json({
-      message: 'Producto creado correctamente',
-      productId: result.insertId
-    });
+    res.json({ message: 'Producto creado correctamente' });
 
   } catch (error) {
-    console.error('Error createProduct:', error);
+    console.error('ERROR REAL createProduct:', error);
     res.status(500).json({ error: 'Error creando producto' });
   }
 };
 
 
-// 🔹 OBTENER TODOS LOS PRODUCTOS (🔥 MARKETPLACE)
+// 🔹 OBTENER PRODUCTOS
 exports.getProducts = async (req, res) => {
   try {
     const [products] = await db.query(`
       SELECT p.*, u.username
       FROM products p
-      LEFT JOIN users u ON p.owner_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
       ORDER BY p.id DESC
     `);
 
     res.json(products);
 
   } catch (error) {
-    console.error('Error getProducts:', error);
+    console.error('ERROR REAL getProducts:', error);
     res.status(500).json({ error: 'Error obteniendo productos' });
   }
 };
 
 
-// 🔓 PRODUCTOS PÚBLICOS
+// 🔓 PÚBLICOS
 exports.getProductsPublic = async (req, res) => {
   try {
     const [products] = await db.query(`
       SELECT p.*, u.username
       FROM products p
-      LEFT JOIN users u ON p.owner_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
     `);
 
     res.json(products);
 
   } catch (error) {
-    console.error('Error getProductsPublic:', error);
-    res.status(500).json({ error: 'Error obteniendo productos públicos' });
+    console.error(error);
+    res.status(500).json({ error: 'Error productos públicos' });
   }
 };
 
 
-// 🔹 OBTENER UNO
+// 🔹 UNO
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -80,24 +77,24 @@ exports.getProductById = async (req, res) => {
     const [products] = await db.query(`
       SELECT p.*, u.username
       FROM products p
-      LEFT JOIN users u ON p.owner_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
       WHERE p.id = ?
     `, [id]);
 
-    if (products.length === 0) {
+    if (!products.length) {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
     res.json(products[0]);
 
   } catch (error) {
-    console.error('Error getProductById:', error);
+    console.error(error);
     res.status(500).json({ error: 'Error obteniendo producto' });
   }
 };
 
 
-// 🔹 ACTUALIZAR PRODUCTO
+// 🔹 ACTUALIZAR
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,16 +107,16 @@ exports.updateProduct = async (req, res) => {
       [name, price, description, image, id]
     );
 
-    res.json({ message: 'Producto actualizado correctamente' });
+    res.json({ message: 'Producto actualizado' });
 
   } catch (error) {
-    console.error('Error updateProduct:', error);
-    res.status(500).json({ error: 'Error actualizando producto' });
+    console.error(error);
+    res.status(500).json({ error: 'Error actualizando' });
   }
 };
 
 
-// 🔹 ELIMINAR PRODUCTO
+// 🔹 ELIMINAR
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -129,10 +126,10 @@ exports.deleteProduct = async (req, res) => {
       [id]
     );
 
-    res.json({ message: 'Producto eliminado correctamente' });
+    res.json({ message: 'Producto eliminado' });
 
   } catch (error) {
-    console.error('Error deleteProduct:', error);
-    res.status(500).json({ error: 'Error eliminando producto' });
+    console.error(error);
+    res.status(500).json({ error: 'Error eliminando' });
   }
 };
