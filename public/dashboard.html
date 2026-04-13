@@ -71,10 +71,22 @@
       cursor: pointer;
     }
 
+    /* 🔥 BOTÓN VOLVER PRO */
     .btn-back {
-      width: auto;
-      padding: 8px 15px;
-      background: #334155;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: white;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(99,102,241,0.6);
+      transition: 0.2s;
+    }
+
+    .btn-back:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(99,102,241,0.9);
     }
 
     img {
@@ -83,10 +95,25 @@
       margin-bottom: 10px;
     }
 
-    .error {
-      color: red;
-      margin-top: 20px;
+    #dropZone {
+      margin-top: 10px;
+      padding: 20px;
+      border: 2px dashed #38bdf8;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
     }
+
+    #dropZone:hover {
+      background: rgba(56,189,248,0.1);
+    }
+
+    #preview {
+      display: none;
+      margin-top: 10px;
+    }
+
   </style>
 </head>
 
@@ -194,7 +221,15 @@ async function loadProducts() {
 
         <input id="pName" placeholder="Nombre">
         <input id="pPrice" placeholder="Precio">
-        <input id="pImage" placeholder="URL Imagen">
+
+        <!-- 🔥 DROP ZONE -->
+        <div id="dropZone">
+          📸 Arrastra imagen aquí o haz click
+          <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+
+        <img id="preview">
+
         <textarea id="pDesc" placeholder="Descripción"></textarea>
 
         <button onclick="crearProducto()">Crear Producto</button>
@@ -219,9 +254,39 @@ async function loadProducts() {
 
     document.getElementById('data').innerHTML = html;
 
+    activarDrop();
+
   } catch (err) {
     alert("Error cargando productos");
   }
+}
+
+
+// ===================== IMAGE =====================
+let imageBase64 = "";
+
+function activarDrop() {
+
+  document.getElementById("dropZone").onclick = () => {
+    document.getElementById("fileInput").click();
+  };
+
+  document.getElementById("fileInput").onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(ev) {
+      imageBase64 = ev.target.result;
+
+      const img = document.getElementById("preview");
+      img.src = imageBase64;
+      img.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+  };
 }
 
 
@@ -230,7 +295,6 @@ async function crearProducto() {
 
   const name = document.getElementById('pName').value;
   const price = document.getElementById('pPrice').value;
-  const image = document.getElementById('pImage').value;
   const description = document.getElementById('pDesc').value;
 
   if (!name || !price) {
@@ -246,7 +310,12 @@ async function crearProducto() {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token
       },
-      body: JSON.stringify({ name, price, image, description })
+      body: JSON.stringify({
+        name,
+        price,
+        image: imageBase64,
+        description
+      })
     });
 
     const data = await res.json();
@@ -258,7 +327,6 @@ async function crearProducto() {
 
     alert("✅ Producto creado");
 
-    // 🔥 AQUÍ CAMBIAMOS
     loadStats();
 
   } catch (err) {
