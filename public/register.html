@@ -194,8 +194,16 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
+localStorage.setItem("email", email);
+localStorage.setItem("role", role);
+
 alert("Usuario creado correctamente");
-window.location.href = "/login.html";
+
+if (role === "super_reseller") {
+  window.location.href = "/payment.html";
+} else {
+  window.location.href = "/login.html";
+}
 
   } catch (err) {
     console.error(err);

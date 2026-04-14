@@ -92,10 +92,10 @@ button {
 // =======================
 // VALIDAR LOGIN
 // =======================
-const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
 
-if(!token){
-  alert("Debes iniciar sesión primero");
+if (role !== "super_reseller") {
+  alert("Acceso solo para super reseller");
   window.location.href = "/login.html";
 }
 
@@ -108,7 +108,9 @@ function goPay(plan) {
     return;
   }
 
-  window.location.href = "/pay.html?plan=" + encodeURIComponent(plan);
+  const email = localStorage.getItem("email");
+
+window.location.href = "/pay.html?plan=" + encodeURIComponent(plan) + "&email=" + encodeURIComponent(email);
 }
 
 </script>
