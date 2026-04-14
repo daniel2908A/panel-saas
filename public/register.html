@@ -171,7 +171,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/register", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -194,15 +194,8 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
-    if(!data.token){
-      alert("Registro incompleto");
-      return;
-    }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("email", email);
-
-    window.location.href = "/payment.html";
+alert("Usuario creado correctamente");
+window.location.href = "/login.html";
 
   } catch (err) {
     console.error(err);
