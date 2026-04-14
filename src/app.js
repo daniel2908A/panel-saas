@@ -33,7 +33,7 @@ const webhookRoutes = require('./routes/webhook.routes');
 // 🔥 CAMBIO CLAVE AQUÍ
 app.use('/api', authRoutes); // ← IMPORTANTE
 
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/commissions', commissionRoutes);
