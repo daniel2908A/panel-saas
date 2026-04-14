@@ -1,3 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nexora Owner Panel</title>
+  <style>
+    body { background:#0b1220; color:white; font-family:sans-serif; }
+    .card { background:#1e293b; padding:15px; margin:10px 0; border-radius:10px; }
+    button { margin:5px; padding:5px 10px; }
+  </style>
+</head>
+<body>
+
+<h1>👑 Nexora Owner Panel</h1>
+<button onclick="logout()">Cerrar sesión</button>
+
+<!-- 🔥 AQUÍ VA EL CONTENEDOR (ESTE ERA EL ERROR) -->
+<div id="users-container">
+  Cargando usuarios...
+</div>
+
 <script>
 // Logout
 function logout(){
@@ -7,21 +28,27 @@ function logout(){
 
 // Load users
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadUsers(); // 🔥 sin token
+  await loadUsers();
 });
 
 // Fetch users
 async function loadUsers(){
   try {
-    const res = await fetch('/api/users'); // 🔥 SIN headers
+    const res = await fetch('/api/users');
 
     if(!res.ok) throw new Error("Error cargando usuarios");
 
     const users = await res.json();
 
-    console.log("USUARIOS:", users); // 👈 DEBUG
+    console.log("USUARIOS:", users);
 
     const container = document.getElementById('users-container');
+
+    if (!container) {
+      console.error("No existe users-container");
+      return;
+    }
+
     container.innerHTML = '';
 
     users.forEach(user => {
@@ -44,11 +71,12 @@ async function loadUsers(){
 
   } catch (err) {
     console.error(err);
-    document.getElementById('users-container').innerHTML = "❌ Error cargando usuarios";
+    const container = document.getElementById('users-container');
+    if(container) container.innerHTML = "❌ Error cargando usuarios";
   }
 }
 
-// Update credits (lo dejamos igual)
+// Update credits
 async function updateCredits(userId, amount){
   const res = await fetch(`/api/user/${userId}/credits`,{
     method:'POST',
@@ -60,4 +88,6 @@ async function updateCredits(userId, amount){
   else alert("Error actualizando créditos");
 }
 </script>
-<!-- test cambio -->
+
+</body>
+</html>
