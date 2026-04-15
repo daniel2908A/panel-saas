@@ -10,14 +10,14 @@ const db = require('../db');
 router.get('/', getUsers);
 
 // =======================
-// 🔥 ACTIVAR USUARIO
+// 🔥 ACTIVAR USUARIO (FIX)
 // =======================
 router.post('/activate/:id', async (req, res) => {
   try {
     const userId = req.params.id;
 
     await db.query(
-      "UPDATE users SET status = 'active' WHERE id = ?",
+      "UPDATE users SET is_active = 1 WHERE id = ?",
       [userId]
     );
 
