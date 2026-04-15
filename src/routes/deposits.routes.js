@@ -7,45 +7,19 @@ const {
   getDeposits
 } = require('../controllers/deposit.controller');
 
-const multer = require('multer');
 const db = require('../db');
-const path = require('path');
-const fs = require('fs');
 
 // =======================
-// 🔥 CREAR CARPETA SI NO EXISTE
-// =======================
-const uploadPath = path.join(__dirname, '../uploads');
-
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-// =======================
-// CONFIG SUBIDA ARCHIVOS
-// =======================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ storage });
-
-// =======================
-// DEPÓSITOS (SIN CAMBIOS)
+// DEPÓSITOS
 // =======================
 router.post('/', createDeposit);
 router.post('/confirm', confirmDeposit);
 router.get('/', getDeposits);
 
 // =======================
-// 🔥 SUBIR COMPROBANTE (SIN TOKEN)
+// 🔥 COMPROBANTE SIN ARCHIVO (SOLUCIÓN FINAL)
 // =======================
-router.post('/payment-proof', upload.single('file'), async (req, res) => {
+router.post('/payment-proof', async (req, res) => {
   try {
 
     const email = req.body.email;
@@ -54,21 +28,16 @@ router.post('/payment-proof', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: "Email requerido" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No se subió archivo" });
-    }
-
-    const filename = req.file.filename;
-
+    // 👉 marcamos como enviado
     await db.query(
-      "UPDATE users SET proof = ? WHERE email = ?",
-      [filename, email]
+      "UPDATE users SET proof = 'enviado' WHERE email = ?",
+      [email]
     );
 
-    res.json({ message: "Comprobante guardado correctamente" });
+    res.json({ message: "Comprobante enviado correctamente" });
 
   } catch (err) {
-    console.error("ERROR REAL:", err);
+    console.error("ERROR FINAL:", err);
     res.status(500).json({ error: err.message });
   }
 });

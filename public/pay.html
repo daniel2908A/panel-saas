@@ -43,6 +43,17 @@ button {
   font-weight: bold;
   cursor: pointer;
 }
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
 </style>
 </head>
 
@@ -56,25 +67,24 @@ button {
     <p id="planInfo"></p>
     <p id="emailInfo"></p>
 
-    <img src="/img/binance-qr.png">
+    <img src="/img/binance-qr.png" alt="QR Binance">
 
     <p><strong>ID Binance:</strong> 1195665274</p>
 
-    <input type="file" id="proof">
+    <input type="text" id="reference" placeholder="Referencia o nota del pago (opcional)">
 
-    <button onclick="enviar()">Enviar comprobante</button>
+    <button onclick="enviar()">Ya envié el pago</button>
 
   </div>
 </div>
 
 <script>
-
 // =======================
 // DATOS
 // =======================
 const params = new URLSearchParams(window.location.search);
 const plan = params.get("plan") || "No definido";
-const email = params.get("email") || "No definido";
+const email = params.get("email") || localStorage.getItem("email") || "No definido";
 
 document.getElementById("planInfo").innerText = "Plan: " + plan;
 document.getElementById("emailInfo").innerText = "Usuario: " + email;
@@ -82,37 +92,41 @@ document.getElementById("emailInfo").innerText = "Usuario: " + email;
 // =======================
 // ENVIAR COMPROBANTE
 // =======================
-async function enviar(){
-
-  try{
-    const file = document.getElementById("proof").files[0];
-
-    if (!file) {
-      alert("Sube comprobante");
+async function enviar() {
+  try {
+    if (!email || email === "No definido") {
+      alert("No se encontró el email del usuario");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("email", email); // 🔥 clave
+    const reference = document.getElementById("reference").value.trim();
 
     const res = await fetch("/api/deposits/payment-proof", {
       method: "POST",
-      body: formData
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        plan,
+        reference
+      })
     });
 
-    if(!res.ok) throw new Error("Error subiendo comprobante");
+    const data = await res.json();
 
-    alert("Comprobante enviado correctamente");
+    if (!res.ok) {
+      throw new Error(data.error || "Error enviando comprobante");
+    }
 
+    alert("Pago informado correctamente");
     window.location.href = "/waiting.html";
 
-  }catch(err){
+  } catch (err) {
     console.error(err);
-    alert("Error enviando comprobante");
+    alert(err.message || "Error enviando comprobante");
   }
 }
-
 </script>
 
 </body>
