@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Pagar - Nexora</title>
 
 <style>
@@ -25,64 +24,13 @@ body {
   background: rgba(30, 41, 59, 0.95);
   padding: 25px;
   border-radius: 20px;
-  box-shadow: 0 0 40px rgba(0,255,150,0.15);
-}
-
-h2 {
-  margin-bottom: 10px;
-}
-
-.plan {
-  font-size: 14px;
-  color: #94a3b8;
-  margin-bottom: 20px;
 }
 
 img {
   width: 100%;
-  max-width: 300px;
+  max-width: 280px;
   margin: 20px auto;
-  display: block;
-  border-radius: 12px;
-}
-
-.binance-box {
-  background: #020617;
-  padding: 18px;
-  border-radius: 12px;
-  margin-top: 15px;
-}
-
-.binance-box p:first-child {
-  font-size: 13px;
-  color: #94a3b8;
-}
-
-.binance-box p:last-child {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.actions button {
-  flex: 1;
-  padding: 10px;
-  font-size: 13px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 20px;
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: white;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 button {
@@ -94,18 +42,6 @@ button {
   border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.3s;
-}
-
-button:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 10px #22c55e;
-}
-
-@media (max-width: 480px) {
-  img {
-    max-width: 260px;
-  }
 }
 </style>
 </head>
@@ -117,21 +53,12 @@ button:hover {
 
 <h2>💳 Pago Binance</h2>
 
-<p class="plan" id="planInfo"></p>
+<p id="planInfo"></p>
+<p id="emailInfo"></p>
 
-<img src="/img/binance-qr.png" alt="QR Binance">
+<img src="/img/binance-qr.png">
 
-<div class="binance-box">
-  <p>Binance Pay ID</p>
-  <p id="binanceId">1195665274</p>
-</div>
-
-<div class="actions">
-  <button onclick="copiarID()">📋 Copiar</button>
-  <button onclick="abrirBinance()">🚀 Abrir App</button>
-</div>
-
-<p style="margin-top:15px;">Escanea o paga manual con Binance Pay</p>
+<p><strong>ID Binance:</strong> 1195665274</p>
 
 <input type="file" id="proof">
 
@@ -143,89 +70,38 @@ button:hover {
 <script>
 
 // =======================
-// PLAN
+// DATOS
 // =======================
 const params = new URLSearchParams(window.location.search);
-const plan = params.get("plan") || "No especificado";
+const plan = params.get("plan") || "No definido";
+const email = params.get("email") || "No definido";
 
-document.getElementById("planInfo").innerText = "Plan seleccionado: " + plan;
-
-// =======================
-// COPIAR ID
-// =======================
-function copiarID() {
-  const id = document.getElementById("binanceId").innerText;
-  navigator.clipboard.writeText(id);
-  alert("ID copiado");
-}
+document.getElementById("planInfo").innerText = "Plan: " + plan;
+document.getElementById("emailInfo").innerText = "Usuario: " + email;
 
 // =======================
-// DETECTAR MOVIL
+// ENVIAR
 // =======================
-function esMovil() {
-  return /Android|iPhone|iPad/i.test(navigator.userAgent);
-}
+function enviar(){
 
-// =======================
-// ABRIR BINANCE
-// =======================
-function abrirBinance() {
-  if (esMovil()) {
-    window.location.href = "bnc://app.binance.com";
-  } else {
-    alert("Abre Binance en tu teléfono para escanear");
+  const file = document.getElementById("proof").files[0];
+
+  if (!file) {
+    alert("Sube comprobante");
+    return;
   }
-}
 
-// =======================
-// ENVIAR COMPROBANTE
-// =======================
-async function enviar() {
-  try{
-    const file = document.getElementById("proof").files[0];
+  const numero = "56946184516";
 
-    if (!file) {
-      alert("Sube comprobante");
-      return;
-    }
+  const mensaje = encodeURIComponent(
+    `Hola, ya pagué en Nexora\n\nUsuario: ${email}\nPlan: ${plan}`
+  );
 
-    const token = localStorage.getItem("token");
+  window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
 
-    if(!token){
-      alert("Debes iniciar sesión");
-      window.location.href="/login.html";
-      return;
-    }
+  alert("Ahora envía el comprobante por WhatsApp");
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/payment/upload", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + token
-      },
-      body: formData
-    });
-
-    if(!res.ok) throw new Error("Error subiendo comprobante");
-
-    const numero = "56946184516";
-
-    const mensaje = encodeURIComponent(
-      "Hola, ya realicé el pago en Nexora Panel (" + plan + ")"
-    );
-
-    window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
-
-    alert("Comprobante enviado correctamente");
-
-    window.location.href = "/dashboard.html";
-
-  }catch(err){
-    console.error(err);
-    alert("Error enviando comprobante");
-  }
+  window.location.href = "/login.html";
 }
 
 </script>
