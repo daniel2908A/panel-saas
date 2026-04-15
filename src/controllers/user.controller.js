@@ -1,7 +1,7 @@
-const const db = require('../db');
+const db = require('../db');
 
 // =======================
-// LISTAR USUARIOS (FIX)
+// LISTAR USUARIOS
 // =======================
 const getUsers = async (req, res) => {
   try {
@@ -11,7 +11,7 @@ const getUsers = async (req, res) => {
 
     res.json(users);
 
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error cargando usuarios" });
   }
