@@ -56,19 +56,19 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // =======================
-// 🔥 ACTIVAR USUARIO (FIX REAL)
+// 🔥 ACTIVAR USUARIO (FINAL)
 // =======================
 exports.activateUserPlan = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { userId } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Falta email" });
+    if (!userId) {
+      return res.status(400).json({ error: "Falta userId" });
     }
 
     await db.query(
-      "UPDATE users SET is_active = 1 WHERE email = ?",
-      [email]
+      "UPDATE users SET is_active = 1 WHERE id = ?",
+      [userId]
     );
 
     res.json({ message: "Usuario activado correctamente" });

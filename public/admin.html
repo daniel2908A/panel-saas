@@ -53,22 +53,13 @@
 
 <script>
 
-// =======================
-// LOGOUT
-// =======================
 function logout(){
   localStorage.removeItem('token');
   window.location.href = '/login.html';
 }
 
-// =======================
-// LOAD USERS
-// =======================
 document.addEventListener('DOMContentLoaded', loadUsers);
 
-// =======================
-// GET USERS
-// =======================
 async function loadUsers(){
   try {
     const res = await fetch('/api/users');
@@ -98,7 +89,7 @@ async function loadUsers(){
         </div>
 
         <div>
-          <button class="green" onclick="activar('${user.email}')">
+          <button class="green" onclick="activar(${user.id})">
             Activar
           </button>
 
@@ -117,15 +108,13 @@ async function loadUsers(){
   }
 }
 
-// =======================
-// 🔥 ACTIVAR USUARIO (FIX)
-// =======================
-async function activar(email){
+// 🔥 ACTIVAR CON ID (FIX FINAL)
+async function activar(userId){
   try{
     const res = await fetch('/api/admin/activate-plan', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ email }) // 👈 SOLO EMAIL
+      body: JSON.stringify({ userId })
     });
 
     const data = await res.json();
@@ -142,9 +131,6 @@ async function activar(email){
   }
 }
 
-// =======================
-// ELIMINAR USUARIO
-// =======================
 async function eliminar(id){
 
   if(!confirm("¿Eliminar usuario?")) return;
@@ -165,9 +151,6 @@ async function eliminar(id){
   }
 }
 
-// =======================
-// CREDITOS
-// =======================
 async function updateCredits(userId, amount){
   await fetch(`/api/user/${userId}/credits`,{
     method:'POST',
