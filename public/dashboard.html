@@ -30,10 +30,6 @@ body{
   cursor: pointer;
 }
 
-.sidebar button:hover{
-  background: #1f2937;
-}
-
 .content{
   flex: 1;
   padding: 20px;
@@ -51,19 +47,9 @@ body{
   border-radius: 10px;
 }
 
-input, textarea{
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  background: #1f2937;
-  color: white;
-}
-
-img{
-  margin-top: 10px;
-  border-radius: 8px;
+.waiting{
+  text-align:center;
+  margin-top:100px;
 }
 </style>
 </head>
@@ -88,15 +74,48 @@ if(!token){
 }
 
 // =======================
+// 🔥 VALIDAR STATUS
+// =======================
+async function checkStatus(){
+  try{
+    const res = await fetch('/api/user/me',{
+      headers:{ Authorization: "Bearer " + token }
+    });
+
+    const user = await res.json();
+
+    if(user.status !== "active"){
+      document.getElementById("app").innerHTML = `
+        <div class="waiting">
+          <h2>⏳ Esperando confirmación de pago</h2>
+          <p>Tu cuenta está en revisión</p>
+          <p>Contacta para acelerar:</p>
+          <h3 style="color:#22c55e">+56 9 4618 4516</h3>
+        </div>
+      `;
+      return false;
+    }
+
+    return true;
+
+  }catch(err){
+    console.error(err);
+    return false;
+  }
+}
+
+// =======================
 // DASHBOARD
 // =======================
 async function dashboard(){
+
+  const ok = await checkStatus();
+  if(!ok) return;
+
   try{
     const res = await fetch('/api/dashboard',{
       headers:{ Authorization: "Bearer " + token }
     });
-
-    if(!res.ok) throw new Error("Error dashboard");
 
     const data = await res.json();
 
@@ -108,7 +127,6 @@ async function dashboard(){
       </div>
     `;
   }catch(err){
-    document.getElementById("app").innerHTML = `❌ Error cargando dashboard`;
     console.error(err);
   }
 }
@@ -117,12 +135,14 @@ async function dashboard(){
 // MARKETPLACE
 // =======================
 async function market(){
+
+  const ok = await checkStatus();
+  if(!ok) return;
+
   try{
     const res = await fetch('/api/products',{
       headers:{ Authorization: "Bearer " + token }
     });
-
-    if(!res.ok) throw new Error("Error productos");
 
     const products = await res.json();
 
@@ -143,14 +163,12 @@ async function market(){
           <div class="card">
             <h3>${p.name}</h3>
             <p>${p.description || ""}</p>
-            <b>$${p.price}</b><br>
-            ${p.image ? `<img src="/uploads/${p.image}" width="100%">` : ""}
+            <b>$${p.price}</b>
           </div>
         `).join("")}
       </div>
     `;
   }catch(err){
-    document.getElementById("app").innerHTML = `❌ Error cargando productos`;
     console.error(err);
   }
 }
@@ -159,48 +177,35 @@ async function market(){
 // CREAR PRODUCTO
 // =======================
 async function create(){
+
+  const ok = await checkStatus();
+  if(!ok) return;
+
   try{
-    const nameInput = document.getElementById("name");
-    const priceInput = document.getElementById("price");
-    const fileInput = document.getElementById("file");
-    const descInput = document.getElementById("desc");
-
-    if(!nameInput.value || !priceInput.value){
-      alert("Completa nombre y precio");
-      return;
-    }
-
     const form = new FormData();
-    form.append("name", nameInput.value);
-    form.append("price", priceInput.value);
-    form.append("description", descInput.value);
 
-    if(fileInput.files[0]){
-      form.append("image", fileInput.files[0]);
-    }
+    form.append("name", document.getElementById("name").value);
+    form.append("price", document.getElementById("price").value);
+    form.append("description", document.getElementById("desc").value);
 
-    const res = await fetch('/api/products',{
-      method: 'POST',
-      headers:{
-        Authorization: "Bearer " + token
-      },
+    const file = document.getElementById("file").files[0];
+    if(file) form.append("image", file);
+
+    await fetch('/api/products',{
+      method:'POST',
+      headers:{ Authorization: "Bearer " + token },
       body: form
     });
 
-    if(!res.ok) throw new Error("Error creando producto");
-
-    alert("Producto creado correctamente");
+    alert("Producto creado");
     market();
 
   }catch(err){
     console.error(err);
-    alert("Error creando producto");
   }
 }
 
-// =======================
 // INIT
-// =======================
 dashboard();
 
 </script>

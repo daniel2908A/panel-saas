@@ -197,8 +197,6 @@ document.getElementById("form").addEventListener("submit", async (e) => {
 localStorage.setItem("email", email);
 localStorage.setItem("role", role);
 
-alert("Usuario creado correctamente");
-
 if (role === "super_reseller") {
   window.location.href = "/payment.html";
 } else {

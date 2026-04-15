@@ -40,8 +40,8 @@ const register = async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
 
-    await db.query(
-      "INSERT INTO users (email, password, role, credits) VALUES (?, ?, ?, 0)",
+   await db.query(
+  "INSERT INTO users (email, password, role, credits, status) VALUES (?, ?, ?, 0, 'pending')",
       [email, hash, role || "reseller"]
     );
 
