@@ -7,7 +7,6 @@ const {
   getDeposits
 } = require('../controllers/deposit.controller');
 
-const auth = require('../middleware/auth.middleware');
 const multer = require('multer');
 const db = require('../db');
 
@@ -24,24 +23,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // =======================
-// DEPÓSITOS
+// DEPÓSITOS (SIN CAMBIOS)
 // =======================
-
-// CREAR
-router.post('/', auth, createDeposit);
-
-// CONFIRMAR
-router.post('/confirm', auth, confirmDeposit);
-
-// LISTAR
-router.get('/', auth, getDeposits);
+router.post('/', createDeposit);
+router.post('/confirm', confirmDeposit);
+router.get('/', getDeposits);
 
 // =======================
-// 🔥 NUEVO: SUBIR COMPROBANTE
+// 🔥 SUBIR COMPROBANTE (SIN TOKEN)
 // =======================
-router.post('/payment-proof', auth, upload.single('file'), async (req, res) => {
+router.post('/payment-proof', upload.single('file'), async (req, res) => {
   try {
-    const userId = req.user.id;
+
+    const email = req.body.email;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email requerido" });
+    }
 
     if (!req.file) {
       return res.status(400).json({ error: "No se subió archivo" });
@@ -50,8 +48,8 @@ router.post('/payment-proof', auth, upload.single('file'), async (req, res) => {
     const filename = req.file.filename;
 
     await db.query(
-      "UPDATE users SET proof = ? WHERE id = ?",
-      [filename, userId]
+      "UPDATE users SET proof = ? WHERE email = ?",
+      [filename, email]
     );
 
     res.json({ message: "Comprobante guardado correctamente" });
