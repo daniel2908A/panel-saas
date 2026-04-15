@@ -9,12 +9,15 @@ const {
 
 const multer = require('multer');
 const db = require('../db');
+const path = require('path');
 
 // =======================
 // CONFIG SUBIDA ARCHIVOS
 // =======================
 const storage = multer.diskStorage({
-  destination: 'uploads/',
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads')); // 🔥 FIX CLAVE
+  },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
   }
@@ -55,8 +58,8 @@ router.post('/payment-proof', upload.single('file'), async (req, res) => {
     res.json({ message: "Comprobante guardado correctamente" });
 
   } catch (err) {
-    console.error("ERROR SUBIENDO COMPROBANTE:", err);
-    res.status(500).json({ error: "Error subiendo comprobante" });
+    console.error("ERROR REAL:", err); // 🔥 ahora verás el error real
+    res.status(500).json({ error: err.message });
   }
 });
 
