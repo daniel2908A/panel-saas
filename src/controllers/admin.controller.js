@@ -56,36 +56,26 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // =======================
-// ACTIVAR PLAN (FIX REAL)
+// 🔥 ACTIVAR USUARIO (FIX REAL)
 // =======================
 exports.activateUserPlan = async (req, res) => {
   try {
-    const { email, plan } = req.body;
+    const { email } = req.body;
 
-    if (!email || !plan) {
-      return res.status(400).json({ error: "Datos incompletos" });
+    if (!email) {
+      return res.status(400).json({ error: "Falta email" });
     }
 
-    let months = 1;
-
-    if (plan === "3m") months = 3;
-    if (plan === "6m") months = 6;
-    if (plan === "12m") months = 12;
-
-    const expireDate = new Date();
-    expireDate.setMonth(expireDate.getMonth() + months);
-
-    // 🔥 FIX CLAVE
     await db.query(
-      "UPDATE users SET plan = ?, expires_at = ?, is_active = 1 WHERE email = ?",
-      [plan, expireDate, email]
+      "UPDATE users SET is_active = 1 WHERE email = ?",
+      [email]
     );
 
-    res.json({ message: "Usuario ACTIVADO correctamente" });
+    res.json({ message: "Usuario activado correctamente" });
 
   } catch (error) {
-    console.error("ERROR PLAN:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    console.error("ERROR ACTIVAR:", error);
+    res.status(500).json({ error: "Error activando usuario" });
   }
 };
 
