@@ -25,8 +25,8 @@ exports.createReseller = async (req, res) => {
 
     await db.query(
       `INSERT INTO users 
-      (username, email, password, role, credits, is_active) 
-      VALUES (?, ?, ?, 'reseller', 0, 0)`,
+      (username, email, password, role, credits, status) 
+      VALUES (?, ?, ?, 'reseller', 0, 'pending')`,
       [username, email, hashedPassword]
     );
 
@@ -44,7 +44,7 @@ exports.createReseller = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
-      "SELECT id, username, email, role, credits, is_active FROM users ORDER BY id DESC"
+      "SELECT id, username, email, role, credits, status FROM users ORDER BY id DESC"
     );
 
     res.json(users);
@@ -56,7 +56,7 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // =======================
-// 🔥 ACTIVAR USUARIO (FINAL)
+// 🔥 ACTIVAR USUARIO (FIX FINAL)
 // =======================
 exports.activateUserPlan = async (req, res) => {
   try {
@@ -67,15 +67,15 @@ exports.activateUserPlan = async (req, res) => {
     }
 
     await db.query(
-      "UPDATE users SET is_active = 1 WHERE id = ?",
+      "UPDATE users SET status = 'active' WHERE id = ?",
       [userId]
     );
 
     res.json({ message: "Usuario activado correctamente" });
 
   } catch (error) {
-    console.error("ERROR ACTIVAR:", error);
-    res.status(500).json({ error: "Error activando usuario" });
+    console.error("ERROR REAL ACTIVAR:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 

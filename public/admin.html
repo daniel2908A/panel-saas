@@ -73,7 +73,8 @@ async function loadUsers(){
 
     users.forEach(user => {
 
-      const status = user.is_active == 1 
+      // 🔥 FIX AQUÍ
+      const status = user.status === 'active' 
         ? `<span class="status-active">ACTIVO</span>` 
         : `<span class="status-inactive">PENDIENTE</span>`;
 
@@ -112,37 +113,26 @@ async function loadUsers(){
 }
 
 // =======================
-// 🔥 ACTIVAR (DEBUG REAL)
+// ACTIVAR
 // =======================
 async function activar(userId){
   try{
-    console.log("👉 Enviando userId:", userId);
-
     const res = await fetch('/api/admin/activate-plan', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId })
     });
 
-    const text = await res.text();
-    console.log("👉 RESPUESTA BACKEND:", text);
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error("Respuesta no es JSON");
-    }
+    const data = await res.json();
 
     if(!res.ok){
       throw new Error(data.error || "Error backend");
     }
 
-    alert("Usuario activado ✅");
     loadUsers();
 
   }catch(err){
-    console.error("❌ ERROR FINAL:", err);
+    console.error(err);
     alert("Error activando usuario");
   }
 }
