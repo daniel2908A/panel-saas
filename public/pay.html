@@ -49,22 +49,22 @@ button {
 <body>
 
 <div class="container">
-<div class="card">
+  <div class="card">
 
-<h2>💳 Pago Binance</h2>
+    <h2>💳 Pago Binance</h2>
 
-<p id="planInfo"></p>
-<p id="emailInfo"></p>
+    <p id="planInfo"></p>
+    <p id="emailInfo"></p>
 
-<img src="/img/binance-qr.png">
+    <img src="/img/binance-qr.png">
 
-<p><strong>ID Binance:</strong> 1195665274</p>
+    <p><strong>ID Binance:</strong> 1195665274</p>
 
-<input type="file" id="proof">
+    <input type="file" id="proof">
 
-<button onclick="enviar()">Enviar comprobante</button>
+    <button onclick="enviar()">Enviar comprobante</button>
 
-</div>
+  </div>
 </div>
 
 <script>
@@ -80,28 +80,47 @@ document.getElementById("planInfo").innerText = "Plan: " + plan;
 document.getElementById("emailInfo").innerText = "Usuario: " + email;
 
 // =======================
-// ENVIAR
+// ENVIAR COMPROBANTE
 // =======================
-function enviar(){
+async function enviar(){
 
-  const file = document.getElementById("proof").files[0];
+  try{
+    const file = document.getElementById("proof").files[0];
 
-  if (!file) {
-    alert("Sube comprobante");
-    return;
+    if (!file) {
+      alert("Sube comprobante");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if(!token){
+      alert("Debes iniciar sesión");
+      window.location.href="/login.html";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/deposits/payment-proof", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token
+      },
+      body: formData
+    });
+
+    if(!res.ok) throw new Error("Error subiendo comprobante");
+
+    alert("Comprobante enviado correctamente");
+
+    window.location.href = "/waiting.html";
+
+  }catch(err){
+    console.error(err);
+    alert("Error enviando comprobante");
   }
-
-  const numero = "56946184516";
-
-  const mensaje = encodeURIComponent(
-    `Hola, ya pagué en Nexora\n\nUsuario: ${email}\nPlan: ${plan}`
-  );
-
-  window.open(`https://wa.me/${numero}?text=${mensaje}`, "_blank");
-
-  alert("Ahora envía el comprobante por WhatsApp");
-
-  window.location.href = "/waiting.html";
 }
 
 </script>
