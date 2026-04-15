@@ -10,13 +10,23 @@ const {
 const multer = require('multer');
 const db = require('../db');
 const path = require('path');
+const fs = require('fs');
+
+// =======================
+// 🔥 CREAR CARPETA SI NO EXISTE
+// =======================
+const uploadPath = path.join(__dirname, '../uploads');
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 
 // =======================
 // CONFIG SUBIDA ARCHIVOS
 // =======================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads')); // 🔥 FIX CLAVE
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
@@ -58,7 +68,7 @@ router.post('/payment-proof', upload.single('file'), async (req, res) => {
     res.json({ message: "Comprobante guardado correctamente" });
 
   } catch (err) {
-    console.error("ERROR REAL:", err); // 🔥 ahora verás el error real
+    console.error("ERROR REAL:", err);
     res.status(500).json({ error: err.message });
   }
 });
