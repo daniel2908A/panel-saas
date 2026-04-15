@@ -2,37 +2,32 @@ const express = require('express');
 const router = express.Router();
 
 const {
-  createReseller,
-  getStats,
   getAllUsers,
+  activateUserPlan,
+  deleteUser,
   addCreditsToUser,
-  removeCreditsFromUser,
-  activateUserPlan
+  removeCreditsFromUser
 } = require('../controllers/admin.controller');
 
-const auth = require('../middleware/auth.middleware');
-const requireRole = require('../middleware/role.middleware');
-
 // =======================
-// ADMIN
-// =======================
-
-// CREAR RESELLER
-router.post('/create-reseller', auth, requireRole('admin'), createReseller);
-
-// ESTADÍSTICAS
-router.get('/stats', auth, requireRole('admin'), getStats);
-
 // LISTAR USUARIOS
-router.get('/users', auth, requireRole('admin'), getAllUsers);
+// =======================
+router.get('/users', getAllUsers);
 
-// AGREGAR CRÉDITOS
-router.post('/add', auth, requireRole('admin'), addCreditsToUser);
+// =======================
+// ACTIVAR PLAN
+// =======================
+router.post('/activate-plan', activateUserPlan);
 
-// RESTAR CRÉDITOS
-router.post('/remove', auth, requireRole('admin'), removeCreditsFromUser);
+// =======================
+// ELIMINAR USUARIO
+// =======================
+router.post('/delete-user', deleteUser);
 
-// ACTIVAR PLAN / SUPER RESELLER
-router.post('/activate-plan', auth, requireRole('admin'), activateUserPlan);
+// =======================
+// CRÉDITOS
+// =======================
+router.post('/add-credits', addCreditsToUser);
+router.post('/remove-credits', removeCreditsFromUser);
 
 module.exports = router;
