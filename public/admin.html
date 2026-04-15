@@ -118,24 +118,26 @@ async function loadUsers(){
 }
 
 // =======================
-// ACTIVAR USUARIO
+// 🔥 ACTIVAR USUARIO (FIX)
 // =======================
 async function activar(email){
   try{
     const res = await fetch('/api/admin/activate-plan', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        email,
-        plan: "1m"
-      })
+      body: JSON.stringify({ email }) // 👈 SOLO EMAIL
     });
 
-    if(!res.ok) throw new Error();
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(data.error || "Error");
+    }
 
     loadUsers();
 
   }catch(err){
+    console.error(err);
     alert("Error activando usuario");
   }
 }
