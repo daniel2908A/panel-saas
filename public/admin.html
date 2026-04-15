@@ -3,21 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <title>Nexora Owner Panel</title>
+
   <style>
-    body { background:#0b1220; color:white; font-family:sans-serif; }
-    .card { background:#1e293b; padding:15px; margin:10px 0; border-radius:10px; }
-    button { margin:5px; padding:5px 10px; cursor:pointer; }
-    img { margin-top:10px; border-radius:8px; }
+    body {
+      background:#0b1220;
+      color:white;
+      font-family:sans-serif;
+    }
+
+    .card {
+      background:#1e293b;
+      padding:15px;
+      margin:10px 0;
+      border-radius:10px;
+    }
+
+    button {
+      margin:5px;
+      padding:6px 10px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      color:white;
+    }
+
+    .green { background:#22c55e; }
+    .red { background:#ef4444; }
+    .blue { background:#3b82f6; }
+    .gray { background:#64748b; }
+
+    .status-active {
+      color:#22c55e;
+      font-weight:bold;
+    }
+
+    .status-inactive {
+      color:#ef4444;
+      font-weight:bold;
+    }
   </style>
 </head>
+
 <body>
 
 <h1>👑 Nexora Owner Panel</h1>
-<button onclick="logout()">Cerrar sesión</button>
+<button onclick="logout()" class="gray">Cerrar sesión</button>
 
-<div id="users-container">
-  Cargando usuarios...
-</div>
+<div id="users-container">Cargando usuarios...</div>
 
 <script>
 
@@ -32,9 +64,7 @@ function logout(){
 // =======================
 // LOAD USERS
 // =======================
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadUsers();
-});
+document.addEventListener('DOMContentLoaded', loadUsers);
 
 // =======================
 // GET USERS
@@ -42,42 +72,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadUsers(){
   try {
     const res = await fetch('/api/users');
-
-    if(!res.ok) throw new Error("Error cargando usuarios");
-
     const users = await res.json();
 
     const container = document.getElementById('users-container');
     container.innerHTML = '';
 
     users.forEach(user => {
+
+      const status = user.is_active == 1 
+        ? `<span class="status-active">ACTIVO</span>` 
+        : `<span class="status-inactive">PENDIENTE</span>`;
+
       const div = document.createElement('div');
-      div.className='card';
+      div.className = 'card';
 
-      div.innerHTML=`
+      div.innerHTML = `
         <strong>${user.email}</strong> (${user.role})<br>
-        🪙 Créditos: $${user.credits || 0}<br>
-        📌 Estado: ${user.status || "pending"}<br>
+        Estado: ${status}<br>
+        Créditos: $${user.credits || 0}
 
         <div>
-          <button onclick="updateCredits(${user.id},5)">+5</button>
-          <button onclick="updateCredits(${user.id},10)">+10</button>
-          <button onclick="updateCredits(${user.id},20)">+20</button>
-          <button onclick="updateCredits(${user.id},50)">+50</button>
-          <button onclick="updateCredits(${user.id},-5)" style="background:red">-5</button>
-          <button onclick="updateCredits(${user.id},-10)" style="background:red">-10</button>
+          <button class="blue" onclick="updateCredits(${user.id},5)">+5</button>
+          <button class="blue" onclick="updateCredits(${user.id},10)">+10</button>
+          <button class="red" onclick="updateCredits(${user.id},-5)">-5</button>
         </div>
 
         <div>
-          <button onclick="activar(${user.id})" style="background:green">
-            ✅ Activar usuario
+          <button class="green" onclick="activar('${user.email}')">
+            Activar
           </button>
-        </div>
 
-        <div>
-          ${user.proof 
-            ? `<img src="/uploads/${user.proof}" width="100%">`
-            : "❌ Sin comprobante"}
+          <button class="red" onclick="eliminar(${user.id})">
+            Eliminar
+          </button>
         </div>
       `;
 
@@ -86,28 +113,53 @@ async function loadUsers(){
 
   } catch (err) {
     console.error(err);
-    document.getElementById('users-container').innerHTML = "❌ Error cargando usuarios";
+    document.getElementById('users-container').innerHTML = "Error cargando usuarios";
   }
 }
 
 // =======================
 // ACTIVAR USUARIO
 // =======================
-async function activar(userId){
+async function activar(email){
   try{
-    const res = await fetch(`/api/users/activate/${userId}`, {
-      method: "POST"
+    const res = await fetch('/api/admin/activate-plan', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        email,
+        plan: "1m"
+      })
     });
 
     if(!res.ok) throw new Error();
 
-    alert("Usuario activado correctamente");
+    loadUsers();
+
+  }catch(err){
+    alert("Error activando usuario");
+  }
+}
+
+// =======================
+// ELIMINAR USUARIO
+// =======================
+async function eliminar(id){
+
+  if(!confirm("¿Eliminar usuario?")) return;
+
+  try{
+    const res = await fetch('/api/admin/delete-user', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ userId:id })
+    });
+
+    if(!res.ok) throw new Error();
 
     loadUsers();
 
   }catch(err){
-    console.error(err);
-    alert("Error activando usuario");
+    alert("Error eliminando usuario");
   }
 }
 
@@ -115,14 +167,13 @@ async function activar(userId){
 // CREDITOS
 // =======================
 async function updateCredits(userId, amount){
-  const res = await fetch(`/api/user/${userId}/credits`,{
+  await fetch(`/api/user/${userId}/credits`,{
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
-    body:JSON.stringify({amount})
+    body: JSON.stringify({amount})
   });
 
-  if(res.ok) loadUsers();
-  else alert("Error actualizando créditos");
+  loadUsers();
 }
 
 </script>

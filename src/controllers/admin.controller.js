@@ -25,8 +25,8 @@ exports.createReseller = async (req, res) => {
 
     await db.query(
       `INSERT INTO users 
-      (username, email, password, role, credits) 
-      VALUES (?, ?, ?, 'reseller', 0)`,
+      (username, email, password, role, credits, is_active) 
+      VALUES (?, ?, ?, 'reseller', 0, 0)`,
       [username, email, hashedPassword]
     );
 
@@ -44,7 +44,7 @@ exports.createReseller = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.query(
-      "SELECT id, username, email, role, credits FROM users ORDER BY id DESC"
+      "SELECT id, username, email, role, credits, is_active FROM users ORDER BY id DESC"
     );
 
     res.json(users);
@@ -56,82 +56,7 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // =======================
-// AGREGAR CRÉDITOS
-// =======================
-exports.addCreditsToUser = async (req, res) => {
-  try {
-    let { userId, amount } = req.body;
-
-    if (!userId || amount === undefined) {
-      return res.status(400).json({ error: "Datos incompletos" });
-    }
-
-    userId = parseInt(userId);
-    amount = parseFloat(amount);
-
-    if (isNaN(userId) || isNaN(amount)) {
-      return res.status(400).json({ error: "Datos inválidos" });
-    }
-
-    await db.query(
-      "UPDATE users SET credits = credits + ? WHERE id = ?",
-      [amount, userId]
-    );
-
-    res.json({ message: "Créditos agregados correctamente" });
-
-  } catch (error) {
-    console.error("ERROR ADD CREDITS:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
-
-// =======================
-// RESTAR CRÉDITOS
-// =======================
-exports.removeCreditsFromUser = async (req, res) => {
-  try {
-    let { userId, amount } = req.body;
-
-    if (!userId || amount === undefined) {
-      return res.status(400).json({ error: "Datos incompletos" });
-    }
-
-    userId = parseInt(userId);
-    amount = parseFloat(amount);
-
-    if (isNaN(userId) || isNaN(amount)) {
-      return res.status(400).json({ error: "Datos inválidos" });
-    }
-
-    const [users] = await db.query(
-      "SELECT credits FROM users WHERE id = ?",
-      [userId]
-    );
-
-    if (!users.length) {
-      return res.status(404).json({ error: "Usuario no existe" });
-    }
-
-    if (users[0].credits < amount) {
-      return res.status(400).json({ error: "Saldo insuficiente" });
-    }
-
-    await db.query(
-      "UPDATE users SET credits = credits - ? WHERE id = ?",
-      [amount, userId]
-    );
-
-    res.json({ message: "Créditos descontados correctamente" });
-
-  } catch (error) {
-    console.error("ERROR REMOVE CREDITS:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
-
-// =======================
-// ACTIVAR PLAN
+// ACTIVAR PLAN (FIX REAL)
 // =======================
 exports.activateUserPlan = async (req, res) => {
   try {
@@ -150,12 +75,13 @@ exports.activateUserPlan = async (req, res) => {
     const expireDate = new Date();
     expireDate.setMonth(expireDate.getMonth() + months);
 
+    // 🔥 FIX CLAVE
     await db.query(
-      "UPDATE users SET plan = ?, expires_at = ? WHERE email = ?",
+      "UPDATE users SET plan = ?, expires_at = ?, is_active = 1 WHERE email = ?",
       [plan, expireDate, email]
     );
 
-    res.json({ message: "Plan activado correctamente" });
+    res.json({ message: "Usuario ACTIVADO correctamente" });
 
   } catch (error) {
     console.error("ERROR PLAN:", error);
@@ -179,7 +105,7 @@ exports.deleteUser = async (req, res) => {
       [userId]
     );
 
-    res.json({ message: "Usuario eliminado" });
+    res.json({ message: "Usuario eliminado correctamente" });
 
   } catch (error) {
     console.error("ERROR DELETE USER:", error);
@@ -188,26 +114,51 @@ exports.deleteUser = async (req, res) => {
 };
 
 // =======================
-// ESTADÍSTICAS
+// CRÉDITOS
 // =======================
-exports.getStats = async (req, res) => {
+exports.addCreditsToUser = async (req, res) => {
   try {
+    let { userId, amount } = req.body;
 
-    const [users] = await db.query(
-      "SELECT COUNT(*) as total FROM users"
+    if (!userId || amount === undefined) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    await db.query(
+      "UPDATE users SET credits = credits + ? WHERE id = ?",
+      [amount, userId]
     );
 
-    const [credits] = await db.query(
-      "SELECT SUM(credits) as total FROM users"
-    );
-
-    res.json({
-      users: users[0].total || 0,
-      credits: credits[0].total || 0
-    });
+    res.json({ message: "Créditos agregados correctamente" });
 
   } catch (error) {
-    console.error("ERROR STATS:", error);
-    res.status(500).json({ error: "Error obteniendo estadísticas" });
+    console.error(error);
+    res.status(500).json({ error: "Error interno" });
+  }
+};
+
+exports.removeCreditsFromUser = async (req, res) => {
+  try {
+    let { userId, amount } = req.body;
+
+    const [users] = await db.query(
+      "SELECT credits FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (!users.length || users[0].credits < amount) {
+      return res.status(400).json({ error: "Saldo insuficiente" });
+    }
+
+    await db.query(
+      "UPDATE users SET credits = credits - ? WHERE id = ?",
+      [amount, userId]
+    );
+
+    res.json({ message: "Créditos descontados correctamente" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error interno" });
   }
 };
