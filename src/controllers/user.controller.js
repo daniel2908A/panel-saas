@@ -1,18 +1,17 @@
 const db = require('../db');
 
 // =======================
-// LISTAR USUARIOS
+// LISTAR USUARIOS (FIX)
 // =======================
 const getUsers = async (req, res) => {
   try {
-    const [users] = await db.query(
-      "SELECT id, email, role, credits, is_active FROM users"
-    );
+
+    const [users] = await db.query("SELECT * FROM users");
 
     res.json(users);
 
   } catch (err) {
-    console.error(err);
+    console.error("ERROR REAL:", err); // 🔥 esto nos dirá si algo falla
     res.status(500).json({ error: "Error cargando usuarios" });
   }
 };
