@@ -1,33 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
-const {
-  getAllUsers,
-  activateUserPlan,
-  deleteUser,
-  addCreditsToUser,
-  removeCreditsFromUser
-} = require('../controllers/admin.controller');
+const adminController = require('../controllers/admin.controller');
 
 // =======================
-// LISTAR USUARIOS
+// USUARIOS
 // =======================
-router.get('/users', getAllUsers);
+router.get('/users', adminController.getAllUsers);
 
 // =======================
-// ACTIVAR PLAN
-// =======================
-router.post('/activate-plan', activateUserPlan);
+// ACTIVAR USUARIO 🔥
+/* ESTA ES LA CLAVE */
+router.post('/activate-plan', adminController.activateUserPlan);
 
 // =======================
-// ELIMINAR USUARIO
+// ELIMINAR
 // =======================
-router.post('/delete-user', deleteUser);
+router.post('/delete-user', adminController.deleteUser);
 
 // =======================
-// CRÉDITOS
+// CREDITOS
 // =======================
-router.post('/add-credits', addCreditsToUser);
-router.post('/remove-credits', removeCreditsFromUser);
+router.post('/add-credits', adminController.addCreditsToUser);
+router.post('/remove-credits', adminController.removeCreditsFromUser);
 
 module.exports = router;
