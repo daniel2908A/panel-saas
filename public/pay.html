@@ -119,7 +119,6 @@ async function enviar() {
       throw new Error(data.error || "Error enviando comprobante");
     }
 
-    alert("Pago informado correctamente");
     window.location.href = "/waiting.html";
 
   } catch (err) {
