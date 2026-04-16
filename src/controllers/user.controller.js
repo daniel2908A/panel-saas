@@ -14,7 +14,7 @@ const getUsers = async (req, res) => {
 };
 
 // =======================
-// OBTENER USUARIO LOGUEADO (FIX COMPLETO)
+// OBTENER USUARIO LOGUEADO (CON PLAN)
 // =======================
 const getMe = async (req, res) => {
   try {
@@ -29,7 +29,8 @@ const getMe = async (req, res) => {
         status,
         referral_code,
         earnings_sales,
-        earnings_referrals
+        earnings_referrals,
+        plan_expiration
       FROM users 
       WHERE id = ?`,
       [userId]
