@@ -1,7 +1,7 @@
 const db = require('../db');
 
 // =======================
-// LISTAR USUARIOS (YA TENÍAS)
+// LISTAR USUARIOS
 // =======================
 const getUsers = async (req, res) => {
   try {
@@ -14,14 +14,24 @@ const getUsers = async (req, res) => {
 };
 
 // =======================
-// 🔥 NUEVO: OBTENER USUARIO LOGUEADO
+// OBTENER USUARIO LOGUEADO (FIX COMPLETO)
 // =======================
 const getMe = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const [rows] = await db.query(
-      "SELECT id, email, role, credits, status FROM users WHERE id = ?",
+      `SELECT 
+        id,
+        email,
+        role,
+        credits,
+        status,
+        referral_code,
+        earnings_sales,
+        earnings_referrals
+      FROM users 
+      WHERE id = ?`,
       [userId]
     );
 
