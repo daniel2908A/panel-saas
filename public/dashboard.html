@@ -141,6 +141,20 @@ async function checkStatus(){
 }
 
 // =======================
+// 🔥 CALCULAR DÍAS RESTANTES (NUEVO)
+// =======================
+function getDaysLeft(date){
+  if(!date) return "Sin plan";
+
+  const today = new Date();
+  const exp = new Date(date);
+
+  const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+
+  return diff > 0 ? diff + " días" : "Expirado";
+}
+
+// =======================
 // DASHBOARD
 // =======================
 async function dashboard(){
@@ -212,7 +226,7 @@ function copyRef(link){
 }
 
 // =======================
-// MARKETPLACE (NO TOCADO)
+// MARKETPLACE
 // =======================
 async function market(){
 
@@ -246,9 +260,6 @@ async function market(){
             <h3>${p.name}</h3>
             <p>${p.description || ""}</p>
             <b>$${p.price}</b>
-
-            <button class="btn btn-blue">Editar</button>
-            <button class="btn" style="background:#ef4444">Eliminar</button>
           </div>
         `).join("")}
       </div>
