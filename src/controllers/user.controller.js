@@ -1,19 +1,40 @@
 const db = require('../db');
 
 // =======================
-// LISTAR USUARIOS (FIX)
+// LISTAR USUARIOS (YA TENÍAS)
 // =======================
 const getUsers = async (req, res) => {
   try {
-
     const [users] = await db.query("SELECT * FROM users");
-
     res.json(users);
-
   } catch (err) {
-    console.error("ERROR REAL:", err); // 🔥 esto nos dirá si algo falla
+    console.error("ERROR REAL:", err);
     res.status(500).json({ error: "Error cargando usuarios" });
   }
 };
 
-module.exports = { getUsers };
+// =======================
+// 🔥 NUEVO: OBTENER USUARIO LOGUEADO
+// =======================
+const getMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [rows] = await db.query(
+      "SELECT id, email, role, credits, status FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json(rows[0]);
+
+  } catch (error) {
+    console.error("ERROR GET ME:", error);
+    res.status(500).json({ error: "Error obteniendo usuario" });
+  }
+};
+
+module.exports = { getUsers, getMe };
