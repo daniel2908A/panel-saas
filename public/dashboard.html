@@ -155,6 +155,8 @@ async function dashboard(){
 
     const data = await res.json();
 
+    const referralLink = `${window.location.origin}/register.html?ref=${user.referral_code || ''}`;
+
     document.getElementById("app").innerHTML = `
       
       <div class="top-box">
@@ -172,9 +174,22 @@ async function dashboard(){
 
         <div class="big-card">
           <h3>💰 Ganancias</h3>
-          <p>Ventas: $0</p>
-          <p>Referidos: $0</p>
+          <p>Ventas: $${user.earnings_sales || 0}</p>
+          <p>Referidos: $${user.earnings_referrals || 0}</p>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>👥 Sistema de Referidos</h3>
+
+        <p><b>Código:</b> ${user.referral_code || '---'}</p>
+
+        <p><b>Link:</b></p>
+        <input value="${referralLink}" readonly style="width:100%;padding:8px;border-radius:6px;border:none">
+
+        <button class="btn btn-blue" onclick="copyRef('${referralLink}')">
+          Copiar link
+        </button>
       </div>
 
       <div class="grid">
@@ -189,7 +204,15 @@ async function dashboard(){
 }
 
 // =======================
-// MARKETPLACE
+// COPIAR LINK
+// =======================
+function copyRef(link){
+  navigator.clipboard.writeText(link);
+  alert("Link copiado 🔥");
+}
+
+// =======================
+// MARKETPLACE (NO TOCADO)
 // =======================
 async function market(){
 

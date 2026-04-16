@@ -2,7 +2,9 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// LOGIN (lo dejamos igual)
+// =======================
+// LOGIN (NO SE TOCA)
+// =======================
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -29,10 +31,19 @@ const login = async (req, res) => {
   }
 };
 
-// 🔥 REGISTER (ESTO FALTABA)
+// =======================
+// GENERAR CÓDIGO DE REFERIDO
+// =======================
+function generateReferralCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// =======================
+// REGISTER (CON REFERIDOS)
+// =======================
 const register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, ref } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: "Faltan datos" });
@@ -40,12 +51,47 @@ const register = async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
 
-   await db.query(
-  "INSERT INTO users (email, password, role, credits, status) VALUES (?, ?, ?, 0, 'pending')",
-      [email, hash, role || "reseller"]
+    // 🔥 generar código único
+    let referralCode;
+    let exists = true;
+
+    while (exists) {
+      referralCode = generateReferralCode();
+      const [rows] = await db.query(
+        "SELECT id FROM users WHERE referral_code = ?",
+        [referralCode]
+      );
+      exists = rows.length > 0;
+    }
+
+    // 🔍 verificar referido
+    let referredBy = null;
+
+    if (ref) {
+      const [refUser] = await db.query(
+        "SELECT referral_code FROM users WHERE referral_code = ?",
+        [ref]
+      );
+
+      if (refUser.length > 0) {
+        referredBy = ref;
+      }
+    }
+
+    // =======================
+    // CREAR USUARIO
+    // =======================
+    await db.query(
+      `INSERT INTO users 
+      (email, password, role, credits, status, referral_code, referred_by) 
+      VALUES (?, ?, ?, 0, 'pending', ?, ?)`,
+      [email, hash, role || "reseller", referralCode, referredBy]
     );
 
-    res.json({ message: "Usuario creado" });
+    res.json({
+      message: "Usuario creado",
+      referralCode
+    });
 
   } catch (err) {
     console.error("ERROR REGISTER:", err);

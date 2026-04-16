@@ -57,31 +57,76 @@ exports.confirmDeposit = async (req, res) => {
 
     const amount = parseFloat(result.amount) || 0;
 
-    // Buscar padre
+    if (amount <= 0) {
+      return res.json(result);
+    }
+
+    // =========================
+    // 💳 SISTEMA NUEVO (8%)
+    // =========================
+
+    const total = amount * 1.08;
+    const fee = total - amount; // 8%
+
+    const ownerShare = amount * 0.05;     // 5%
+    const referralShare = amount * 0.03;  // 3%
+
+    // =========================
+    // BUSCAR REFERIDO
+    // =========================
     const [users] = await db.query(
-      "SELECT parent_id FROM users WHERE id = ?",
+      "SELECT referred_by FROM users WHERE id = ?",
       [userId]
     );
 
-    if (!users.length) {
-      return res.json(result); // usuario sin padre
-    }
+    let referredBy = users[0]?.referred_by || null;
 
-    const parentId = users[0].parent_id;
+    // =========================
+    // 💸 SUMAR CRÉDITOS AL USUARIO
+    // =========================
+    await db.query(
+      "UPDATE users SET credits = credits + ? WHERE id = ?",
+      [amount, userId]
+    );
 
-    // Comisión
-    if (parentId && amount > 0) {
-      const commission = amount * 0.10;
+    // =========================
+    // 💰 GANANCIA OWNER
+    // =========================
+    const OWNER_ID = 1;
 
+    await db.query(
+      "UPDATE users SET earnings_sales = earnings_sales + ? WHERE id = ?",
+      [referredBy ? ownerShare : fee, OWNER_ID]
+    );
+
+    // =========================
+    // 👥 GANANCIA REFERIDO
+    // =========================
+    if (referredBy) {
       await db.query(
-        "UPDATE users SET credits = credits + ? WHERE id = ?",
-        [commission, parentId]
+        "UPDATE users SET earnings_referrals = earnings_referrals + ? WHERE referral_code = ?",
+        [referralShare, referredBy]
       );
 
-      console.log(`💸 Comisión ${commission} → usuario ${parentId}`);
+      console.log(`💸 Referido gana ${referralShare}`);
+    } else {
+      console.log(`💸 Owner gana todo: ${fee}`);
     }
 
-    res.json(result);
+    console.log(`
+      💳 Recarga: ${amount}
+      💰 Fee: ${fee}
+      👑 Owner: ${referredBy ? ownerShare : fee}
+      👥 Referido: ${referredBy ? referralShare : 0}
+    `);
+
+    res.json({
+      message: "Depósito confirmado correctamente",
+      amount,
+      fee,
+      ownerShare,
+      referralShare
+    });
 
   } catch (error) {
     console.error("ERROR CONFIRM DEPOSIT:", error);
