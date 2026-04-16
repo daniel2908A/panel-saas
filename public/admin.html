@@ -164,13 +164,31 @@ async function eliminar(id){
 // CREDITOS
 // =======================
 async function updateCredits(userId, amount){
-  await fetch(`/api/user/${userId}/credits`,{
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({amount})
-  });
 
-  loadUsers();
+  try {
+
+    const url = amount > 0 
+      ? '/api/admin/add-credits' 
+      : '/api/admin/remove-credits';
+
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        userId,
+        amount: Math.abs(amount)
+      })
+    });
+
+    if(!res.ok) throw new Error();
+
+    loadUsers();
+
+  } catch(err){
+    console.error(err);
+    alert("Error actualizando créditos");
+  }
+
 }
 
 </script>
