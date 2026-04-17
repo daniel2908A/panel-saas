@@ -42,16 +42,20 @@ body{
 
 .grid{
   display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
   gap: 20px;
 }
 
 .card{
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(145deg,#0f172a,#020617);
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  transition:0.3s;
+}
+
+.card:hover{
+  transform: translateY(-5px);
 }
 
 .waiting{
@@ -141,8 +145,6 @@ async function checkStatus(){
 }
 
 // =======================
-// 🔥 CALCULAR DÍAS RESTANTES (NUEVO)
-// =======================
 function getDaysLeft(date){
   if(!date) return "Sin plan";
 
@@ -155,70 +157,61 @@ function getDaysLeft(date){
 }
 
 // =======================
-// DASHBOARD
-// =======================
 async function dashboard(){
 
   const user = await checkStatus();
   if(!user) return;
 
-  try{
-    const res = await fetch('/api/dashboard',{
-      headers:{ Authorization: "Bearer " + token }
-    });
+  const res = await fetch('/api/dashboard',{
+    headers:{ Authorization: "Bearer " + token }
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    const referralLink = `${window.location.origin}/register.html?ref=${user.referral_code || ''}`;
+  const referralLink = `${window.location.origin}/register.html?ref=${user.referral_code || ''}`;
 
-    document.getElementById("app").innerHTML = `
-      
-      <div class="top-box">
-        <div class="big-card">
-          <h3>💳 Créditos</h3>
-          <h2>$${data.credits}</h2>
-          <button class="btn btn-green">Recargar</button>
-        </div>
+  document.getElementById("app").innerHTML = `
+    <div class="top-box">
 
-        <div class="big-card">
-          <h3>📅 Plan</h3>
-          <p>Activo</p>
-          <p>Días restantes: ${getDaysLeft(user.plan_expiration)}</p>
-        </div>
-
-        <div class="big-card">
-          <h3>💰 Ganancias</h3>
-          <p>Ventas: $${user.earnings_sales || 0}</p>
-          <p>Referidos: $${user.earnings_referrals || 0}</p>
-        </div>
+      <div class="big-card">
+        <h3>💳 Créditos</h3>
+        <h2>$${data.credits}</h2>
+        <button class="btn btn-green">Recargar</button>
       </div>
 
-      <div class="card">
-        <h3>👥 Sistema de Referidos</h3>
-
-        <p><b>Código:</b> ${user.referral_code || '---'}</p>
-
-        <p><b>Link:</b></p>
-        <input value="${referralLink}" readonly style="width:100%;padding:8px;border-radius:6px;border:none">
-
-        <button class="btn btn-blue" onclick="copyRef('${referralLink}')">
-          Copiar link
-        </button>
+      <div class="big-card">
+        <h3>📅 Plan</h3>
+        <p>Activo</p>
+        <p>Días restantes: ${getDaysLeft(user.plan_expiration)}</p>
       </div>
 
-      <div class="grid">
-        <div class="card">💰 Ventas: ${data.sales}</div>
-        <div class="card">👤 Usuarios: ${data.users}</div>
-        <div class="card">📦 Productos activos</div>
+      <div class="big-card">
+        <h3>💰 Ganancias</h3>
+        <p>Ventas: $${user.earnings_sales || 0}</p>
+        <p>Referidos: $${user.earnings_referrals || 0}</p>
       </div>
-    `;
-  }catch(err){
-    console.error(err);
-  }
+
+    </div>
+
+    <div class="card">
+      <h3>👥 Sistema de Referidos</h3>
+      <p><b>Código:</b> ${user.referral_code || '---'}</p>
+
+      <input value="${referralLink}" readonly style="width:100%;padding:8px;border-radius:6px;border:none">
+
+      <button class="btn btn-blue" onclick="copyRef('${referralLink}')">
+        Copiar link
+      </button>
+    </div>
+
+    <div class="grid">
+      <div class="card">💰 Ventas: ${data.sales}</div>
+      <div class="card">👤 Usuarios: ${data.users}</div>
+      <div class="card">📦 Productos activos</div>
+    </div>
+  `;
 }
 
-// =======================
-// COPIAR LINK
 // =======================
 function copyRef(link){
   navigator.clipboard.writeText(link);
@@ -226,79 +219,95 @@ function copyRef(link){
 }
 
 // =======================
-// MARKETPLACE
-// =======================
 async function market(){
 
   const ok = await checkStatus();
   if(!ok) return;
 
-  try{
-    const res = await fetch('/api/products',{
-      headers:{ Authorization: "Bearer " + token }
-    });
+  const res = await fetch('/api/products',{
+    headers:{ Authorization: "Bearer " + token }
+  });
 
-    const products = await res.json();
+  const products = await res.json();
 
-    document.getElementById("app").innerHTML = `
-      <h2>🛒 Marketplace</h2>
+  document.getElementById("app").innerHTML = `
+    <h2>🛒 Marketplace</h2>
 
-      <div class="card">
-        <h3>Crear Producto</h3>
+    <div class="card">
+      <h3>Crear Producto</h3>
 
-        <input id="name" placeholder="Nombre">
-        <input id="price" placeholder="Precio">
-        <input type="file" id="file">
-        <textarea id="desc" placeholder="Descripción"></textarea>
+      <input id="name" placeholder="Nombre">
+      <input id="price" placeholder="Precio">
+      <input type="file" id="file">
+      <textarea id="desc" placeholder="Descripción"></textarea>
 
-        <button class="btn btn-blue" onclick="create()">Crear</button>
-      </div>
+      <button class="btn btn-blue" onclick="create()">Crear</button>
+    </div>
 
-      <div class="grid">
-        ${products.map(p => `
-          <div class="card">
-            <h3>${p.name}</h3>
-            <p>${p.description || ""}</p>
-            <b>$${p.price}</b>
+    <div class="grid">
+      ${products.map(p => `
+        <div class="card">
+
+          <img src="${p.image || 'https://via.placeholder.com/300'}"
+          style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px">
+
+          <h3>${p.name}</h3>
+          <p style="opacity:0.7">${p.description || ""}</p>
+
+          <b style="font-size:18px">$${p.price}</b>
+
+          <div style="margin-top:10px;display:flex;gap:10px">
+            <button class="btn btn-blue" onclick="editProduct(${p.id})">Editar</button>
+            <button class="btn" style="background:#ef4444" onclick="deleteProduct(${p.id})">Eliminar</button>
           </div>
-        `).join("")}
-      </div>
-    `;
-  }catch(err){
-    console.error(err);
-  }
+
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 // =======================
-// CREAR PRODUCTO
+async function deleteProduct(id){
+  if(!confirm("¿Eliminar producto?")) return;
+
+  await fetch('/api/products/' + id,{
+    method:'DELETE',
+    headers:{ Authorization: "Bearer " + token }
+  });
+
+  alert("Producto eliminado");
+  market();
+}
+
+// =======================
+function editProduct(id){
+  alert("Editor próximo 🔥 ID: " + id);
+}
+
 // =======================
 async function create(){
 
   const ok = await checkStatus();
   if(!ok) return;
 
-  try{
-    const form = new FormData();
+  const form = new FormData();
 
-    form.append("name", document.getElementById("name").value);
-    form.append("price", document.getElementById("price").value);
-    form.append("description", document.getElementById("desc").value);
+  form.append("name", document.getElementById("name").value);
+  form.append("price", document.getElementById("price").value);
+  form.append("description", document.getElementById("desc").value);
 
-    const file = document.getElementById("file").files[0];
-    if(file) form.append("image", file);
+  const file = document.getElementById("file").files[0];
+  if(file) form.append("image", file);
 
-    await fetch('/api/products',{
-      method:'POST',
-      headers:{ Authorization: "Bearer " + token },
-      body: form
-    });
+  await fetch('/api/products',{
+    method:'POST',
+    headers:{ Authorization: "Bearer " + token },
+    body: form
+  });
 
-    alert("Producto creado");
-    market();
-
-  }catch(err){
-    console.error(err);
-  }
+  alert("Producto creado");
+  market();
 }
 
 // INIT
