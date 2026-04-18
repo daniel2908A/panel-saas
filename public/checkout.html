@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Checkout</title>
+<title>Checkout Nexora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  font-family: Segoe UI;
+  margin:0;
+  font-family:Arial;
   background:#020617;
   color:white;
   display:flex;
@@ -17,10 +19,23 @@ body{
 
 .box{
   background:#111827;
-  padding:30px;
+  padding:25px;
   border-radius:16px;
   width:350px;
+  box-shadow:0 0 30px rgba(0,0,0,0.5);
 }
+
+h2{text-align:center;margin-bottom:20px;}
+
+.row{margin-bottom:10px;}
+
+.price{
+  font-size:22px;
+  margin:10px 0;
+}
+
+.ok{color:#22c55e;}
+.bad{color:#ef4444;}
 
 button{
   width:100%;
@@ -29,16 +44,25 @@ button{
   border:none;
   border-radius:10px;
   cursor:pointer;
+  font-weight:bold;
 }
 
-.buy{ background:#22c55e }
-.reload{ background:#3b82f6 }
+.buy{background:#22c55e;}
+.buy:disabled{background:#374151;cursor:not-allowed;}
+
+.recharge{background:#3b82f6;}
+
+.small{
+  font-size:12px;
+  color:#94a3b8;
+  margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="box" id="box"></div>
+<div class="box" id="box">Cargando...</div>
 
 <script>
 
@@ -46,47 +70,122 @@ const token = localStorage.getItem("token");
 const purchase = JSON.parse(localStorage.getItem("pendingPurchase"));
 
 if(!purchase){
-  document.getElementById("box").innerHTML = "No hay compra pendiente";
+  document.getElementById("box").innerHTML="❌ No hay compra pendiente";
 }else{
+  loadCheckout();
+}
 
-  document.getElementById("box").innerHTML = `
-    <h2>🧾 Confirmar compra</h2>
+// =====================
+// CARGAR CHECKOUT
+// =====================
+async function loadCheckout(){
 
-    <p><b>Producto:</b> ${purchase.name}</p>
-    <p><b>Precio:</b> $${purchase.price}</p>
+  try{
 
-    <button class="buy" onclick="confirmBuy()">Comprar ahora</button>
-    <button class="reload" onclick="recharge()">Recargar créditos</button>
+    const res = await fetch('/api/dashboard',{
+      headers:{ Authorization:"Bearer "+token }
+    });
+
+    const data = await res.json();
+
+    const credits = data.credits || 0;
+    const price = purchase.price || 0;
+
+    const enough = credits >= price;
+
+    document.getElementById("box").innerHTML = `
+      <h2>🧾 Confirmar compra</h2>
+
+      <div class="row"><b>Producto:</b> ${purchase.name}</div>
+      <div class="price">$${price}</div>
+
+      <div class="row">
+        💳 Tus créditos: <b>$${credits}</b>
+      </div>
+
+      <div class="row ${enough ? 'ok' : 'bad'}">
+        ${enough ? '✔ Tienes saldo suficiente' : '❌ Saldo insuficiente'}
+      </div>
+
+      <button class="buy" ${!enough ? 'disabled' : ''} onclick="confirmBuy()">
+        ${enough ? 'Comprar ahora' : 'Saldo insuficiente'}
+      </button>
+
+      <button class="recharge" onclick="showRecharge()">
+        Recargar créditos
+      </button>
+
+      <div id="rechargeBox"></div>
+
+      <div class="small">
+        Puedes recargar con Binance y usar tus créditos para comprar
+      </div>
+    `;
+
+  }catch(err){
+    document.getElementById("box").innerHTML="❌ Error cargando datos";
+  }
+}
+
+// =====================
+// COMPRAR
+// =====================
+async function confirmBuy(){
+
+  try{
+
+    const res = await fetch('/api/orders/buy',{
+      method:'POST',
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({ productId: purchase.id })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      alert(data.error || "Error en compra");
+      return;
+    }
+
+    alert("✅ Compra realizada");
+
+    localStorage.removeItem("pendingPurchase");
+
+    window.location.href="/dashboard.html";
+
+  }catch{
+    alert("Error de conexión");
+  }
+}
+
+// =====================
+// RECARGA UI
+// =====================
+function showRecharge(){
+
+  const amounts = [5,10,20,50,100];
+
+  document.getElementById("rechargeBox").innerHTML = `
+    <h3>💸 Recargar</h3>
+    ${amounts.map(a=>`
+      <button class="recharge" onclick="recharge(${a})">
+        $${a}
+      </button>
+    `).join("")}
   `;
 }
 
-async function confirmBuy(){
+// =====================
+// RECARGA (placeholder)
+// =====================
+function recharge(amount){
+  alert("Recarga de $" + amount + " con Binance próximamente 💸");
 
-  const res = await fetch('/api/orders/buy', {
-    method:'POST',
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Bearer "+token
-    },
-    body: JSON.stringify({ productId: purchase.id })
-  });
-
-  const data = await res.json();
-
-  if(!res.ok){
-    alert(data.error || "Error");
-    return;
-  }
-
-  alert("✅ Compra realizada");
-
-  localStorage.removeItem("pendingPurchase");
-
-  window.location.href = "/dashboard.html";
-}
-
-function recharge(){
-  alert("Recarga con Binance próximamente 💸");
+  // futuro:
+  // window.location.href="/payment.html?amount="+amount
 }
 
 </script>
