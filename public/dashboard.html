@@ -74,8 +74,8 @@ body{
 
 <body>
 
-<div class="sidebar">
-  <button onclick="dashboard()">Panel Cliente</button>
+<div class="sidebar" id="sidebar">
+  <button onclick="dashboard()">Panel</button>
   <button onclick="goMarket()">Marketplace</button>
 </div>
 
@@ -88,6 +88,15 @@ body{
 const token = localStorage.getItem("token");
 if(!token) location.href="/login.html";
 
+const role = localStorage.getItem("role");
+
+// 🔥 MOSTRAR PANEL VENDEDOR SI CORRESPONDE
+if(role === "super_reseller"){
+  document.getElementById("sidebar").innerHTML += `
+    <button onclick="sellerPanel()">Panel Vendedor</button>
+  `;
+}
+
 function getDaysLeft(date){
   if(!date) return "Sin fecha";
   const diff=Math.ceil((new Date(date)-new Date())/(1000*60*60*24));
@@ -95,7 +104,7 @@ function getDaysLeft(date){
 }
 
 // =====================
-// DASHBOARD CLIENTE
+// PANEL CLIENTE
 // =====================
 async function dashboard(){
 
@@ -141,6 +150,23 @@ async function dashboard(){
       ${myProducts}
     </div>
   </div>
+
+  `;
+}
+
+// =====================
+// PANEL VENDEDOR (BÁSICO)
+// =====================
+function sellerPanel(){
+  document.getElementById("app").innerHTML=`
+
+    <h2>💼 Panel Vendedor</h2>
+
+    <div class="big-card">
+      <h3>📊 Información</h3>
+      <p>Desde aquí puedes gestionar tus productos</p>
+      <button class="btn btn-blue" onclick="goMarket()">Ir a gestionar productos</button>
+    </div>
 
   `;
 }
@@ -195,6 +221,7 @@ function goMarket(){
   window.location.href="/marketplace.html";
 }
 
+// INIT
 dashboard();
 
 </script>

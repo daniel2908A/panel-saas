@@ -30,9 +30,10 @@ const commissionRoutes = require('./routes/commission.routes');
 const planRoutes = require('./routes/plan.routes');
 const webhookRoutes = require('./routes/webhook.routes');
 
-// 🔥 CAMBIO CLAVE AQUÍ
-app.use('/api', authRoutes); // ← IMPORTANTE
-
+// =====================
+// ROUTES
+// =====================
+app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -45,28 +46,65 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/plan', planRoutes);
 app.use('/api/webhook', webhookRoutes);
 
-// Ruta principal
+// =============================
+// 🔥 PRODUCTOS PÚBLICOS (MARKETPLACE)
+// =============================
+app.get('/api/products/public', async (req, res) => {
+  try {
+
+    const [products] = await db.query(`
+      SELECT 
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.color,
+        p.category,
+        u.username as seller
+      FROM products p
+      LEFT JOIN users u ON p.user_id = u.id
+    `);
+
+    res.json(products);
+
+  } catch (err) {
+    console.error("Error productos públicos:", err);
+    res.status(500).json({ error: "Error cargando productos" });
+  }
+});
+
+// =====================
+// RUTA PRINCIPAL
+// =====================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
-// Test
+// =====================
+// TEST API
+// =====================
 app.get('/api', (req, res) => {
   res.json({ message: "API funcionando 🚀" });
 });
 
+// =====================
 // 404
+// =====================
 app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// Error global
+// =====================
+// ERROR GLOBAL
+// =====================
 app.use((err, req, res, next) => {
   console.error("Error global:", err);
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
-// Server
+// =====================
+// SERVER
+// =====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

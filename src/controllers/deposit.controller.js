@@ -1,156 +1,67 @@
-const depositService = require("../services/deposit.service");
 const db = require('../db');
 
-// =======================
-// CREAR DEPÓSITO
-// =======================
-exports.createDeposit = async (req, res) => {
+// =============================
+// 💸 RECARGA + COMISIONES
+// =============================
+const createDeposit = async (req, res) => {
   try {
-    const userId = req.user?.id;
-    let { amount } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ message: "No autorizado" });
+    const { user_id, amount } = req.body;
+
+    if (!user_id || !amount) {
+      return res.status(400).json({ error: "Datos incompletos" });
     }
 
-    amount = parseFloat(amount);
+    // quitar 8% comisión
+    const credits = amount / 1.08;
+    const commission = amount - credits;
 
-    if (!amount || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: "Monto inválido" });
+    await db.query("START TRANSACTION");
+
+    // sumar créditos
+    await db.query(`
+      UPDATE users SET credits = credits + ?
+      WHERE id = ?
+    `, [credits, user_id]);
+
+    // buscar referido
+    const [[user]] = await db.query(
+      "SELECT referred_by FROM users WHERE id = ?", [user_id]
+    );
+
+    let ownerCommission = commission;
+    let refCommission = 0;
+
+    if (user.referred_by) {
+      refCommission = commission * 0.375; // ~0.3 de 0.8
+      ownerCommission = commission - refCommission;
+
+      // pagar referido
+      await db.query(`
+        UPDATE users 
+        SET earnings_referrals = IFNULL(earnings_referrals,0) + ?
+        WHERE id = ?
+      `, [refCommission, user.referred_by]);
     }
 
-    const result = await depositService.createDeposit(userId, amount);
+    // pagar owner (ID 1)
+    await db.query(`
+      UPDATE users 
+      SET earnings_referrals = IFNULL(earnings_referrals,0) + ?
+      WHERE id = 1
+    `, [ownerCommission]);
 
-    res.json({
-      message: "Depósito creado",
-      ...result
-    });
+    await db.query("COMMIT");
 
-  } catch (error) {
-    console.error("ERROR CREATE DEPOSIT:", error);
-    res.status(500).json({ message: "Error creando depósito" });
+    res.json({ success: true });
+
+  } catch (err) {
+    await db.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Error en recarga" });
   }
 };
 
-// =======================
-// CONFIRMAR DEPÓSITO
-// =======================
-exports.confirmDeposit = async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    const { depositId, txid } = req.body;
-
-    if (!userId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
-    if (!depositId || !txid) {
-      return res.status(400).json({ message: "Datos incompletos" });
-    }
-
-    // Confirmar depósito
-    const result = await depositService.confirmDeposit(
-      userId,
-      depositId,
-      txid
-    );
-
-    const amount = parseFloat(result.amount) || 0;
-
-    if (amount <= 0) {
-      return res.json(result);
-    }
-
-    // =========================
-    // 💳 SISTEMA NUEVO (8%)
-    // =========================
-
-    const total = amount * 1.08;
-    const fee = total - amount; // 8%
-
-    const ownerShare = amount * 0.05;     // 5%
-    const referralShare = amount * 0.03;  // 3%
-
-    // =========================
-    // BUSCAR REFERIDO
-    // =========================
-    const [users] = await db.query(
-      "SELECT referred_by FROM users WHERE id = ?",
-      [userId]
-    );
-
-    let referredBy = users[0]?.referred_by || null;
-
-    // =========================
-    // 💸 SUMAR CRÉDITOS AL USUARIO
-    // =========================
-    await db.query(
-      "UPDATE users SET credits = credits + ? WHERE id = ?",
-      [amount, userId]
-    );
-
-    // =========================
-    // 💰 GANANCIA OWNER
-    // =========================
-    const OWNER_ID = 1;
-
-    await db.query(
-      "UPDATE users SET earnings_sales = earnings_sales + ? WHERE id = ?",
-      [referredBy ? ownerShare : fee, OWNER_ID]
-    );
-
-    // =========================
-    // 👥 GANANCIA REFERIDO
-    // =========================
-    if (referredBy) {
-      await db.query(
-        "UPDATE users SET earnings_referrals = earnings_referrals + ? WHERE referral_code = ?",
-        [referralShare, referredBy]
-      );
-
-      console.log(`💸 Referido gana ${referralShare}`);
-    } else {
-      console.log(`💸 Owner gana todo: ${fee}`);
-    }
-
-    console.log(`
-      💳 Recarga: ${amount}
-      💰 Fee: ${fee}
-      👑 Owner: ${referredBy ? ownerShare : fee}
-      👥 Referido: ${referredBy ? referralShare : 0}
-    `);
-
-    res.json({
-      message: "Depósito confirmado correctamente",
-      amount,
-      fee,
-      ownerShare,
-      referralShare
-    });
-
-  } catch (error) {
-    console.error("ERROR CONFIRM DEPOSIT:", error);
-    res.status(500).json({ message: "Error confirmando depósito" });
-  }
-};
-
-// =======================
-// LISTAR DEPÓSITOS
-// =======================
-exports.getDeposits = async (req, res) => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
-    const deposits = await depositService.getDeposits(userId);
-
-    res.json(deposits);
-
-  } catch (error) {
-    console.error("ERROR GET DEPOSITS:", error);
-    res.status(500).json({ message: "Error obteniendo depósitos" });
-  }
+module.exports = {
+  createDeposit
 };
