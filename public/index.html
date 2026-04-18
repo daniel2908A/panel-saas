@@ -92,9 +92,7 @@ header {
 }
 
 .hero h1 { font-size: 52px; }
-
 .hero span { color: #38bdf8; }
-
 .hero p { color: #94a3b8; }
 
 .hero button {
@@ -108,7 +106,17 @@ header {
 
 .counter { margin-top: 20px; color: #4ade80; }
 
-.card, .testimonial, .product {
+.market-btn {
+  margin-top: 30px;
+  padding: 20px 40px;
+  font-size: 22px;
+  border-radius: 14px;
+  background: #22c55e;
+  border: none;
+  cursor: pointer;
+}
+
+.card, .testimonial {
   backdrop-filter: blur(10px);
   background: rgba(2,6,23,0.7);
 }
@@ -152,17 +160,6 @@ header {
   padding: 20px;
   max-width: 400px;
   margin: auto;
-  border-radius: 10px;
-}
-
-.products {
-  padding: 50px;
-  text-align: center;
-}
-
-.product {
-  padding: 15px;
-  margin-bottom: 10px;
   border-radius: 10px;
 }
 
@@ -212,6 +209,8 @@ footer {
   <p>Un sistema completo para vender y automatizar ingresos</p>
   <button onclick="goRegister()">💸 Empezar ahora</button>
 
+  <button class="market-btn" onclick="goMarket()">🛒 Ver Marketplace</button>
+
   <div class="counter" id="counter">+$0 generados hoy</div>
 
   <div class="dashboard-preview">
@@ -233,11 +232,6 @@ footer {
   <div class="testimonial" id="testimonialBox"></div>
 </section>
 
-<section class="products">
-  <h2>🛒 Productos disponibles</h2>
-  <div id="products">Cargando...</div>
-</section>
-
 <section class="cta">
   <h2>🚀 Empieza hoy mismo</h2>
   <button onclick="goRegister()">Crear cuenta</button>
@@ -253,6 +247,7 @@ footer {
 function goLogin(){ window.location.href='/login.html' }
 function goRegister(){ window.location.href='/register.html' }
 function goWhats(){ window.open('https://wa.me/50239779827') }
+function goMarket(){ window.location.href='/marketplace.html' }
 
 // contador
 let total=0;
@@ -296,31 +291,6 @@ function rotateTestimonial(){
 
 rotateTestimonial();
 setInterval(rotateTestimonial,3000);
-
-// productos (con manejo de error)
-async function loadProducts(){
-  try{
-    const res=await fetch('/api/products/public');
-
-    if(!res.ok) throw new Error("error");
-
-    const data=await res.json();
-
-    let html="";
-    data.forEach(p=>{
-      const price=p.price||(p.plans&&p.plans[0]?.price)||0;
-      html+=`<div class="product"><b>${p.name}</b><br>$${price}</div>`;
-    });
-
-    document.getElementById("products").innerHTML=html;
-
-  }catch(err){
-    document.getElementById("products").innerHTML="❌ Error cargando productos";
-    console.error(err);
-  }
-}
-
-loadProducts();
 
 </script>
 
