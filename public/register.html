@@ -104,12 +104,12 @@ button:hover {
 <h2>Crear Cuenta</h2>
 
 <div class="tabs">
-  <div class="tab active" onclick="setRole('reseller', this)">Reseller</div>
-  <div class="tab" onclick="setRole('super_reseller', this)">Super Reseller</div>
+  <div class="tab active" onclick="setRole('reseller', this)">Cliente</div>
+  <div class="tab" onclick="setRole('super_reseller', this)">Vendedor</div>
 </div>
 
 <div class="info" id="infoText">
-  Acceso básico para vender productos
+  Acceso básico para comprar productos
 </div>
 
 <form id="form">
@@ -138,9 +138,9 @@ function setRole(r, el) {
   const info = document.getElementById('infoText');
 
   if (r === 'super_reseller') {
-    info.innerText = "Nivel avanzado con sistema multinivel 🚀";
+    info.innerText = "Crea tu negocio y vende productos dentro de Nexora 💸";
   } else {
-    info.innerText = "Acceso básico para vender productos";
+    info.innerText = "Acceso básico para comprar productos";
   }
 }
 
@@ -194,14 +194,14 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
-localStorage.setItem("email", email);
-localStorage.setItem("role", role);
+    localStorage.setItem("email", email);
+    localStorage.setItem("role", role);
 
-if (role === "super_reseller") {
-  window.location.href = "/payment.html";
-} else {
-  window.location.href = "/login.html";
-}
+    if (role === "super_reseller") {
+      window.location.href = "/payment.html";
+    } else {
+      window.location.href = "/login.html";
+    }
 
   } catch (err) {
     console.error(err);
