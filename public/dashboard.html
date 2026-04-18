@@ -53,10 +53,19 @@ body{
   border:none;
   border-radius:10px;
   cursor:pointer;
+  margin-top:5px;
 }
 
 .btn-blue{ background:#3b82f6 }
 .btn-green{ background:#22c55e }
+
+.color-btn{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  border:2px solid white;
+  cursor:pointer;
+}
 
 .big-card{
   flex:1;
@@ -88,6 +97,12 @@ body{
 
 const token = localStorage.getItem("token");
 if(!token) location.href="/login.html";
+
+let selectedColor = "#3b82f6";
+
+function setColor(color){
+  selectedColor = color;
+}
 
 async function checkStatus(){
   const res = await fetch('/api/users/me',{
@@ -146,7 +161,6 @@ async function dashboard(){
   `;
 }
 
-// presets
 function preset(type){
   const presets={
     Netflix:{name:"Cuenta Netflix Premium",desc:"Acceso completo UHD",price:"5",color:"#e50914"},
@@ -155,10 +169,10 @@ function preset(type){
   };
 
   const p=presets[type];
-  name.value=p.name;
-  desc.value=p.desc;
-  price.value=p.price;
-  color.value=p.color;
+  document.getElementById("name").value=p.name;
+  document.getElementById("desc").value=p.desc;
+  document.getElementById("price").value=p.price;
+  selectedColor=p.color;
 }
 
 async function market(){
@@ -188,8 +202,15 @@ async function market(){
     <input id="name" placeholder="Nombre">
     <input id="price" placeholder="Precio">
 
-    <label>Color:</label>
-    <input type="color" id="color" value="#3b82f6">
+    <h4>Color:</h4>
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <div class="color-btn" style="background:#3b82f6" onclick="setColor('#3b82f6')"></div>
+      <div class="color-btn" style="background:#ef4444" onclick="setColor('#ef4444')"></div>
+      <div class="color-btn" style="background:#22c55e" onclick="setColor('#22c55e')"></div>
+      <div class="color-btn" style="background:#eab308" onclick="setColor('#eab308')"></div>
+      <div class="color-btn" style="background:#ec4899" onclick="setColor('#ec4899')"></div>
+      <div class="color-btn" style="background:#000" onclick="setColor('#000')"></div>
+    </div>
 
     <textarea id="desc" placeholder="Descripción"></textarea>
 
@@ -212,12 +233,13 @@ async function market(){
           font-weight:bold;
           background:${p.color||'#3b82f6'};
         ">
-          ${p.name}
+          ${p.name || 'Producto'}
         </div>
 
         <p>${p.description||""}</p>
-        <h2>$${p.price}</h2>
+        <h2>$${p.price||0}</h2>
 
+        <button class="btn btn-green" onclick="editProduct(${p.id})">Editar</button>
         <button class="btn btn-blue" onclick="deleteProduct(${p.id})">Eliminar</button>
 
       </div>
@@ -229,21 +251,47 @@ async function market(){
 
 async function create(){
 
-  const form=new FormData();
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const description = document.getElementById("desc").value;
 
-  form.append("name",name.value);
-  form.append("price",price.value);
-  form.append("description",desc.value);
-  form.append("color",color.value);
+  if(!name || !price){
+    alert("Completa los campos");
+    return;
+  }
 
   await fetch('/api/products',{
     method:'POST',
-    headers:{ Authorization:"Bearer "+token },
-    body:form
+    headers:{ 
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token 
+    },
+    body: JSON.stringify({
+      name,
+      price,
+      description,
+      color:selectedColor
+    })
   });
 
   alert("Producto creado");
   market();
+}
+
+function editProduct(id){
+  const name = prompt("Nuevo nombre:");
+  const price = prompt("Nuevo precio:");
+
+  if(!name || !price) return;
+
+  fetch('/api/products/'+id,{
+    method:'PUT',
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body: JSON.stringify({ name, price })
+  }).then(()=>market());
 }
 
 async function deleteProduct(id){
@@ -254,7 +302,6 @@ async function deleteProduct(id){
   market();
 }
 
-// init
 dashboard();
 
 </script>
