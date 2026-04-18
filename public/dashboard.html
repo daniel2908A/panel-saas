@@ -113,9 +113,6 @@ if(!token){
   location.href = "/login.html";
 }
 
-// =======================
-// VALIDAR STATUS
-// =======================
 async function checkStatus(){
   try{
     const res = await fetch('/api/users/me',{
@@ -129,7 +126,6 @@ async function checkStatus(){
         <div class="waiting">
           <h2>⏳ Esperando confirmación de pago</h2>
           <p>Tu cuenta está en revisión</p>
-          <p>Contacta para acelerar:</p>
           <h3 style="color:#22c55e">+56 9 4618 4516</h3>
         </div>
       `;
@@ -144,21 +140,15 @@ async function checkStatus(){
   }
 }
 
-// =======================
 function getDaysLeft(date){
   if(!date) return "Sin plan";
-
   const today = new Date();
   const exp = new Date(date);
-
   const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
-
   return diff > 0 ? diff + " días" : "Expirado";
 }
 
-// =======================
 async function dashboard(){
-
   const user = await checkStatus();
   if(!user) return;
 
@@ -203,22 +193,40 @@ async function dashboard(){
         Copiar link
       </button>
     </div>
-
-    <div class="grid">
-      <div class="card">💰 Ventas: ${data.sales}</div>
-      <div class="card">👤 Usuarios: ${data.users}</div>
-      <div class="card">📦 Productos activos</div>
-    </div>
   `;
 }
 
-// =======================
 function copyRef(link){
   navigator.clipboard.writeText(link);
   alert("Link copiado 🔥");
 }
 
-// =======================
+// 🔥 NUEVO: PRODUCTOS PREDEFINIDOS
+function preset(type){
+  const presets = {
+    Netflix:{
+      name:"Cuenta Netflix Premium",
+      desc:"Acceso completo a Netflix UHD",
+      price:"5"
+    },
+    Disney:{
+      name:"Cuenta Disney+",
+      desc:"Películas y series Disney+",
+      price:"4"
+    },
+    Spotify:{
+      name:"Spotify Premium",
+      desc:"Música sin anuncios",
+      price:"3"
+    }
+  };
+
+  const p = presets[type];
+  document.getElementById("name").value = p.name;
+  document.getElementById("desc").value = p.desc;
+  document.getElementById("price").value = p.price;
+}
+
 async function market(){
 
   const ok = await checkStatus();
@@ -234,6 +242,13 @@ async function market(){
     <h2>🛒 Marketplace</h2>
 
     <div class="card">
+      <h3>⚡ Productos rápidos</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+        <button class="btn btn-blue" onclick="preset('Netflix')">Netflix</button>
+        <button class="btn btn-blue" onclick="preset('Disney')">Disney+</button>
+        <button class="btn btn-blue" onclick="preset('Spotify')">Spotify</button>
+      </div>
+
       <h3>Crear Producto</h3>
 
       <input id="name" placeholder="Nombre">
@@ -247,27 +262,23 @@ async function market(){
     <div class="grid">
       ${products.map(p => `
         <div class="card">
-
           <img src="${p.image || 'https://via.placeholder.com/300'}"
           style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px">
 
           <h3>${p.name}</h3>
           <p style="opacity:0.7">${p.description || ""}</p>
-
-          <b style="font-size:18px">$${p.price}</b>
+          <b>$${p.price}</b>
 
           <div style="margin-top:10px;display:flex;gap:10px">
             <button class="btn btn-blue" onclick="editProduct(${p.id})">Editar</button>
             <button class="btn" style="background:#ef4444" onclick="deleteProduct(${p.id})">Eliminar</button>
           </div>
-
         </div>
       `).join("")}
     </div>
   `;
 }
 
-// =======================
 async function deleteProduct(id){
   if(!confirm("¿Eliminar producto?")) return;
 
@@ -280,12 +291,10 @@ async function deleteProduct(id){
   market();
 }
 
-// =======================
 function editProduct(id){
   alert("Editor próximo 🔥 ID: " + id);
 }
 
-// =======================
 async function create(){
 
   const ok = await checkStatus();
