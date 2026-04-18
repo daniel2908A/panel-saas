@@ -65,6 +65,12 @@ body{
   border-radius:50%;
   border:2px solid white;
   cursor:pointer;
+  transition:0.2s;
+}
+
+.selected-color{
+  border:3px solid white !important;
+  transform: scale(1.1);
 }
 
 .big-card{
@@ -100,8 +106,14 @@ if(!token) location.href="/login.html";
 
 let selectedColor = "#3b82f6";
 
-function setColor(color){
+function setColor(color, el){
   selectedColor = color;
+
+  document.querySelectorAll('.color-btn').forEach(btn=>{
+    btn.classList.remove('selected-color');
+  });
+
+  el.classList.add('selected-color');
 }
 
 async function checkStatus(){
@@ -204,12 +216,12 @@ async function market(){
 
     <h4>Color:</h4>
     <div style="display:flex;gap:10px;margin-bottom:10px;">
-      <div class="color-btn" style="background:#3b82f6" onclick="setColor('#3b82f6')"></div>
-      <div class="color-btn" style="background:#ef4444" onclick="setColor('#ef4444')"></div>
-      <div class="color-btn" style="background:#22c55e" onclick="setColor('#22c55e')"></div>
-      <div class="color-btn" style="background:#eab308" onclick="setColor('#eab308')"></div>
-      <div class="color-btn" style="background:#ec4899" onclick="setColor('#ec4899')"></div>
-      <div class="color-btn" style="background:#000" onclick="setColor('#000')"></div>
+      <div class="color-btn" style="background:#3b82f6" onclick="setColor('#3b82f6', this)"></div>
+      <div class="color-btn" style="background:#ef4444" onclick="setColor('#ef4444', this)"></div>
+      <div class="color-btn" style="background:#22c55e" onclick="setColor('#22c55e', this)"></div>
+      <div class="color-btn" style="background:#eab308" onclick="setColor('#eab308', this)"></div>
+      <div class="color-btn" style="background:#ec4899" onclick="setColor('#ec4899', this)"></div>
+      <div class="color-btn" style="background:#000" onclick="setColor('#000', this)"></div>
     </div>
 
     <textarea id="desc" placeholder="Descripción"></textarea>
@@ -247,6 +259,12 @@ async function market(){
 
   </div>
   `;
+
+  // seleccionar color por defecto
+  setTimeout(()=>{
+    const first = document.querySelector('.color-btn');
+    if(first) first.click();
+  },100);
 }
 
 async function create(){
