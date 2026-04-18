@@ -243,7 +243,8 @@ async function market(){
           border-radius:12px;
           font-size:20px;
           font-weight:bold;
-          background:${p.color||'#3b82f6'};
+          background: linear-gradient(135deg, ${p.color||'#3b82f6'}, #000);
+          box-shadow: 0 0 20px ${p.color||'#3b82f6'};
         ">
           ${p.name || 'Producto'}
         </div>
@@ -260,7 +261,6 @@ async function market(){
   </div>
   `;
 
-  // seleccionar color por defecto
   setTimeout(()=>{
     const first = document.querySelector('.color-btn');
     if(first) first.click();
