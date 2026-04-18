@@ -47,12 +47,12 @@ app.use('/api/plan', planRoutes);
 app.use('/api/webhook', webhookRoutes);
 
 // =============================
-// 🔥 PRODUCTOS PÚBLICOS (MARKETPLACE)
+// 🔥 PRODUCTOS PÚBLICOS (FIXED)
 // =============================
 app.get('/api/products/public', async (req, res) => {
   try {
 
-    const [products] = await db.query(`
+    const result = await db.query(`
       SELECT 
         p.id,
         p.name,
@@ -64,6 +64,9 @@ app.get('/api/products/public', async (req, res) => {
       FROM products p
       LEFT JOIN users u ON p.user_id = u.id
     `);
+
+    // 🔥 COMPATIBLE CON TODAS LAS CONFIGS
+    const products = Array.isArray(result) ? result[0] : result;
 
     res.json(products);
 
