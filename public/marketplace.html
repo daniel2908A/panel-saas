@@ -97,7 +97,7 @@ body{
 
 <div class="title">
   <h1>Productos disponibles</h1>
-  <div class="subtitle">Ofrecidos por nuestros resellers</div>
+  <div class="subtitle">Ofrecidos por nuestros vendedores</div>
 </div>
 
 <div class="categories">
@@ -117,18 +117,18 @@ function goHome(){
 
 let allProducts=[];
 
-// 🔥 CARGA INTELIGENTE (esto soluciona tu error)
+// =====================
+// CARGAR PRODUCTOS
+// =====================
 async function loadProducts(){
   try{
 
     let res;
 
-    // intenta público primero
     try{
       res = await fetch('/api/products/public');
       if(!res.ok) throw "fail";
     }catch{
-      // fallback privado con token
       const token = localStorage.getItem("token");
 
       res = await fetch('/api/products',{
@@ -152,7 +152,9 @@ async function loadProducts(){
   }
 }
 
-// render
+// =====================
+// RENDER
+// =====================
 function renderProducts(products){
 
   if(products.length===0){
@@ -173,13 +175,13 @@ function renderProducts(products){
           ${p.name || 'Producto'}
         </div>
 
-        <div class="tag">Vendido por reseller</div>
+        <div class="tag">Vendido por vendedor</div>
 
         <p>${p.description || ''}</p>
 
         <div class="price">$${p.price || 0}</div>
 
-        <button class="btn buy" onclick="buy(${p.id})">
+        <button class="btn buy" onclick='buy(${JSON.stringify(p)})'>
           Comprar
         </button>
 
@@ -190,7 +192,9 @@ function renderProducts(products){
   document.getElementById("products").innerHTML=html;
 }
 
-// filtro
+// =====================
+// FILTRO
+// =====================
 function filterCat(cat, el){
   document.querySelectorAll('.cat').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
@@ -202,20 +206,24 @@ function filterCat(cat, el){
   }
 }
 
-// 💸 FLUJO REAL DE COMPRA
-function buy(id){
+// =====================
+// 💸 FLUJO INTELIGENTE
+// =====================
+function buy(product){
 
   const token = localStorage.getItem("token");
 
-  // no está logueado
+  // 🔥 GUARDAR COMPRA
+  localStorage.setItem("pendingPurchase", JSON.stringify(product));
+
+  // no logueado
   if(!token){
-    alert("Debes crear cuenta primero");
     window.location.href="/register.html";
     return;
   }
 
-  // está logueado → ir a panel a comprar
-  window.location.href="/dashboard.html";
+  // logueado → checkout
+  window.location.href="/checkout.html";
 }
 
 loadProducts();

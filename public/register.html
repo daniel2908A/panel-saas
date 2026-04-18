@@ -155,7 +155,7 @@ if (refFromUrl) {
 }
 
 // =======================
-// REGISTRO
+// REGISTRO + FLUJO INTELIGENTE
 // =======================
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -194,9 +194,23 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       return;
     }
 
+    // 🔥 guardar sesión (si tu backend devuelve token)
+    if(data.token){
+      localStorage.setItem("token", data.token);
+    }
+
     localStorage.setItem("email", email);
     localStorage.setItem("role", role);
 
+    // 🔥 DETECTAR COMPRA PENDIENTE
+    const pending = localStorage.getItem("pendingPurchase");
+
+    if(pending){
+      window.location.href = "/checkout.html";
+      return;
+    }
+
+    // flujo normal
     if (role === "super_reseller") {
       window.location.href = "/payment.html";
     } else {

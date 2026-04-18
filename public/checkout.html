@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Checkout</title>
+
+<style>
+body{
+  font-family: Segoe UI;
+  background:#020617;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:#111827;
+  padding:30px;
+  border-radius:16px;
+  width:350px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.buy{ background:#22c55e }
+.reload{ background:#3b82f6 }
+</style>
+</head>
+
+<body>
+
+<div class="box" id="box"></div>
+
+<script>
+
+const token = localStorage.getItem("token");
+const purchase = JSON.parse(localStorage.getItem("pendingPurchase"));
+
+if(!purchase){
+  document.getElementById("box").innerHTML = "No hay compra pendiente";
+}else{
+
+  document.getElementById("box").innerHTML = `
+    <h2>🧾 Confirmar compra</h2>
+
+    <p><b>Producto:</b> ${purchase.name}</p>
+    <p><b>Precio:</b> $${purchase.price}</p>
+
+    <button class="buy" onclick="confirmBuy()">Comprar ahora</button>
+    <button class="reload" onclick="recharge()">Recargar créditos</button>
+  `;
+}
+
+async function confirmBuy(){
+
+  const res = await fetch('/api/orders/buy', {
+    method:'POST',
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body: JSON.stringify({ productId: purchase.id })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.error || "Error");
+    return;
+  }
+
+  alert("✅ Compra realizada");
+
+  localStorage.removeItem("pendingPurchase");
+
+  window.location.href = "/dashboard.html";
+}
+
+function recharge(){
+  alert("Recarga con Binance próximamente 💸");
+}
+
+</script>
+
+</body>
+</html>
