@@ -49,31 +49,46 @@ safeRoute('/api/webhook', require('./routes/webhook.routes'));
 app.use('/uploads', express.static('uploads'));
 
 // =============================
-// 🔥 PRODUCTOS PÚBLICOS
+// 🔥 PRODUCTOS PÚBLICOS (FIX REAL)
 // =============================
 app.get('/api/products/public', async (req, res) => {
   try {
 
+    console.log("📡 Cargando productos públicos...");
+
     const result = await db.query(`
       SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.color,
-        p.category,
-        u.username as seller
-      FROM products p
-      LEFT JOIN users u ON p.user_id = u.id
+        id,
+        name,
+        description,
+        price,
+        color,
+        category
+      FROM products
     `);
 
-    const products = Array.isArray(result) ? result[0] : result;
+    let products;
+
+    // 🔥 compatibilidad total mysql / mysql2
+    if (Array.isArray(result)) {
+      products = result[0];
+    } else {
+      products = result;
+    }
+
+    // seguridad extra
+    if (!products) products = [];
+
+    console.log("✅ Productos encontrados:", products.length);
 
     res.json(products);
 
   } catch (err) {
-    console.error("Error productos públicos:", err);
-    res.status(500).json({ error: "Error cargando productos" });
+    console.error("🔥 ERROR PUBLIC PRODUCTS:", err);
+    res.status(500).json({
+      error: "Error cargando productos",
+      detail: err.message
+    });
   }
 });
 
@@ -86,15 +101,24 @@ app.get('/api', (req, res) => {
   res.json({ message: "API funcionando 🚀" });
 });
 
+// =====================
+// 404
+// =====================
 app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
+// =====================
+// ERROR GLOBAL
+// =====================
 app.use((err, req, res, next) => {
   console.error("Error global:", err);
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
+// =====================
+// SERVER
+// =====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
