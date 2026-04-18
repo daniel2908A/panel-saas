@@ -161,7 +161,7 @@ let allProducts=[];
 // cargar productos
 async function loadProducts(){
   try{
-    const res = await fetch('/api/products');
+    const res = await fetch('/api/products/public');
     const data = await res.json();
 
     allProducts = data;
