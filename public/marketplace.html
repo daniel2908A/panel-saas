@@ -13,7 +13,6 @@ body{
   color:white;
 }
 
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
@@ -21,10 +20,7 @@ body{
   align-items:center;
 }
 
-.logo{
-  font-size:22px;
-  font-weight:bold;
-}
+.logo{ font-size:22px; font-weight:bold; }
 
 .back{
   background:#111827;
@@ -33,18 +29,9 @@ body{
   cursor:pointer;
 }
 
-/* TITULO */
-.title{
-  text-align:center;
-  margin-top:20px;
-}
+.title{text-align:center;margin-top:20px;}
+.subtitle{color:#94a3b8;margin-top:10px;}
 
-.subtitle{
-  color:#94a3b8;
-  margin-top:10px;
-}
-
-/* CATEGORIAS */
 .categories{
   display:flex;
   gap:15px;
@@ -58,18 +45,10 @@ body{
   border-radius:10px;
   background:#111827;
   cursor:pointer;
-  transition:0.2s;
 }
 
-.cat:hover{
-  background:#3b82f6;
-}
+.active{ background:#3b82f6; }
 
-.active{
-  background:#3b82f6;
-}
-
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
@@ -77,17 +56,11 @@ body{
   padding:30px;
 }
 
-/* PRODUCTO */
 .card{
   background:#020617;
   border-radius:16px;
   padding:15px;
   box-shadow:0 10px 25px rgba(0,0,0,0.5);
-  transition:0.3s;
-}
-
-.card:hover{
-  transform:translateY(-5px);
 }
 
 .banner{
@@ -97,13 +70,9 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:bold;
-  font-size:18px;
 }
 
-.price{
-  font-size:22px;
-  margin:10px 0;
-}
+.price{ font-size:22px;margin:10px 0; }
 
 .btn{
   width:100%;
@@ -113,16 +82,9 @@ body{
   cursor:pointer;
 }
 
-.buy{
-  background:#22c55e;
-}
+.buy{ background:#22c55e; }
 
-/* TAG */
-.tag{
-  font-size:12px;
-  color:#94a3b8;
-  margin-top:10px;
-}
+.tag{ font-size:12px;color:#94a3b8;margin-top:10px; }
 </style>
 </head>
 
@@ -135,20 +97,17 @@ body{
 
 <div class="title">
   <h1>Productos disponibles</h1>
-  <div class="subtitle">Ofrecidos por nuestros resellers verificados</div>
+  <div class="subtitle">Ofrecidos por nuestros resellers</div>
 </div>
 
-<!-- CATEGORIAS -->
 <div class="categories">
   <div class="cat active" onclick="filterCat('all', this)">Todos</div>
   <div class="cat" onclick="filterCat('streaming', this)">🎬 Streaming</div>
   <div class="cat" onclick="filterCat('music', this)">🎵 Música</div>
   <div class="cat" onclick="filterCat('iptv', this)">📺 IPTV</div>
-  <div class="cat" onclick="filterCat('tools', this)">🧰 Herramientas</div>
 </div>
 
-<!-- PRODUCTOS -->
-<div class="grid" id="products"></div>
+<div class="grid" id="products">Cargando...</div>
 
 <script>
 
@@ -158,26 +117,46 @@ function goHome(){
 
 let allProducts=[];
 
-// cargar productos
+// 🔥 CARGA INTELIGENTE (esto soluciona tu error)
 async function loadProducts(){
   try{
-    const res = await fetch('/api/products/public');
+
+    let res;
+
+    // intenta público primero
+    try{
+      res = await fetch('/api/products/public');
+      if(!res.ok) throw "fail";
+    }catch{
+      // fallback privado con token
+      const token = localStorage.getItem("token");
+
+      res = await fetch('/api/products',{
+        headers:{ Authorization:"Bearer "+token }
+      });
+    }
+
     const data = await res.json();
+
+    if(!Array.isArray(data)){
+      throw new Error("Formato incorrecto");
+    }
 
     allProducts = data;
 
     renderProducts(data);
 
   }catch(err){
-    document.getElementById("products").innerHTML="Error cargando productos";
+    console.error(err);
+    document.getElementById("products").innerHTML="❌ No se pudieron cargar los productos";
   }
 }
 
 // render
 function renderProducts(products){
 
-  if(products.length === 0){
-    document.getElementById("products").innerHTML="<p>No hay productos</p>";
+  if(products.length===0){
+    document.getElementById("products").innerHTML="No hay productos";
     return;
   }
 
@@ -189,8 +168,7 @@ function renderProducts(products){
       <div class="card">
 
         <div class="banner" style="
-          background: linear-gradient(135deg, ${p.color || '#3b82f6'}, #000);
-          box-shadow: 0 0 15px ${p.color || '#3b82f6'};
+          background: linear-gradient(135deg, ${p.color||'#3b82f6'}, #000);
         ">
           ${p.name || 'Producto'}
         </div>
@@ -214,25 +192,32 @@ function renderProducts(products){
 
 // filtro
 function filterCat(cat, el){
-
   document.querySelectorAll('.cat').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
 
-  if(cat === "all"){
+  if(cat==="all"){
     renderProducts(allProducts);
+  }else{
+    renderProducts(allProducts.filter(p=>p.category===cat));
+  }
+}
+
+// 💸 FLUJO REAL DE COMPRA
+function buy(id){
+
+  const token = localStorage.getItem("token");
+
+  // no está logueado
+  if(!token){
+    alert("Debes crear cuenta primero");
+    window.location.href="/register.html";
     return;
   }
 
-  const filtered = allProducts.filter(p => p.category === cat);
-  renderProducts(filtered);
+  // está logueado → ir a panel a comprar
+  window.location.href="/dashboard.html";
 }
 
-// comprar (placeholder)
-function buy(id){
-  alert("Compra próximamente 💸");
-}
-
-// init
 loadProducts();
 
 </script>
