@@ -201,24 +201,12 @@ function copyRef(link){
   alert("Link copiado 🔥");
 }
 
-// 🔥 NUEVO: PRODUCTOS PREDEFINIDOS
+// presets
 function preset(type){
   const presets = {
-    Netflix:{
-      name:"Cuenta Netflix Premium",
-      desc:"Acceso completo a Netflix UHD",
-      price:"5"
-    },
-    Disney:{
-      name:"Cuenta Disney+",
-      desc:"Películas y series Disney+",
-      price:"4"
-    },
-    Spotify:{
-      name:"Spotify Premium",
-      desc:"Música sin anuncios",
-      price:"3"
-    }
+    Netflix:{name:"Cuenta Netflix Premium",desc:"Acceso completo a Netflix UHD",price:"5"},
+    Disney:{name:"Cuenta Disney+",desc:"Películas y series Disney+",price:"4"},
+    Spotify:{name:"Spotify Premium",desc:"Música sin anuncios",price:"3"}
   };
 
   const p = presets[type];
@@ -260,21 +248,54 @@ async function market(){
     </div>
 
     <div class="grid">
-      ${products.map(p => `
-        <div class="card">
-          <img src="${p.image || 'https://via.placeholder.com/300'}"
-          style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px">
+      ${products.map(p => {
 
-          <h3>${p.name}</h3>
-          <p style="opacity:0.7">${p.description || ""}</p>
-          <b>$${p.price}</b>
+        let color = "linear-gradient(135deg,#3b82f6,#9333ea)";
 
-          <div style="margin-top:10px;display:flex;gap:10px">
-            <button class="btn btn-blue" onclick="editProduct(${p.id})">Editar</button>
-            <button class="btn" style="background:#ef4444" onclick="deleteProduct(${p.id})">Eliminar</button>
+        if(p.name.toLowerCase().includes("netflix")){
+          color = "linear-gradient(135deg,#e50914,#b20710)";
+        }
+
+        if(p.name.toLowerCase().includes("disney")){
+          color = "linear-gradient(135deg,#1e3a8a,#3b82f6)";
+        }
+
+        if(p.name.toLowerCase().includes("spotify")){
+          color = "linear-gradient(135deg,#1db954,#15803d)";
+        }
+
+        return `
+          <div class="card">
+
+            <div style="
+              height:120px;
+              border-radius:12px;
+              margin-bottom:10px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:22px;
+              font-weight:bold;
+              background:${color};
+              box-shadow:0 0 20px rgba(0,0,0,0.6);
+              text-align:center;
+              padding:10px;
+            ">
+              ${p.name}
+            </div>
+
+            <p style="opacity:0.7">${p.description || ""}</p>
+
+            <h2>$${p.price}</h2>
+
+            <div style="margin-top:10px;display:flex;gap:10px">
+              <button class="btn btn-blue" onclick="editProduct(${p.id})">Editar</button>
+              <button class="btn" style="background:#ef4444" onclick="deleteProduct(${p.id})">Eliminar</button>
+            </div>
+
           </div>
-        </div>
-      `).join("")}
+        `;
+      }).join("")}
     </div>
   `;
 }
