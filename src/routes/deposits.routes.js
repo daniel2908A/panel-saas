@@ -1,17 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const {
-  createDeposit
-} = require('../controllers/deposit.controller');
+// ⚠️ IMPORTANTE: importar bien
+const depositController = require('../controllers/deposit.controller');
 
 // =======================
-// DEPÓSITOS
+// DEPÓSITO / RECARGA
 // =======================
-router.post('/', createDeposit);
+router.post('/', depositController.createDeposit);
 
 // =======================
-// 🔥 COMPROBANTE (SIN BD)
+// COMPROBANTE SIMPLE
 // =======================
 router.post('/payment-proof', async (req, res) => {
   try {
@@ -27,8 +26,8 @@ router.post('/payment-proof', async (req, res) => {
     res.json({ message: "Comprobante recibido" });
 
   } catch (err) {
-    console.error("ERROR FINAL:", err);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Error interno" });
   }
 });
 
