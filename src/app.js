@@ -1,5 +1,5 @@
 require('dotenv').config();
-console.log("Deploy debug iniciado");
+console.log("Deploy estable iniciado");
 
 const express = require('express');
 const path = require('path');
@@ -49,54 +49,50 @@ safeRoute('/api/webhook', require('./routes/webhook.routes'));
 app.use('/uploads', express.static('uploads'));
 
 // =============================
-// 🔥 PRODUCTOS PÚBLICOS (FIX REAL)
+// 🔥 PRODUCTOS PÚBLICOS (ULTRA FIX)
 // =============================
 app.get('/api/products/public', async (req, res) => {
   try {
 
-    console.log("📡 Cargando productos públicos...");
+    console.log("📡 Intentando cargar productos públicos...");
 
-    const result = await db.query(`
-      SELECT 
-        id,
-        name,
-        description,
-        price,
-        color,
-        category
-      FROM products
-    `);
+    const result = await db.query("SELECT * FROM products");
 
-    let products;
+    let products = [];
 
-    // 🔥 compatibilidad total mysql / mysql2
+    // 🔥 compatibilidad mysql / mysql2
     if (Array.isArray(result)) {
       products = result[0];
     } else {
       products = result;
     }
 
-    // seguridad extra
-    if (!products) products = [];
+    // 🔥 FORZAR ARRAY SI O SI
+    if (!Array.isArray(products)) {
+      console.log("⚠️ Resultado no es array:", products);
+      products = [];
+    }
 
-    console.log("✅ Productos encontrados:", products.length);
+    console.log("✅ Productos enviados:", products.length);
 
     res.json(products);
 
   } catch (err) {
     console.error("🔥 ERROR PUBLIC PRODUCTS:", err);
-    res.status(500).json({
-      error: "Error cargando productos",
-      detail: err.message
-    });
+
+    // 🔥 NUNCA ROMPER FRONTEND
+    res.json([]);
   }
 });
 
+// =====================
+// ROOT
 // =====================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
+// =====================
 app.get('/api', (req, res) => {
   res.json({ message: "API funcionando 🚀" });
 });
